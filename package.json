@@ -1,0 +1,32 @@
+{
+  "name": "@adobe/cordova-acpcore",
+  "version": "1.0.0",
+  "description": "Adobe Experience Platform - Core plugin for Cordova apps.",
+  "cordova": {
+    "id": "cordova-acpcore",
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adobe/cordova-acpcore"
+  },
+  "keywords": [
+    "cordova",
+    "adobe",
+    "core",
+    "acpcore",
+    "target",
+    "acptarget",
+    "analytics",
+    "acpanalytics",
+    "marketing",
+    "ecosystem:cordova",
+    "cordova-ios",
+    "cordova-android"
+  ],
+  "author": "Adobe",
+  "license": "Apache 2.0"
+}
