@@ -3,12 +3,12 @@
 name: CI
 
 # Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the main branch
+# events but only for the master branch
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -50,6 +50,6 @@ jobs:
 
     - name: build android and ios
       run: |
-        cordova-paramedic --platform android@8.0.0 --plugin . --justbuild --verbose
+        cordova-paramedic --platform android --plugin . --justbuild --verbose
         cordova-paramedic --platform ios --plugin . --justbuild --verbose --timeout 900000
 
