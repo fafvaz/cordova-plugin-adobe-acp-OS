@@ -181,7 +181,7 @@
 
 - (void) setLogLevel:(CDVInvokedUrlCommand*)command {
     [self.commandDelegate runInBackground:^{
-        ACPMobileLogLevel logLevel = (ACPMobileLogLevel)[self getCommandArg:command.arguments[0]];
+        ACPMobileLogLevel logLevel = (ACPMobileLogLevel)[[self getCommandArg:command.arguments[0]] intValue];
 
         [ACPCore setLogLevel:logLevel];
 
@@ -193,17 +193,19 @@
 - (void) setPrivacyStatus:(CDVInvokedUrlCommand*)command {
     [self.commandDelegate runInBackground:^{
         ACPMobilePrivacyStatus privacyStatus;
-        switch ((int)[self getCommandArg:command.arguments[0]]) {
+	    ACPMobilePrivacyStatus privacyStatus = (ACPMobilePrivacyStatus)[[self getCommandArg:command.arguments[0]] intValue];
+        /*switch ([self getCommandArg:command.arguments[0]] intValue) {
             case 0:
                 privacyStatus = ACPMobilePrivacyStatusOptIn;
 		break;
             case 1:
                 privacyStatus = ACPMobilePrivacyStatusOptOut;
 		break;
+	    case 2:
             default:
                 privacyStatus = ACPMobilePrivacyStatusUnknown;
 		break;
-        }
+        }*/
 
         [ACPCore setPrivacyStatus:privacyStatus];
 
