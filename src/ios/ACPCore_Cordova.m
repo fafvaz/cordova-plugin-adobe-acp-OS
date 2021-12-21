@@ -50,7 +50,7 @@
 - (void) updateConfiguration:(CDVInvokedUrlCommand*)command;
 - (void) getAppId:(CDVInvokedUrlCommand*)command;
 - (void) setPushIdentifier:(CDVInvokedUrlCommand*)command;
-- (void)loadAdobe:(CDVInvokedUrlCommand*)command;
+- (void) loadAdobe:(CDVInvokedUrlCommand*)command;
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken;
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error;
