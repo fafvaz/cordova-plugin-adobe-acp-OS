@@ -195,13 +195,13 @@
         ACPMobilePrivacyStatus privacyStatus;
         switch ((int)[self getCommandArg:command.arguments[0]]) {
             case 0:
-                privacyStatus = ACPMobilePrivacyStatusOptIn;
+                privacyStatus = AEPPrivacyStatusOptedIn;
 		break;
             case 1:
-                privacyStatus = ACPMobilePrivacyStatusOptOut;
+                privacyStatus = AEPPrivacyStatusOptedOut;
 		break;
             default:
-                privacyStatus = ACPMobilePrivacyStatusUnknown;
+                privacyStatus = AEPPrivacyStatusUnknown;
 		break;
         }
 
