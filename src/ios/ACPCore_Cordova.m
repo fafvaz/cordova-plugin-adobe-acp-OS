@@ -196,13 +196,13 @@
         switch (int) [self getCommandArg:command.arguments[0]] {
             case 0:
                 privacyStatus = ACPMobilePrivacyStatusOptIn;
-				break;
+		break;
             case 1:
                 privacyStatus = ACPMobilePrivacyStatusOptOut;
-				break;
+		break;
             default:
                 privacyStatus = ACPMobilePrivacyStatusUnknown;
-				break;
+		break;
         }
 
         [ACPCore setPrivacyStatus:privacyStatus];
