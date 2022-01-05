@@ -112,7 +112,7 @@
         <framework custom="true" src="src/android/ACP_Cordova.gradle" type="gradleReference" />
         <framework src="com.google.firebase:firebase-core:16.0.1" />
 		<framework src="com.google.firebase:firebase-messaging:21.0.1" />
-		<framework src="com.google.gms:google-services:4.3.4" />
+		<!--<framework src="com.google.gms:google-services:4.3.4" />-->
     </platform>
 
     <!-- configure ios platform -->
