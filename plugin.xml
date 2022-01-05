@@ -110,7 +110,7 @@
         <source-file src="src/android/ACPAnalytics_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <!-- dependencies managed through included gradle file -->
         <framework custom="true" src="src/android/ACP_Cordova.gradle" type="gradleReference" />
-        <framework src="com.google.firebase:firebase-core:16.0.1" />
+      <!--  <framework src="com.google.firebase:firebase-core:16.0.1" /> -->
 	<framework src="com.google.firebase:firebase-messaging:17.3.4" />
 	<framework src="com.google.gms:google-services:4.3.5" />
     </platform>
