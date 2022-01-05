@@ -118,7 +118,6 @@
     <!-- configure ios platform -->
     <platform name="ios">
         <hook type="after_plugin_install" src="hooks/ios_embed_framework_hook.js"/>  
-	
         <config-file target="*-Info.plist" parent="AppId">
             <string>$APP_ID</string>
         </config-file>
