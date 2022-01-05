@@ -50,7 +50,7 @@
 - (void) updateConfiguration:(CDVInvokedUrlCommand*)command;
 - (void) getAppId:(CDVInvokedUrlCommand*)command;
 - (void) setPushIdentifier:(CDVInvokedUrlCommand*)command;
-- (void)loadAdobe:(CDVInvokedUrlCommand*)command;
+- (void) loadAdobe:(CDVInvokedUrlCommand*)command;
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken;
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error;
@@ -181,7 +181,7 @@
 
 - (void) setLogLevel:(CDVInvokedUrlCommand*)command {
     [self.commandDelegate runInBackground:^{
-        ACPMobileLogLevel logLevel = (ACPMobileLogLevel)[self getCommandArg:command.arguments[0]];
+        ACPMobileLogLevel logLevel = (ACPMobileLogLevel)[[self getCommandArg:command.arguments[0]] intValue];
 
         [ACPCore setLogLevel:logLevel];
 
@@ -192,7 +192,7 @@
 
 - (void) setPrivacyStatus:(CDVInvokedUrlCommand*)command {
     [self.commandDelegate runInBackground:^{
-        ACPMobilePrivacyStatus privacyStatus = (ACPMobilePrivacyStatus)[self getCommandArg:command.arguments[0]];
+        ACPMobilePrivacyStatus privacyStatus = (ACPMobilePrivacyStatus)[[self getCommandArg:command.arguments[0]] intValue];
 
         [ACPCore setPrivacyStatus:privacyStatus];
 

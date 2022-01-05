@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-acpcore"
-    version="0.0.1"
+<plugin xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-acp" version="0.0.1"
     xmlns="http://apache.org/cordova/ns/plugins/1.0">
-    <name>cordova-acpcore</name>
-    <description>ACPCore Plugin for Cordova</description>
+    <name>cordova-acp</name>
+    <description>ACP Plugins bundle for Cordova</description>
     <license>Apache 2.0</license>
-    <keywords>cordova,adobe,core,acpcore,marketing</keywords>
+    <keywords>cordova,adobe,core,acpcore,target,acptarget,analytics,acpanalytics,marketing</keywords>
 
     <preference name="APP_ID" value="" />
 
@@ -46,7 +45,7 @@
     <!-- configure android platform -->
     <platform name="android">
       
-        <config-file target="res/values/strings.xml" parent="/*"> 
+        <config-file target="res/values/strings.xml" parent="/*">
             <string name="AppId">$APP_ID</string>
         </config-file>
        
@@ -119,7 +118,6 @@
     <!-- configure ios platform -->
     <platform name="ios">
         <hook type="after_plugin_install" src="hooks/ios_embed_framework_hook.js"/>  
-	    
         <config-file target="*-Info.plist" parent="AppId">
             <string>$APP_ID</string>
         </config-file>
@@ -182,10 +180,10 @@
         <!-- dependencies -->
         <framework src="libsqlite3.dylib" />
         <framework src="SystemConfiguration.framework" />
-		<framework src="ACPCore" type="podspec" spec="~> 2.0" />
+		<framework src="ACPCore" type="podspec" spec="~> 2.7" />
 		<framework src="ACPTarget" type="podspec" spec="~> 2.1" />
-		<framework src="ACPAnalytics" type="podspec" spec="~> 2.0" />
-		<framework src="ACPUserProfile" type="podspec" spec="~> 2.0" />
+		<framework src="ACPAnalytics" type="podspec" spec="~> 2.4" />
+		<framework src="ACPUserProfile" type="podspec" spec="~> 2.1" />
 		<framework src="ACPMobileServices" type="podspec" spec="~> 1.0" />
     
         <!-- sdk source for ios managed by cocoapods -->
@@ -203,4 +201,6 @@
         </config-file>
  
     </platform>
+
+    
 </plugin>
