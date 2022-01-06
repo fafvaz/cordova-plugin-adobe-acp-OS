@@ -1,13 +1,12 @@
 buildscript {
     repositories {
         google()
-        mavenCentral()
+        jcenter()
     }
     dependencies {
       //classpath 'com.android.tools.build:gradle:3.2.0'
-      classpath 'com.android.tools.build:gradle:4.0.1'
-      classpath 'com.google.gms:google-services:4.3.+'
-      
+      classpath "com.android.tools.build:gradle:4.0.1"
+      classpath 'com.google.gms:google-services:4.3.5'
 
      // classpath 'com.google.gms:google-services:4.3.5'
         
@@ -44,10 +43,10 @@ dependencies {
     implementation 'com.adobe.marketing.mobile:target:1.+' 
     implementation 'com.adobe.marketing.mobile:userprofile:1.+' 
     implementation 'com.adobe.marketing.mobile:sdk-core:1.+'
-    implementation 'com.google.gms:google-services:4.3.+'
-    implementation 'com.google.firebase:firebase-core:19.0.+'
-    implementation 'com.google.firebase:firebase-messaging:23.0.+'
-    implementation 'com.google.firebase:firebase-auth:21.0.+'
+    implementation 'com.google.gms:google-services:4.3.5'
+    implementation 'com.google.firebase:firebase-core:16.0.1'
+    implementation 'com.google.firebase:firebase-messaging:17.3.4'
+    implementation 'com.google.firebase:firebase-auth:16.0.1'
     implementation 'com.google.android.gms:play-services-auth:15.0.1'
 
 
