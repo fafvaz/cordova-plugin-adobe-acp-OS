@@ -35,7 +35,7 @@ import com.adobe.marketing.mobile.WrapperType;
 import com.adobe.marketing.mobile.Campaign;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.installations.FirebaseInstallationsApi;
+import com.google.firebase.messaging;
 //import com.google.firebase.iid.FirebaseInstanceId;
 //import com.google.firebase.iid.InstanceIdResult;
 import android.os.Bundle;
@@ -569,16 +569,16 @@ public class ACPCore_Cordova extends CordovaPlugin {
        final Context context = this.cordova.getActivity().getApplicationContext();
         FirebaseApp.initializeApp(context);
   
-        FirebaseInstallations.getInstance().getInstanceId().addOnCompleteListener(new OnCompleteListener<InstallationTokenResult>() {
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(new OnCompleteListener<String>() {
             @Override 
-            public void onComplete(@NonNull Task<InstanceIdResult> task) {
+            public void onComplete(@NonNull Task<String> task) {
                
                 if (!task.isSuccessful()) {
                     System.out.println("Message App getInstanceId failed: " + task.getException());
                     return;
                 } 
                 
-                String token = task.getResult().getToken();
+                String token = task.getResult();
                 System.out.println("Got token: " +  token);
 
                 Thread t = new Thread() {
