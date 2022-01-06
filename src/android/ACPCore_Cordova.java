@@ -570,16 +570,16 @@ public class ACPCore_Cordova extends CordovaPlugin {
        final Context context = this.cordova.getActivity().getApplicationContext();
         FirebaseApp.initializeApp(context);
   
-        FirebaseInstallations.getInstance().getId().addOnCompleteListener(new OnCompleteListener<String>() {
+        FirebaseInstallations.getInstance().getToken().addOnCompleteListener(new OnCompleteListener<InstallationTokenResult>() {
             @Override 
-            public void onComplete(@NonNull Task<String> task) {
+            public void onComplete(@NonNull Task<InstallationTokenResult> task) {
                
                 if (!task.isSuccessful()) {
                     System.out.println("Message App getInstanceId failed: " + task.getException());
                     return;
                 } 
                 
-                String token = task.getResult();
+                String token = task.getResult().getToken();
                 System.out.println("Got token: " +  token);
 
                 Thread t = new Thread() {
