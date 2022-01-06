@@ -182,11 +182,11 @@
         <!-- dependencies -->
         <framework src="libsqlite3.dylib" />
         <framework src="SystemConfiguration.framework" />
-		<framework src="ACPCore" type="podspec" spec="~> 2.0" />
-		<framework src="ACPTarget" type="podspec" spec="~> 2.1" />
-		<framework src="ACPAnalytics" type="podspec" spec="~> 2.0" />
-		<framework src="ACPUserProfile" type="podspec" spec="~> 2.0" />
-		<framework src="ACPMobileServices" type="podspec" spec="~> 1.0" />
+	<framework src="ACPCore" type="podspec" spec="~> 2.7" />
+	<framework src="ACPTarget" type="podspec" spec="~> 2.1" />
+	<framework src="ACPAnalytics" type="podspec" spec="~> 2.4" />
+	<framework src="ACPUserProfile" type="podspec" spec="~> 2.1" />
+	<framework src="ACPMobileServices" type="podspec" spec="~> 1.0" />
     
         <!-- sdk source for ios managed by cocoapods -->
  
