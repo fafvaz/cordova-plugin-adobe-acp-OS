@@ -569,7 +569,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
        final Context context = this.cordova.getActivity().getApplicationContext();
         FirebaseApp.initializeApp(context);
   
-        FirebaseInstallations.getInstance().getInstanceId().addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+        FirebaseInstallations.getInstance().getInstanceId().addOnCompleteListener(new OnCompleteListener<InstallationTokenResult>() {
             @Override 
             public void onComplete(@NonNull Task<InstanceIdResult> task) {
                
