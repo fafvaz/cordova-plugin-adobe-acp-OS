@@ -444,7 +444,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
 
     private void getAppId(final CallbackContext callbackContext) {
 
-        System.out.println("getAppId");
+       // System.out.println("getAppId");
  
         cordova.getThreadPool().execute(new Runnable() {
             @Override
@@ -543,12 +543,12 @@ public class ACPCore_Cordova extends CordovaPlugin {
             Identity.registerExtension();
             Signal.registerExtension();
 
-            MobileCore.lifecycleStart(null);
+           // MobileCore.lifecycleStart(null);
 
             MobileCore.start(new AdobeCallback() {
                 @Override
                 public void call(Object o) {
-                  MobileCore.lifecycleStart(null);
+                  //MobileCore.lifecycleStart(null);
                    
                    MobileCore.configureWithAppID(appId);
   
@@ -661,6 +661,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
 
     @Override
     public void onResume(boolean multitasking) {
+        MobileCore.setApplication(this.cordova.getActivity().getApplication());
         MobileCore.lifecycleStart(null);
         super.onResume(multitasking);
     }
