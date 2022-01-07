@@ -35,8 +35,10 @@ import com.adobe.marketing.mobile.WrapperType;
 import com.adobe.marketing.mobile.Campaign;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.installations.FirebaseInstallations;
+import com.google.firebase.installations.InstallationTokenResult;
+//import com.google.firebase.iid.FirebaseInstanceId;
+//import com.google.firebase.iid.InstanceIdResult;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -568,9 +570,9 @@ public class ACPCore_Cordova extends CordovaPlugin {
        final Context context = this.cordova.getActivity().getApplicationContext();
         FirebaseApp.initializeApp(context);
   
-        FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+        FirebaseInstallations.getInstance().getToken(true).addOnCompleteListener(new OnCompleteListener<InstallationTokenResult>() {
             @Override 
-            public void onComplete(@NonNull Task<InstanceIdResult> task) {
+            public void onComplete(@NonNull Task<InstallationTokenResult> task) {
                
                 if (!task.isSuccessful()) {
                     System.out.println("Message App getInstanceId failed: " + task.getException());
