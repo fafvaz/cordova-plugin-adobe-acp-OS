@@ -333,10 +333,19 @@
     [ACPUserProfile registerExtension];
 
 
-    [ACPCore start:^{
-        [ACPCore lifecycleStart:nil];
-        [ACPCore collectPii:@{@"cusFiscalNumber": @"111111111"}];
-    }];
+     //teste
+   UIApplicationState state = [[UIApplication sharedApplication] applicationState];
+    if (state == UIApplicationStateBackground || state == UIApplicationStateInactive)
+    {
+     
+    }else{
+        [ACPCore start:^{
+            [ACPCore lifecycleStart:nil];
+            [ACPCore collectPii:@{@"cusFiscalNumber": @"111111111"}];
+        }];
+    }
+
+    //end test
     
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
    // [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -378,10 +387,19 @@
     [ACPUserProfile registerExtension];
 
 
-    [ACPCore start:^{
-        [ACPCore lifecycleStart:nil];
-        [ACPCore collectPii:@{@"cusFiscalNumber": @"111111111"}];
-    }];
+      //teste
+   UIApplicationState state = [[UIApplication sharedApplication] applicationState];
+    if (state == UIApplicationStateBackground || state == UIApplicationStateInactive)
+    {
+     
+    }else{
+        [ACPCore start:^{
+            [ACPCore lifecycleStart:nil];
+            [ACPCore collectPii:@{@"cusFiscalNumber": @"111111111"}];
+        }];
+    }
+
+    //end test
     
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
    // [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
