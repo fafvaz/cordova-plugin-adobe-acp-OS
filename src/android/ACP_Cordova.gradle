@@ -1,6 +1,6 @@
 buildscript {
     repositories {
-        google()
+       google()
        // jcenter()
        mavenCentral()
     }
@@ -24,6 +24,7 @@ configurations.all {
 
 repositories {
     google()
+    mavenCentral()
     flatDir {
         dirs 'libs'
         dirs 'src/main/libs' //fix for cordova-android >= 7.0.0
