@@ -57,6 +57,31 @@ dependencies {
 }
 */
 
+buildscript {
+  repositories {
+    google()
+    maven {
+      url 'https://maven.fabric.io/public'
+    }
+  }
+  dependencies {
+    classpath 'com.google.gms:google-services:4.3.4'
+    classpath 'com.android.tools.build:gradle:4.1.1'
+  }
+}
+
+repositories {
+    google()
+    mavenCentral()
+    maven {
+      url 'https://maven.fabric.io/public'
+    }
+    flatDir {
+        dirs 'libs'
+        dirs 'src/main/libs' //fix for cordova-android >= 7.0.0
+    }
+}
+
 dependencies {
     // adobe
     implementation 'com.adobe.marketing.mobile:analytics:1.+' 
