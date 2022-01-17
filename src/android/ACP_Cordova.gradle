@@ -1,3 +1,4 @@
+/*
 android {
   defaultConfig {
     multiDexEnabled true
@@ -36,7 +37,7 @@ repositories {
         dirs 'libs'
         dirs 'src/main/libs' //fix for cordova-android >= 7.0.0
     }
-}
+}*/
 
 dependencies {
  
