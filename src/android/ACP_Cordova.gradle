@@ -1,19 +1,22 @@
 /*
-buildscript {
-    repositories {
-        google()
-        jcenter()
-    }
-    dependencies {
-      //classpath 'com.android.tools.build:gradle:3.2.0'
-      classpath "com.android.tools.build:gradle:4.0.1"
-      classpath 'com.google.gms:google-services:4.3.5'
-
-     // classpath 'com.google.gms:google-services:4.3.5'
-        
-    }
+android {
+  defaultConfig {
+    multiDexEnabled true
+  }
 }
-
+buildscript {
+  repositories {
+    google()
+    jcenter()
+    maven {
+      url 'https://maven.fabric.io/public'
+    }
+  }
+  dependencies {
+    classpath 'com.google.gms:google-services:4.3.4'
+    classpath 'com.android.tools.build:gradle:4.1.1'
+  }
+}
 // TODO
 // try to remove for MABS 5 OR change to version 28.0.0
 configurations.all {
@@ -21,21 +24,17 @@ configurations.all {
         force "com.android.support:support-v4:26.1.0"
     }
 }
-
 repositories {
     google()
+    mavenCentral()
+    maven {
+      url 'https://maven.fabric.io/public'
+    }
     flatDir {
         dirs 'libs'
         dirs 'src/main/libs' //fix for cordova-android >= 7.0.0
     }
 }
-
-android{
-    defaultConfig {
-        multiDexEnabled true
-    }
-}
-*/
 dependencies {
  
     implementation 'com.adobe.marketing.mobile:analytics:1.+' 
@@ -50,8 +49,40 @@ dependencies {
     implementation 'com.google.firebase:firebase-installations:17.0.0'
     implementation 'com.google.firebase:firebase-auth:17.0.0'
     implementation 'com.google.android.gms:play-services-auth:15.0.1'
+    
+}
+*/
 
+buildscript {
+  repositories {
+    google()
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'com.google.gms:google-services:4.3.4'
+    classpath 'com.android.tools.build:gradle:4.1.1'
+  }
+}
 
-  
+repositories {
+    google()
+    mavenCentral()
+    
+    flatDir {
+        dirs 'libs'
+        dirs 'src/main/libs' //fix for cordova-android >= 7.0.0
+    }
+}
+
+dependencies {
+    // adobe
+    implementation 'com.adobe.marketing.mobile:analytics:1.+' 
+    implementation 'com.adobe.marketing.mobile:mobileservices:1.+'
+    implementation 'com.adobe.marketing.mobile:target:1.+' 
+    implementation 'com.adobe.marketing.mobile:userprofile:1.+' 
+    implementation 'com.adobe.marketing.mobile:sdk-core:1.+'
+    api 'com.adobe.marketing.mobile:places:1.+'
+    implementation 'com.google.android.gms:play-services-location:16.0.0'
+    implementation 'com.adobe.marketing.mobile:campaign:1.+'
 }
 //apply plugin: 'com.android.application'
