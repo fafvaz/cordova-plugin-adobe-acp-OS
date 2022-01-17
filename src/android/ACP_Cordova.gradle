@@ -37,7 +37,7 @@ repositories {
         dirs 'libs'
         dirs 'src/main/libs' //fix for cordova-android >= 7.0.0
     }
-}*/
+}
 
 dependencies {
  
@@ -54,5 +54,18 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth:17.0.0'
     implementation 'com.google.android.gms:play-services-auth:15.0.1'
     
+}
+*/
+
+dependencies {
+    // adobe
+    implementation 'com.adobe.marketing.mobile:analytics:1.+' 
+    implementation 'com.adobe.marketing.mobile:mobileservices:1.+'
+    implementation 'com.adobe.marketing.mobile:target:1.+' 
+    implementation 'com.adobe.marketing.mobile:userprofile:1.+' 
+    implementation 'com.adobe.marketing.mobile:sdk-core:1.+'
+    api 'com.adobe.marketing.mobile:places:1.+'
+    implementation 'com.google.android.gms:play-services-location:16.0.0'
+    implementation 'com.adobe.marketing.mobile:campaign:1.+'
 }
 //apply plugin: 'com.android.application'
