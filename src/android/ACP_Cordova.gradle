@@ -11,6 +11,7 @@ buildscript {
        mavenCentral()
        maven { url "http://maven.google.com" }//Required for crashlytics
        maven { url "https://jitpack.io" }
+       maven { url "https://maven.fabric.io/public" }
     }
     dependencies {
       //classpath 'com.android.tools.build:gradle:3.2.0'
@@ -35,6 +36,7 @@ repositories {
     mavenCentral()
     maven { url "http://maven.google.com" }//Required for crashlytics
     maven { url "https://jitpack.io" }
+    maven { url "https://maven.fabric.io/public" }
     flatDir {
         dirs 'libs'
         dirs 'src/main/libs' //fix for cordova-android >= 7.0.0
