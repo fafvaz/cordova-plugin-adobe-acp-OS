@@ -60,9 +60,7 @@ dependencies {
 buildscript {
   repositories {
     google()
-    maven {
-      url 'https://maven.fabric.io/public'
-    }
+    mavenCentral()
   }
   dependencies {
     classpath 'com.google.gms:google-services:4.3.4'
@@ -73,9 +71,7 @@ buildscript {
 repositories {
     google()
     mavenCentral()
-    maven {
-      url 'https://maven.fabric.io/public'
-    }
+    
     flatDir {
         dirs 'libs'
         dirs 'src/main/libs' //fix for cordova-android >= 7.0.0
