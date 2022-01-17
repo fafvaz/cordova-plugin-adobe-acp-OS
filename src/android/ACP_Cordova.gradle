@@ -1,8 +1,16 @@
+android {
+  defaultConfig {
+    multiDexEnabled true
+  }
+}
+
 buildscript {
     repositories {
        google()
        // jcenter()
        mavenCentral()
+       maven { url "http://maven.google.com" }//Required for crashlytics
+       maven { url "https://jitpack.io" }
     }
     dependencies {
       //classpath 'com.android.tools.build:gradle:3.2.0'
@@ -25,18 +33,11 @@ configurations.all {
 repositories {
     google()
     mavenCentral()
-    maven {
-        url "https://maven.google.com"
-    }
+    maven { url "http://maven.google.com" }//Required for crashlytics
+    maven { url "https://jitpack.io" }
     flatDir {
         dirs 'libs'
         dirs 'src/main/libs' //fix for cordova-android >= 7.0.0
-    }
-}
-
-android{
-    defaultConfig {
-        multiDexEnabled true
     }
 }
 
@@ -54,8 +55,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-installations:17.0.0'
     implementation 'com.google.firebase:firebase-auth:17.0.0'
     implementation 'com.google.android.gms:play-services-auth:15.0.1'
-
-
-  
+    
 }
 //apply plugin: 'com.android.application'
