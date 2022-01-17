@@ -5,8 +5,7 @@ android {
 }
 
 buildscript {
-    repositories {
-       repositories {
+  repositories {
     google()
     jcenter()
     maven {
@@ -30,6 +29,9 @@ configurations.all {
 repositories {
     google()
     mavenCentral()
+    maven {
+      url 'https://maven.fabric.io/public'
+    }
     flatDir {
         dirs 'libs'
         dirs 'src/main/libs' //fix for cordova-android >= 7.0.0
