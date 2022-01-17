@@ -25,6 +25,9 @@ configurations.all {
 repositories {
     google()
     mavenCentral()
+    maven {
+        url "https://maven.google.com"
+    }
     flatDir {
         dirs 'libs'
         dirs 'src/main/libs' //fix for cordova-android >= 7.0.0
