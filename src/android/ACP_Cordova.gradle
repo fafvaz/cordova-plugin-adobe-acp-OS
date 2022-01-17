@@ -6,21 +6,17 @@ android {
 
 buildscript {
     repositories {
-       google()
-       // jcenter()
-       mavenCentral()
-       maven { url "http://maven.google.com" }//Required for crashlytics
-       maven { url "https://jitpack.io" }
-       maven { url "https://maven.fabric.io/public" }
+       repositories {
+    google()
+    jcenter()
+    maven {
+      url 'https://maven.fabric.io/public'
     }
-    dependencies {
-      //classpath 'com.android.tools.build:gradle:3.2.0'
-      classpath "com.android.tools.build:gradle:4.0.1"
-      classpath 'com.google.gms:google-services:4.3.5'
-
-     // classpath 'com.google.gms:google-services:4.3.5'
-        
-    }
+  }
+  dependencies {
+    classpath 'com.google.gms:google-services:4.3.4'
+    classpath 'com.android.tools.build:gradle:4.1.1'
+  }
 }
 
 // TODO
@@ -34,9 +30,6 @@ configurations.all {
 repositories {
     google()
     mavenCentral()
-    maven { url "http://maven.google.com" }//Required for crashlytics
-    maven { url "https://jitpack.io" }
-    maven { url "https://maven.fabric.io/public" }
     flatDir {
         dirs 'libs'
         dirs 'src/main/libs' //fix for cordova-android >= 7.0.0
