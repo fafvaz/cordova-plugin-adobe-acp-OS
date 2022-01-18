@@ -63,8 +63,6 @@ var ACPCore = (function () {
     return exec(success, fail, PLUGIN_NAME, FUNCTION_NAME, [sdkEvent]);
   };
 
-
-
   ACPCore.dispatchEventWithResponseCallback = function (
     sdkEvent,
     success,
@@ -255,7 +253,11 @@ var ACPCore = (function () {
       acpPrintNotAString('action', FUNCTION_NAME);
       return;
     }
- 
+
+    if (contextData && !acpIsObject(contextData)) {
+      acpPrintNotAnObject('contextData', FUNCTION_NAME);
+      return;
+    }
 
     if (success && !acpIsFunction(success)) {
       acpPrintNotAFunction('success', FUNCTION_NAME);
@@ -281,7 +283,10 @@ var ACPCore = (function () {
       return;
     }
 
-   
+    if (contextData && !acpIsObject(contextData)) {
+      acpPrintNotAnObject('contextData', FUNCTION_NAME);
+      return;
+    }
 
     if (success && !acpIsFunction(success)) {
       acpPrintNotAFunction('success', FUNCTION_NAME);
@@ -301,7 +306,12 @@ var ACPCore = (function () {
 
   ACPCore.updateConfiguration = function (config, success, fail) {
     var FUNCTION_NAME = 'updateConfiguration';
- 
+
+    if (!acpIsObject(config)) {
+      acpPrintNotAnObject('config', FUNCTION_NAME);
+      return;
+    }
+
     if (success && !acpIsFunction(success)) {
       acpPrintNotAFunction('success', FUNCTION_NAME);
       return;
@@ -329,47 +339,6 @@ var ACPCore = (function () {
     }
 
     return exec(success, fail, PLUGIN_NAME, FUNCTION_NAME, []);
-  };
-
-  ACPCore.loadAdobe = function (success, fail) {
-    var FUNCTION_NAME = 'loadAdobe';
-
-    return exec(success, fail, PLUGIN_NAME, FUNCTION_NAME);
-  };
-
-  ACPCore.beginTest = function (success, fail) {
-    var FUNCTION_NAME = 'beginTest';
-
-    if (success && !acpIsFunction(success)) {
-      acpPrintNotAFunction('success', FUNCTION_NAME);
-      return;
-    }
-
-    if (fail && !acpIsFunction(fail)) {
-      acpPrintNotAFunction('fail', FUNCTION_NAME);
-      return;
-    }
-
-    return exec(success, fail, PLUGIN_NAME, FUNCTION_NAME, []);
-  }; 
-
-  ACPCore.setPushIdentifier = function (token, success, fail) {
-    var FUNCTION_NAME = 'setPushIdentifier';
-     
-    if (success && !acpIsFunction(success)) {
-      acpPrintNotAFunction('success', FUNCTION_NAME);
-      return;
-    }
-
-    if (fail && !acpIsFunction(fail)) {
-      acpPrintNotAFunction('fail', FUNCTION_NAME);
-      return;
-    }
-
-    console.log("token: " + token);
-
-    return exec(success, fail, PLUGIN_NAME, FUNCTION_NAME, [token]);
-    
   };
 
   return ACPCore;
@@ -420,17 +389,15 @@ window.acpIsObject = function (value) {
   return value && typeof value === 'object' && value.constructor === Object;
 };
 
-/*
 window.acpPrintNotAnObject = function (paramName, functionName) {
   console.log(
-    "..::Ignoring call to '" + 
+    "Ignoring call to '" +
       functionName +
       "'. The '" +
       paramName +
       "' parameter is required to be an Object."
   );
 };
-*/
 
 window.acpIsFunction = function (value) {
   return typeof value === 'function';

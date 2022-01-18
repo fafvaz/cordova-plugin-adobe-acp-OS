@@ -10,21 +10,20 @@
  governing permissions and limitations under the License.
  */
 
-var ACPSignal = (function() {
-    var ACPSignal = (typeof exports !== 'undefined') && exports || {};
-    var exec = cordova.require('cordova/exec'); // eslint-disable-line no-undef
+var ACPSignal = (function () {
+  var ACPSignal = (typeof exports !== 'undefined' && exports) || {};
+  var exec = cordova.require('cordova/exec'); // eslint-disable-line no-undef
 
-    var PLUGIN_NAME = "ACPSignal_Cordova";
+  var PLUGIN_NAME = 'ACPSignal_Cordova';
 
-    // ===========================================================================
-    // public APIs
-    // ===========================================================================
-    ACPSignal.extensionVersion = function(success, fail) {
-        return exec(success, fail, PLUGIN_NAME, "extensionVersion", []);
-    };
+  // ===========================================================================
+  // public APIs
+  // ===========================================================================
+  ACPSignal.extensionVersion = function (success, fail) {
+    return exec(success, fail, PLUGIN_NAME, 'extensionVersion', []);
+  };
 
-    return ACPSignal;
-
-}());
+  return ACPSignal;
+})();
 
 module.exports = ACPSignal;
