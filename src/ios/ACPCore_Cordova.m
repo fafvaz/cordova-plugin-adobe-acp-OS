@@ -10,8 +10,6 @@
  governing permissions and limitations under the License.
  */
 
- 
-
 #import <ACPCore/ACPCore.h>
 #import <ACPCore/ACPExtensionEvent.h>
 #import <ACPCore/ACPIdentity.h>
@@ -21,18 +19,10 @@
 #import <ACPTarget/ACPTarget.h>
 #import <ACPAnalytics/ACPAnalytics.h>
 #import <ACPUserProfile/ACPUserProfile.h>
+#import <ACPPlaces/ACPPlaces.h>
+#import <ACPCampaign/ACPCampaign.h>
 #import <Cordova/CDV.h>
 #import <Foundation/Foundation.h>
-
-
-
-@import UserNotifications;
-
-//#import <FirebaseCore/FIRApp.h>
-//#import <FirebaseMessaging/FirebaseMessaging.h>
-//@import Firebase;
-
-
 
 @interface ACPCore_Cordova : CDVPlugin
 - (void) dispatchEvent:(CDVInvokedUrlCommand*)command;
@@ -49,13 +39,7 @@
 - (void) trackState:(CDVInvokedUrlCommand*)command;
 - (void) updateConfiguration:(CDVInvokedUrlCommand*)command;
 - (void) getAppId:(CDVInvokedUrlCommand*)command;
-- (void) setPushIdentifier:(CDVInvokedUrlCommand*)command;
-- (void) loadAdobe:(CDVInvokedUrlCommand*)command;
 
-- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken;
-- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error;
-- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))handler;
-- (void)applicationDidBecomeActive:(UIApplication *)application;
 
 @end
 
@@ -181,7 +165,7 @@
 
 - (void) setLogLevel:(CDVInvokedUrlCommand*)command {
     [self.commandDelegate runInBackground:^{
-        ACPMobileLogLevel logLevel = (ACPMobileLogLevel)[[self getCommandArg:command.arguments[0]] intValue];
+        ACPMobileLogLevel logLevel = (ACPMobileLogLevel)[self getCommandArg:command.arguments[0]];
 
         [ACPCore setLogLevel:logLevel];
 
@@ -192,7 +176,7 @@
 
 - (void) setPrivacyStatus:(CDVInvokedUrlCommand*)command {
     [self.commandDelegate runInBackground:^{
-        ACPMobilePrivacyStatus privacyStatus = (ACPMobilePrivacyStatus)[[self getCommandArg:command.arguments[0]] intValue];
+        ACPMobilePrivacyStatus privacyStatus = (ACPMobilePrivacyStatus)[self getCommandArg:command.arguments[0]];
 
         [ACPCore setPrivacyStatus:privacyStatus];
 
@@ -255,17 +239,6 @@
     }];
 }
 
-- (void) setPushIdentifier:(CDVInvokedUrlCommand*)command {
-    [self.commandDelegate runInBackground:^{
-       NSString *token = [self getCommandArg:command.arguments[0]];
-
-        [ACPCore setPushIdentifier:token];
-
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    }];
-}
-
 // ===========================================================================
 // helper functions
 // ===========================================================================
@@ -302,109 +275,26 @@
 - (void)pluginInitialize
 {
     appId = [[[NSBundle mainBundle] infoDictionary] valueForKey:@"AppId"];
-
-    UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];  
-      center.delegate = self;  
-      [center requestAuthorizationWithOptions:(UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionBadge) completionHandler:^(BOOL granted, NSError * _Nullable error) {
-        if( !error ) {
-            // required to get the app to do anything at all about push notifications  
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [[UIApplication sharedApplication] registerForRemoteNotifications];
-            });
-            NSLog( @"Push registration success." );  
-        } else {
-            NSLog( @"Push registration FAILED" );  
-            NSLog( @"ERROR: %@ - %@", error.localizedFailureReason, error.localizedDescription );  
-            NSLog( @"SUGGESTIONS: %@ - %@", error.localizedRecoveryOptions, error.localizedRecoverySuggestion );  
-        }
-        }];
-      
-    [ACPCore setLogLevel:ACPMobileLogLevelDebug];
-    
-    [ACPCore setWrapperType:ACPMobileWrapperTypeCordova];
+    [ACPCore setLogLevel:ACPMobileLogLevelDebug]; 
     [ACPCore configureWithAppId:appId];
     
+    [ACPCampaign registerExtension];
+    [ACPPlaces registerExtension];
     [ACPAnalytics registerExtension];
-    [ACPMobileServices registerExtension];
-    [ACPTarget registerExtension];
-    [ACPIdentity registerExtension];
-    [ACPLifecycle registerExtension];
-    [ACPSignal registerExtension];
-    [ACPUserProfile registerExtension];
-
-
-    [ACPCore start:^{
-        [ACPCore lifecycleStart:nil];
-        [ACPCore collectPii:@{@"cusFiscalNumber": @"111111111"}];
+    [ACPMobileServices registerExtension]; 
+    [ACPTarget registerExtension]; 
+    [ACPUserProfile registerExtension]; 
+    [ACPIdentity registerExtension]; 
+    [ACPLifecycle registerExtension]; 
+    [ACPSignal registerExtension]; 
+    [ACPCore start:^{     
+        [ACPCore lifecycleStart:nil]; 
     }];
     
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-   // [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
- 
-}
-
-- (void)loadAdobe:(CDVInvokedUrlCommand*)command
-{
-
-    appId = [[[NSBundle mainBundle] infoDictionary] valueForKey:@"AppId"];
-    UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];  
-      center.delegate = self;  
-      [center requestAuthorizationWithOptions:(UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionBadge) completionHandler:^(BOOL granted, NSError * _Nullable error) {
-        if(!error) {
-            // required to get the app to do anything at all about push notifications  
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [[UIApplication sharedApplication] registerForRemoteNotifications];
-            });
-            NSLog( @"Push registration success." );  
-        } else {
-            NSLog( @"Push registration FAILED" );  
-            NSLog( @"ERROR: %@ - %@", error.localizedFailureReason, error.localizedDescription );  
-            NSLog( @"SUGGESTIONS: %@ - %@", error.localizedRecoveryOptions, error.localizedRecoverySuggestion );  
-        }
-        }];
-      
-    [ACPCore setLogLevel:ACPMobileLogLevelDebug];
-    
-    [ACPCore setWrapperType:ACPMobileWrapperTypeCordova];
-
-    [ACPCore configureWithAppId:appId];
-    
-    [ACPAnalytics registerExtension];
-    [ACPMobileServices registerExtension];
-    [ACPTarget registerExtension];
-    [ACPIdentity registerExtension];
-    [ACPLifecycle registerExtension];
-    [ACPSignal registerExtension];
-    [ACPUserProfile registerExtension];
-
-
-    [ACPCore start:^{
-        [ACPCore lifecycleStart:nil];
-        [ACPCore collectPii:@{@"cusFiscalNumber": @"111111111"}];
-    }];
-    
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-   // [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-    NSLog(@"setPushIdentifier: %@", deviceToken);
-    [ACPCore setPushIdentifier:deviceToken];
-        
-
-}
-
-- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
-    NSLog(@"didFailToRegisterForRemoteNotificationsWithError");
-}
-
-- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))handler
-{
-    NSLog(@"didReceiveNotification");
-}
-
-- (void)applicationDidBecomeActive:(UIApplication *)application {
-    application.applicationIconBadgeNumber = 0;
+    NSDate *date= [NSDate date];
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc]init];
+    [dateFormatter setDateFormat:@"dd/MM/yyyy HH:mm:ss"];
+    initTime = [dateFormatter stringFromDate:date];
 }
 
 @end
