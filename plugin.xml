@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-acp" version="0.0.1"
+<plugin xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-acp" version="0.0.2"
     xmlns="http://apache.org/cordova/ns/plugins/1.0">
     <name>cordova-acp</name>
     <description>ACP Plugins bundle for Cordova</description>
     <license>Apache 2.0</license>
     <keywords>cordova,adobe,core,acpcore,target,acptarget,analytics,acpanalytics,marketing</keywords>
 
-    <preference name="APP_ID" value="" />
+    <preference name="APP_ID" default="6495a7895c9a/78672f12ac93/launch-86a02caa8ebf"/>
 
     <!-- use "ACPCore" to access the ACPCore APIs in javascript -->
     <js-module name="cordova-acpcore" src="www/ACPCore.js">
@@ -32,24 +32,20 @@
     <js-module name="cordova-acpanalytics" src="www/ACPAnalytics.js">
         <clobbers target="ACPAnalytics" />
     </js-module>
-
-    <access origin="*" />
-   <!-- Allow links to web pages to open in a browser -->
-    <allow-intent href="http://*/*" />
-    <allow-intent href="https://*/*" />
-    <allow-intent href="tel:*" />
-    <allow-intent href="sms:*" />
-    <allow-intent href="mailto:*" />
-    <allow-intent href="geo:*" />
+    <!-- use "ACPPlaces" to access the plugin APIs in javascript -->
+    <js-module name="cordova-acpplaces" src="www/ACPPlaces.js">
+        <clobbers target="ACPPlaces" />
+    </js-module>
+    <!-- use "ACPCampaign" to access the plugin APIs in javascript -->
+    <js-module name="cordova-ACPCampaign" src="www/ACPCampaign.js">
+        <clobbers target="ACPCampaign" />
+    </js-module>
 
     <!-- configure android platform -->
     <platform name="android">
-      
         <config-file target="res/values/strings.xml" parent="/*">
             <string name="AppId">$APP_ID</string>
         </config-file>
-       
-       
         <config-file parent="/*" target="res/xml/config.xml">
             <feature name="ACPCore_Cordova">
                 <param name="android-package" value="com.adobe.marketing.mobile.cordova.ACPCore_Cordova" />
@@ -86,20 +82,30 @@
                 <param name="onload" value="true" />
             </feature>
         </config-file>
+        <config-file parent="/*" target="res/xml/config.xml">
+            <feature name="ACPPlaces_Cordova">
+                <param name="android-package" value="com.adobe.marketing.mobile.cordova.ACPPlaces_Cordova" />
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
+        <config-file parent="/*" target="res/xml/config.xml">
+            <feature name="ACPCampaign_Cordova">
+                <param name="android-package" value="com.adobe.marketing.mobile.cordova.ACPCampaign_Cordova" />
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
         <!-- add required permissions to AndroidManifest.xml -->
         <config-file parent="/manifest" target="AndroidManifest.xml">
             <uses-permission android:name="android.permission.INTERNET" />
             <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
         </config-file>
 
-         <config-file parent="/manifest/application" target="AndroidManifest.xml">
-            <service  android:name="CampaignFirebaseMessagingService" android:enabled="true" android:exported="true">
-                <intent-filter>
-                    <action android:name="com.google.firebase.MESSAGING_EVENT" />
-                </intent-filter>
-            </service>
+        <!-- add receivers to AndroidManifest.xml -->
+        <config-file parent="/manifest/application" target="AndroidManifest.xml">
+            <receiver android:name="com.adobe.marketing.mobile.MessageNotificationHandler" />
+            <receiver android:name="com.adobe.marketing.mobile.LocalNotificationHandler" />
+            <activity android:name="com.adobe.marketing.mobile.FullscreenMessageActivity" />
         </config-file>
-
 
         <!-- plugin source -->
         <source-file src="src/android/ACPCore_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
@@ -108,16 +114,14 @@
         <source-file src="src/android/ACPSignal_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPTarget_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPAnalytics_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
+        <source-file src="src/android/ACPPlaces_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
+        <source-file src="src/android/ACPCampaign_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <!-- dependencies managed through included gradle file -->
         <framework custom="true" src="src/android/ACP_Cordova.gradle" type="gradleReference" />
-        <framework src="com.google.firebase:firebase-core:17.2.0" />
-	<framework src="com.google.firebase:firebase-installations:17.0.0" />
-	<framework src="com.google.gms:google-services:4.3.5" />
     </platform>
 
     <!-- configure ios platform -->
     <platform name="ios">
-        <hook type="after_plugin_install" src="hooks/ios_embed_framework_hook.js"/>  
         <config-file target="*-Info.plist" parent="AppId">
             <string>$APP_ID</string>
         </config-file>
@@ -158,49 +162,56 @@
             </feature>
         </config-file>
         <config-file parent="/*" target="config.xml">
-            <feature name="AppDelegate_Push">
-                <param name="ios-package" value="AppDelegate_Push" />
+            <feature name="ACPPlaces_Cordova">
+                <param name="ios-package" value="ACPPlaces_Cordova" />
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
+        <config-file parent="/*" target="config.xml">
+            <feature name="ACPCampaign_Cordova">
+                <param name="ios-package" value="ACPCampaign_Cordova" />
                 <param name="onload" value="true" />
             </feature>
         </config-file>
 
-        <allow-intent href="itms:*" />
-        <allow-intent href="itms-apps:*" />
-         
         <!-- plugin source -->
-        <header-file src="src/ios/AppDelegate_Push.h" />
-		<source-file src="src/ios/AppDelegate_Push.m"/>
         <source-file src="src/ios/ACPCore_Cordova.m" />
         <source-file src="src/ios/ACPIdentity_Cordova.m" />
         <source-file src="src/ios/ACPLifecycle_Cordova.m" />
         <source-file src="src/ios/ACPSignal_Cordova.m" />
         <source-file src="src/ios/ACPTarget_Cordova.m" />
         <source-file src="src/ios/ACPAnalytics_Cordova.m" />
+        <source-file src="src/ios/ACPPlaces_Cordova.m" />
+        <source-file src="src/ios/ACPCampaign_Cordova.m" />
+        <source-file src="src/ios/AppDelegate+Push.m"/>
+
+        <!-- header -->
+        <header-file src="src/ios/AppDelegate+Push.h" />
         
         <!-- dependencies -->
         <framework src="libsqlite3.dylib" />
         <framework src="SystemConfiguration.framework" />
-        <framework src="ACPCore" type="podspec" spec="~> 2.7" />
-        <framework src="ACPTarget" type="podspec" spec="~> 2.1" />
-        <framework src="ACPAnalytics" type="podspec" spec="~> 2.4" />
-        <framework src="ACPUserProfile" type="podspec" spec="~> 2.1" />
-        <framework src="ACPMobileServices" type="podspec" spec="~> 1.0" />
-    
         <!-- sdk source for ios managed by cocoapods -->
- 
-        <config-file target="*-Info.plist" parent="UIBackgroundModes">
-			<array>
-				<string>remote-notification</string>
-			</array>
-		</config-file>
-        <config-file target="*-Debug.plist" parent="aps-environment">
-            <string>development</string>
-        </config-file>
-        <config-file target="*-Release.plist" parent="aps-environment">
-            <string>production</string>
-        </config-file>
- 
+        <framework src="ACPCore" type="podspec" spec="~> 2.9" />
+        <framework src="ACPTarget" type="podspec" spec="~> 2.2" />
+        <framework src="ACPAnalytics" type="podspec" spec="~> 2.5" />
+        <framework src="ACPUserProfile" type="podspec" spec="~> 2.2" />
+        <framework src="ACPMobileServices" type="podspec" spec="~> 1.1" />
+        <framework src="ACPPlaces" type="podspec" spec="~> 1.4" />
+        <framework src="ACPCampaign" type="podspec" spec="~> 1.1" />
+        <!-- 
+        <podspec>
+            <config>
+                <source url="https://github.com/CocoaPods/Specs.git" />
+            </config>
+            <pods use-frameworks="true">
+                <pod name="ACPCore" spec="~> 2.7" />
+                <pod name="ACPTarget" spec="~> 2.1" />
+                <pod name="ACPAnalytics" spec="~> 2.4" />
+                <pod name="ACPUserProfile" spec="~> 2.1" />
+                <pod name="ACPMobileServices" spec="~> 1.0" />
+            </pods>
+        </podspec>
+        -->
     </platform>
-
-    
 </plugin>
