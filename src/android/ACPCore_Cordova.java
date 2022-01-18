@@ -35,8 +35,8 @@ import com.adobe.marketing.mobile.WrapperType;
 import com.adobe.marketing.mobile.Campaign;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.installations.FirebaseInstallations;
-import com.google.firebase.installations.InstallationTokenResult;
+//import com.google.firebase.installations.FirebaseInstallations;
+//import com.google.firebase.installations.InstallationTokenResult;
 //import com.google.firebase.iid.FirebaseInstanceId;
 //import com.google.firebase.iid.InstanceIdResult;
 import android.os.Bundle;
@@ -553,7 +553,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
                    MobileCore.configureWithAppID(appId);
   
                    collectPii();
-                   registerToken();
+                   //registerToken();
                    
                 }
             });
@@ -564,7 +564,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
           
     }
     
-   
+   /*
     void registerToken() {
 
        final Context context = this.cordova.getActivity().getApplicationContext();
@@ -603,6 +603,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
         });
  
     }
+    */
  
     void collectPii(){ 
         
