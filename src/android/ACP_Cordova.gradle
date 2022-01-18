@@ -1,4 +1,3 @@
-/*
 android {
   defaultConfig {
     multiDexEnabled true
@@ -7,7 +6,6 @@ android {
 buildscript {
   repositories {
     google()
-    jcenter()
     maven {
       url 'https://maven.fabric.io/public'
     }
@@ -51,8 +49,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:15.0.1'
     
 }
-*/
-
+/*
 buildscript {
   repositories {
     google()
@@ -85,4 +82,4 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:16.0.0'
     implementation 'com.adobe.marketing.mobile:campaign:1.+'
 }
-//apply plugin: 'com.android.application'
+//apply plugin: 'com.android.application'*/
