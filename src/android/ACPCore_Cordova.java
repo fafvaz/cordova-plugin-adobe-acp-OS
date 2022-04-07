@@ -13,7 +13,6 @@
 package com.adobe.marketing.mobile.cordova;
 
 import android.content.Context;
-import com.google.firebase.FirebaseApp;
 import android.support.annotation.NonNull;
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.Analytics;
