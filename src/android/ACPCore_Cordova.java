@@ -12,9 +12,6 @@
 
 package com.adobe.marketing.mobile.cordova;
 
-import android.content.Context;
-import com.google.firebase.FirebaseApp;
-import android.support.annotation.NonNull;
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.Analytics;
 import com.adobe.marketing.mobile.Event;
@@ -32,24 +29,9 @@ import com.adobe.marketing.mobile.Signal;
 import com.adobe.marketing.mobile.Target;
 import com.adobe.marketing.mobile.UserProfile;
 import com.adobe.marketing.mobile.WrapperType;
+import com.adobe.marketing.mobile.Places;
+import com.adobe.marketing.mobile.PlacesMonitor;
 import com.adobe.marketing.mobile.Campaign;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.InstanceIdResult;
-import android.os.Bundle;
-import android.util.Log;
-import android.widget.Toast;
-import android.os.Build;
-import android.app.Activity;
-import android.app.Application;
-import android.content.Context;
-import android.provider.Settings;
-import android.os.Bundle;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
@@ -76,8 +58,6 @@ public class ACPCore_Cordova extends CordovaPlugin {
     final static String METHOD_CORE_TRACK_STATE = "trackState";
     final static String METHOD_CORE_UPDATE_CONFIGURATION = "updateConfiguration";
     final static String METHOD_CORE_GET_APP_ID = "getAppId";
-    final static String METHOD_CORE_BEGIN_TEST = "beginTest";
-    final static String METHOD_CORE_SET_PUSH_IDENTIFIER = "setPushIdentifier";
 
     private String appId;
     private String initTime;
@@ -128,12 +108,6 @@ public class ACPCore_Cordova extends CordovaPlugin {
             return true;
         } else if (METHOD_CORE_GET_APP_ID.equals(action)) {
             this.getAppId(callbackContext);
-            return true;
-        } else if (METHOD_CORE_SET_PUSH_IDENTIFIER.equals(action)) {
-            this.setPushIdentifier(args, callbackContext);
-            return true;
-        } else if (METHOD_CORE_BEGIN_TEST.equals(action)) {
-            this.beginTest(callbackContext);
             return true;
         }
 
@@ -367,7 +341,6 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 try {
                     final String action = args.getString(0);
                     final HashMap<String, String> contextData = getStringMapFromJSON(args.getJSONObject(1));
-
                     MobileCore.trackAction(action, contextData);
                     callbackContext.success();
                 } catch (final Exception ex) {
@@ -390,6 +363,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
 
                     MobileCore.trackState(state, contextData);
                     callbackContext.success();
+                    System.out.println("Passei no trackstate");
                 } catch (final Exception ex) {
                     final String errorMessage = String.format("Exception in call to trackState: %s",
                             ex.getLocalizedMessage());
@@ -419,47 +393,11 @@ public class ACPCore_Cordova extends CordovaPlugin {
         });
     }
 
-    private void setPushIdentifier(final JSONArray args, final CallbackContext callbackContext) {
-        
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final String token = args.getString(0);
-                    System.out.println("setPushIdentifier: " + token);
-                    MobileCore.setPushIdentifier(token);
-                   
-                    callbackContext.success();
-                } catch (final Exception ex) {
-                    final String errorMessage = String.format("Exception in call to setPushIdentifier: %s",
-                            ex.getLocalizedMessage());
-                    MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
-                    callbackContext.error(errorMessage);
-                }
-            }
-        });
-    }
-
     private void getAppId(final CallbackContext callbackContext) {
-
-        System.out.println("getAppId");
- 
         cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
                 callbackContext.success(appId);
-            }
-        });
-    }
-
-    private void beginTest(final CallbackContext callbackContext) {
-
-        System.out.println("beginTest");
-
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                callbackContext.success("beginTest");
             }
         });
     }
@@ -520,147 +458,49 @@ public class ACPCore_Cordova extends CordovaPlugin {
     // ===============================================================
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
-
         super.initialize(cordova, webView);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
-
+        MobileCore.setLogLevel(LoggingMode.DEBUG);      
+        
         appId = cordova.getActivity().getString(cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName()));
-        Log.e("appId ", appId);
-         
-       final Context context = this.cordova.getActivity().getApplicationContext();   
-       MobileCore.setLogLevel(LoggingMode.VERBOSE);
-       MobileCore.setWrapperType(WrapperType.CORDOVA);
-
+ 
         try {
+            Campaign.registerExtension();
+            Places.registerExtension();
+            PlacesMonitor.registerExtension();
             Analytics.registerExtension();
             MobileServices.registerExtension();
-            Campaign.registerExtension();
-            UserProfile.registerExtension();
-            Lifecycle.registerExtension();
             Target.registerExtension();
+            UserProfile.registerExtension();                
             Identity.registerExtension();
+            Lifecycle.registerExtension();
             Signal.registerExtension();
-
-            MobileCore.lifecycleStart(null);
-
             MobileCore.start(new AdobeCallback() {
                 @Override
                 public void call(Object o) {
-                  MobileCore.lifecycleStart(null);
-                   
-                   MobileCore.configureWithAppID(appId);
-  
-                   collectPii();
-                   registerToken();
-                   
+                    MobileCore.configureWithAppID(appId);
                 }
             });
- 
+
         } catch (InvalidInitException e) {
-            Log.e("CampaignTestApp error", e.getMessage());
         }
-          
+
+        initTime = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date());
     }
+
     
-   
-    void registerToken() {
-
-       final Context context = this.cordova.getActivity().getApplicationContext();
-        FirebaseApp.initializeApp(context);
-  
-        FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
-            @Override 
-            public void onComplete(@NonNull Task<InstanceIdResult> task) {
-               
-                if (!task.isSuccessful()) {
-                    System.out.println("Message App getInstanceId failed: " + task.getException());
-                    return;
-                } 
-                
-                String token = task.getResult().getToken();
-                System.out.println("Got token: " +  token);
-
-                Thread t = new Thread() {
-                    @Override
-                    public void run() {
-                        super.run();
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
-                        MobileCore.setPushIdentifier(token);
-                        collectPii();
-                        
-                    }
-                };
-
-                t.start();
-            }
-        });
- 
-    }
- 
-    void collectPii(){ 
-        
-        Log.d("Core version ", MobileCore.extensionVersion());
-        Log.d("Campaign version ", Campaign.extensionVersion());
-        Log.d("UserProfile version ", UserProfile.extensionVersion());
-        Log.d("Identity version ", Identity.extensionVersion());
-        Log.d("Lifecycle version ", Lifecycle.extensionVersion());
-        Log.d("Signal version ", Signal.extensionVersion());
-
-        Thread t = new Thread() {
-            @Override
-            public void run() {
-                super.run();
-                try {
-                    Thread.sleep(10000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                System.out.println("--");
-                System.out.println("--");
-                System.out.println("--");
-                System.out.println("Collect PII");
-
-                System.out.println("Build.DEVICE: " + Build.DEVICE);
-                System.out.println("Build.DEVICE: " + Build.MODEL);
-                System.out.println("Build.DEVICE: " + Build.BRAND);
-                System.out.println("Build.DEVICE: " + Build.MANUFACTURER);
-                System.out.println("Build.DEVICE: " + Build.VERSION.RELEASE);
-
-                Map<String, String> linkageFields = new HashMap<>();
-                    
-                //linkageFields.put("pushPlatform", "gcm"); // fcm
-                linkageFields.put("cusFiscalNumber", "111111111");
-                //linkageFields.put("FiscalNumber", "205266649");
-                // linkageFields.put("marketingCloudId", "123");
-                // linkageFields.put("userKey", "rodrigo.santos@galp.com");
-                
-                MobileCore.collectPii(linkageFields);
-                Campaign.setLinkageFields(linkageFields);
-
-                
-            }
-        };
-
-        t.start();
-
-    }
- 
     @Override
     public void onPause(boolean multitasking) {
-        MobileCore.lifecyclePause();
         super.onPause(multitasking);
+        MobileCore.lifecyclePause();
     }
 
     @Override
     public void onResume(boolean multitasking) {
-        MobileCore.lifecycleStart(null);
         super.onResume(multitasking);
+        MobileCore.setApplication(this.cordova.getActivity().getApplication());
+        MobileCore.lifecycleStart(null);
     }
- 
-} 
+
+
+}

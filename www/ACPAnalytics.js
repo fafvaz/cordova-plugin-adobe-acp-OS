@@ -9,155 +9,155 @@
  governing permissions and limitations under the License.
  */
 
-var ACPAnalytics = (function() {
-    var exec = require('cordova/exec');
-	var ACPAnalytics = (typeof exports !== 'undefined') && exports || {};
-	var PLUGIN_NAME = "ACPAnalytics_Cordova";
-	// ===========================================================================
-	// public APIs
-	// ===========================================================================
+var ACPAnalytics = (function () {
+  var exec = require('cordova/exec');
+  var ACPAnalytics = (typeof exports !== 'undefined' && exports) || {};
+  var PLUGIN_NAME = 'ACPAnalytics_Cordova';
+  // ===========================================================================
+  // public APIs
+  // ===========================================================================
 
-    // Gets the current Analytics extension version.
-    ACPAnalytics.extensionVersion = function (success, error) {
-        var FUNCTION_NAME = "extensionVersion";
+  // Gets the current Analytics extension version.
+  ACPAnalytics.extensionVersion = function (success, error) {
+    var FUNCTION_NAME = 'extensionVersion';
 
-        if (success && !isFunction(success)) {
-            printNotAFunction("success", FUNCTION_NAME);
-            return;
-        }
+    if (success && !isFunction(success)) {
+      printNotAFunction('success', FUNCTION_NAME);
+      return;
+    }
 
-        if (error && !isFunction(error)) {
-            printNotAFunction("error", FUNCTION_NAME);
-            return;
-        }
+    if (error && !isFunction(error)) {
+      printNotAFunction('error', FUNCTION_NAME);
+      return;
+    }
 
-        exec(success, error, 'ACPAnalytics_Cordova', FUNCTION_NAME, []);
-    };
+    exec(success, error, PLUGIN_NAME, FUNCTION_NAME, []);
+  };
 
-    // Sends all queued hits to Analytics, regardless of the current hit batch settings.
-    ACPAnalytics.sendQueuedHits = function (success, error) {
-        var FUNCTION_NAME = "sendQueuedHits";
+  // Sends all queued hits to Analytics, regardless of the current hit batch settings.
+  ACPAnalytics.sendQueuedHits = function (success, error) {
+    var FUNCTION_NAME = 'sendQueuedHits';
 
-        if (success && !isFunction(success)) {
-            printNotAFunction("success", FUNCTION_NAME);
-            return;
-        }
+    if (success && !isFunction(success)) {
+      printNotAFunction('success', FUNCTION_NAME);
+      return;
+    }
 
-        if (error && !isFunction(error)) {
-            printNotAFunction("error", FUNCTION_NAME);
-            return;
-        }
+    if (error && !isFunction(error)) {
+      printNotAFunction('error', FUNCTION_NAME);
+      return;
+    }
 
-        exec(success, error, 'ACPAnalytics_Cordova', FUNCTION_NAME, []);
-    };
+    exec(success, error, PLUGIN_NAME, FUNCTION_NAME, []);
+  };
 
-    // Force delete, without sending to Analytics, all hits being stored or batched on the SDK.
-    ACPAnalytics.clearQueue = function (success, error) {
-        var FUNCTION_NAME = "clearQueue";
+  // Force delete, without sending to Analytics, all hits being stored or batched on the SDK.
+  ACPAnalytics.clearQueue = function (success, error) {
+    var FUNCTION_NAME = 'clearQueue';
 
-        if (success && !isFunction(success)) {
-            printNotAFunction("success", FUNCTION_NAME);
-            return;
-        }
+    if (success && !isFunction(success)) {
+      printNotAFunction('success', FUNCTION_NAME);
+      return;
+    }
 
-        if (error && !isFunction(error)) {
-            printNotAFunction("error", FUNCTION_NAME);
-            return;
-        }
-        exec(success, error, 'ACPAnalytics_Cordova', FUNCTION_NAME, []);
-    };
+    if (error && !isFunction(error)) {
+      printNotAFunction('error', FUNCTION_NAME);
+      return;
+    }
+    exec(success, error, PLUGIN_NAME, FUNCTION_NAME, []);
+  };
 
-    // Retrieves the total number of Analytics hits in the tracking queue.
-    ACPAnalytics.getQueueSize = function (success, error) {
-        var FUNCTION_NAME = "getQueueSize";
+  // Retrieves the total number of Analytics hits in the tracking queue.
+  ACPAnalytics.getQueueSize = function (success, error) {
+    var FUNCTION_NAME = 'getQueueSize';
 
-        if (success && !isFunction(success)) {
-            printNotAFunction("success", FUNCTION_NAME);
-            return;
-        }
+    if (success && !isFunction(success)) {
+      printNotAFunction('success', FUNCTION_NAME);
+      return;
+    }
 
-        if (error && !isFunction(error)) {
-            printNotAFunction("error", FUNCTION_NAME);
-            return;
-        }
+    if (error && !isFunction(error)) {
+      printNotAFunction('error', FUNCTION_NAME);
+      return;
+    }
 
-        exec(success, error, 'ACPAnalytics_Cordova', FUNCTION_NAME, []);
-    };
+    exec(success, error, PLUGIN_NAME, FUNCTION_NAME, []);
+  };
 
-    // Retrieves the Analytics tracking identifier that is generated for this app/device instance.
-    ACPAnalytics.getTrackingIdentifier = function (success, error) {
-        var FUNCTION_NAME = "getTrackingIdentifier";
+  // Retrieves the Analytics tracking identifier that is generated for this app/device instance.
+  ACPAnalytics.getTrackingIdentifier = function (success, error) {
+    var FUNCTION_NAME = 'getTrackingIdentifier';
 
-        if (success && !isFunction(success)) {
-            printNotAFunction("success", FUNCTION_NAME);
-            return;
-        }
+    if (success && !isFunction(success)) {
+      printNotAFunction('success', FUNCTION_NAME);
+      return;
+    }
 
-        if (error && !isFunction(error)) {
-            printNotAFunction("error", FUNCTION_NAME);
-            return;
-        }
-        exec(success, error, 'ACPAnalytics_Cordova', FUNCTION_NAME, []);
-    };
+    if (error && !isFunction(error)) {
+      printNotAFunction('error', FUNCTION_NAME);
+      return;
+    }
+    exec(success, error, PLUGIN_NAME, FUNCTION_NAME, []);
+  };
 
-    // Gets a custom Analytics visitor identifier.
-    ACPAnalytics.getVisitorIdentifier = function (success, error) {
-        var FUNCTION_NAME = "getVisitorIdentifier";
+  // Gets a custom Analytics visitor identifier.
+  ACPAnalytics.getVisitorIdentifier = function (success, error) {
+    var FUNCTION_NAME = 'getVisitorIdentifier';
 
-        if (success && !isFunction(success)) {
-            printNotAFunction("success", FUNCTION_NAME);
-            return;
-        }
+    if (success && !isFunction(success)) {
+      printNotAFunction('success', FUNCTION_NAME);
+      return;
+    }
 
-        if (error && !isFunction(error)) {
-            printNotAFunction("error", FUNCTION_NAME);
-            return;
-        }
-        exec(success, error, 'ACPAnalytics_Cordova', FUNCTION_NAME, []);
-    };
+    if (error && !isFunction(error)) {
+      printNotAFunction('error', FUNCTION_NAME);
+      return;
+    }
+    exec(success, error, PLUGIN_NAME, FUNCTION_NAME, []);
+  };
 
-    // Sets a custom Analytics visitor identifier.
-    ACPAnalytics.setVisitorIdentifier = function (visitorId, success, error) {
-        var FUNCTION_NAME = "setVisitorIdentifier";
+  // Sets a custom Analytics visitor identifier.
+  ACPAnalytics.setVisitorIdentifier = function (visitorId, success, error) {
+    var FUNCTION_NAME = 'setVisitorIdentifier';
 
-        if (!isString(visitorId)) {
-            printNotAString("visitorId", FUNCTION_NAME);
-            return;
-        }
+    if (!isString(visitorId)) {
+      printNotAString('visitorId', FUNCTION_NAME);
+      return;
+    }
 
-        if (success && !isFunction(success)) {
-            printNotAFunction("success", FUNCTION_NAME);
-            return;
-        }
+    if (success && !isFunction(success)) {
+      printNotAFunction('success', FUNCTION_NAME);
+      return;
+    }
 
-        if (error && !isFunction(error)) {
-            printNotAFunction("error", FUNCTION_NAME);
-            return;
-        }
+    if (error && !isFunction(error)) {
+      printNotAFunction('error', FUNCTION_NAME);
+      return;
+    }
 
-        exec(success, error, 'ACPAnalytics_Cordova', FUNCTION_NAME, [visitorId]);
-    };
+    exec(success, error, PLUGIN_NAME, FUNCTION_NAME, [visitorId]);
+  };
 
-	return ACPAnalytics;
-}());
+  return ACPAnalytics;
+})();
 
 // ===========================================================================
 // helper functions
 // ===========================================================================
 function isString(value) {
-    return typeof value === 'string' || value instanceof String;
+  return typeof value === 'string' || value instanceof String;
 }
 
 function printNotAString(paramName, functionName) {
-    console.log("Ignoring call to '" + functionName + "'. The '" + paramName + "' parameter is required to be a String.");
+  console.log("Ignoring call to '" + functionName + "'. The '" + paramName + "' parameter is required to be a String.");
 }
 
-function isFunction (value) {
-    return typeof value === 'function';
+function isFunction(value) {
+  return typeof value === 'function';
 }
 
 function printNotAFunction(paramName, functionName) {
-    console.log("Ignoring call to '" + functionName + "'. The '" + paramName + "' parameter is required to be a function.");
+  console.log("Ignoring call to '" + functionName + "'. The '" + paramName + "' parameter is required to be a function.");
 }
 
 module.exports = ACPAnalytics;

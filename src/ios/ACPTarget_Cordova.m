@@ -20,8 +20,6 @@
 #import <ACPTarget/ACPTargetPrefetchObject.h>
 #import <Cordova/CDVPluginResult.h>
 
- 
-
 
 @interface ACPTarget_Cordova : CDVPlugin
 
