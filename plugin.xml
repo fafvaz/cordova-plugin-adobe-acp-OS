@@ -7,6 +7,7 @@
     <keywords>cordova,adobe,core,acpcore,target,acptarget,analytics,acpanalytics,marketing</keywords>
 
     <preference name="APP_ID" default="6495a7895c9a/78672f12ac93/launch-86a02caa8ebf"/>
+    <preference name="TYPE_ID" default="fiscalnumber"/>
 
     <!-- use "ACPCore" to access the ACPCore APIs in javascript -->
     <js-module name="cordova-acpcore" src="www/ACPCore.js">
@@ -49,6 +50,9 @@
     <platform name="android">
         <config-file target="res/values/strings.xml" parent="/*">
             <string name="AppId">$APP_ID</string>
+        </config-file>
+        <config-file target="res/values/strings.xml" parent="/*">
+            <string name="TypeId">$TYPE_ID</string>
         </config-file>
         <config-file parent="/*" target="res/xml/config.xml">
             <feature name="ACPCore_Cordova">
@@ -143,6 +147,9 @@
     <platform name="ios">
         <config-file target="*-Info.plist" parent="AppId">
             <string>$APP_ID</string>
+        </config-file>
+        <config-file target="*-Info.plist" parent="TypeId">
+            <string>$TYPE_ID</string>
         </config-file>
         <config-file target="*-Info.plist" parent="NSLocationAlwaysUsageDescription">
             <string>Location permission necessary for geofencing with adobe experience</string>

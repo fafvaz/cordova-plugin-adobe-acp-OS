@@ -27,11 +27,15 @@
 
 - (void)extensionVersion:(CDVInvokedUrlCommand*)command;
 - (void)setPushIdentifier:(CDVInvokedUrlCommand*)command;
+- (void) getTypeId:(CDVInvokedUrlCommand*)command;
+
 
 
 @end
 
 @implementation ACPCampaign_Cordova
+
+NSString *typeId;
 
 - (void)extensionVersion:(CDVInvokedUrlCommand*)command
 {
@@ -55,16 +59,18 @@
     UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];  
       center.delegate = self;  
       [center requestAuthorizationWithOptions:(UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionBadge) completionHandler:^(BOOL granted, NSError * _Nullable error) {
+
+         typeId = [[[NSBundle mainBundle] infoDictionary] valueForKey:@"TypeId"];
             
         if( !error ) {
             // required to get the app to do anything at all about push notifications  
             dispatch_async(dispatch_get_main_queue(), ^{
                 NSString *deviceToken = command.arguments[0];
-                NSString *fiscalNumber = command.arguments[1];
+                NSString *valueTypeId = command.arguments[1];
 
                 NSData* data = [deviceToken dataUsingEncoding:NSUTF8StringEncoding];
 
-                [ACPCore collectPii:@{@"fiscalnumber": fiscalNumber}]; 
+                [ACPCore collectPii:@{typeId: valueTypeId}]; 
                 [[UIApplication sharedApplication] registerForRemoteNotifications];
             });
              
@@ -82,6 +88,13 @@
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void) getTypeId:(CDVInvokedUrlCommand*)command {
+    [self.commandDelegate runInBackground:^{
+         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:typeId];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }];
 }
 
 @end

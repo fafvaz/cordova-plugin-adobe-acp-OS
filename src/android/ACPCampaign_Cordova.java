@@ -71,6 +71,10 @@ public class ACPCampaign_Cordova extends CordovaPlugin {
 
     //SetPushIdentifier
     private void setPushIdentifier(final JSONArray args, final CallbackContext callbackContext) {
+
+
+        typeId = cordova.getActivity().getString(cordova.getActivity().getResources().getIdentifier("TypeId", "string", cordova.getActivity().getPackageName()));
+
         cordova.getThreadPool().execute(new Runnable() {           
             @Override
             public void run() {
@@ -81,9 +85,9 @@ public class ACPCampaign_Cordova extends CordovaPlugin {
                 try {
 
                     String deviceToken = args.getString(0);
-                    String fiscalNumber = args.getString(1);
+                    String valueTypeId = args.getString(1);
                     HashMap<String, String> data = new HashMap<>();
-                    data.put("fiscalnumber", fiscalNumber);
+                    data.put(typeId, valueTypeId);
                     MobileCore.setPushIdentifier(deviceToken);
                     MobileCore.collectPii(data);
                     callbackContext.success();
