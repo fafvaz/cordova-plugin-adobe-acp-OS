@@ -38,7 +38,7 @@ import java.util.HashMap;
  */
 public class ACPCampaign_Cordova extends CordovaPlugin {
 
-
+     private String typeId;
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
