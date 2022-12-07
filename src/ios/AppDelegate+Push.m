@@ -1,6 +1,6 @@
 
 #import "AppDelegate+Push.h"
-#import "ACPCore.h"
+#import <ACPCore/ACPCore.h>
 #import <ACPCampaign/ACPCampaign.h>
 #import <objc/runtime.h>
 
