@@ -1,3 +1,10 @@
+repositories{
+    jcenter()
+    flatDir{
+        dirs 'libs'
+    }
+}
+
 dependencies {
     // adobe
     implementation 'com.adobe.marketing.mobile:analytics:1.+' 
