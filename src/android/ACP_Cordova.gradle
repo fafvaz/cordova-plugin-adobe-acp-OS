@@ -1,3 +1,10 @@
+repositories{
+    jcenter()
+    flatDir{
+        dirs 'libs'
+    }
+}
+
 dependencies {
     // adobe
     implementation 'com.adobe.marketing.mobile:analytics:1.+' 
@@ -6,7 +13,7 @@ dependencies {
     implementation 'com.adobe.marketing.mobile:userprofile:1.+' 
     implementation 'com.adobe.marketing.mobile:sdk-core:1.+'
     api 'com.adobe.marketing.mobile:places:1.+'
-    api 'com.adobe.marketing.mobile:places-monitor:2.+'
+    api(name:'places-monitor-android-phone-release', ext:'aar')
     implementation 'com.google.android.gms:play-services-location:16.0.0'
     implementation 'com.adobe.marketing.mobile:campaign:1.+'
 }

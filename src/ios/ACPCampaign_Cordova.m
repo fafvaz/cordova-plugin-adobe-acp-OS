@@ -15,10 +15,10 @@
 
 #import <ACPCampaign/ACPCampaign.h>
 #import <Cordova/CDVPluginResult.h>
-#import "ACPCore.h"
-#import "ACPIdentity.h"
-#import "ACPLifecycle.h"
-#import "ACPSignal.h"
+#import <ACPCore/ACPCore.h>
+#import <ACPCore/ACPIdentity.h>
+#import <ACPCore/ACPLifecycle.h>
+#import <ACPCore/ACPSignal.h>
 #import "ACPUserProfile.h"
 
 @import UserNotifications;
