@@ -45,6 +45,10 @@
     <js-module name="cordova-ACPCampaign" src="www/ACPCampaign.js">
         <clobbers target="ACPCampaign" />
     </js-module>
+     <!-- use "AEPAssurance" to access the plugin APIs in javascript -->
+    <js-module name="cordova-aepassurance" src="www/AEPAssurance.js">
+        <clobbers target="AEPAssurance" />
+    </js-module>
 
     <!-- configure android platform -->
     <platform name="android">
@@ -108,6 +112,12 @@
                 <param name="onload" value="true" />
             </feature>
         </config-file>
+         <config-file parent="/*" target="res/xml/config.xml">
+            <feature name="AEPAssurance_Cordova">
+                <param name="android-package" value="com.adobe.marketing.mobile.cordova.AEPAssurance_Cordova" />
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
         <!-- add required permissions to AndroidManifest.xml -->
         <config-file parent="/manifest" target="AndroidManifest.xml">
             <uses-permission android:name="android.permission.INTERNET" />
@@ -139,6 +149,7 @@
         <source-file src="src/android/ACPPlaces_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPPlacesMonitor_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPCampaign_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
+        <source-file src="src/android/AEPAssurance_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <!-- dependencies managed through included gradle file -->
         <framework custom="true" src="src/android/ACP_Cordova.gradle" type="gradleReference" />
         <framework custom="true" src="src/android/AEPAssurance_Cordova.gradle" type="gradleReference" />
@@ -216,6 +227,12 @@
                 <param name="onload" value="true" />
             </feature>
         </config-file>
+         <config-file parent="/*" target="config.xml">
+            <feature name="AEPAssurance_Cordova">
+                <param name="ios-package" value="AEPAssurance_Cordova" />
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
 
         <!-- plugin source -->
         <source-file src="src/ios/ACPCore_Cordova.m" />
@@ -228,6 +245,7 @@
         <source-file src="src/ios/ACPPlacesMonitor_Cordova.m" />
         <source-file src="src/ios/ACPCampaign_Cordova.m" />
         <source-file src="src/ios/AppDelegate+Push.m"/>
+        <source-file src="src/ios/AEPAssurance_Cordova.m" />
 
         <!-- header -->
         <header-file src="src/ios/AppDelegate+Push.h" />
