@@ -32,6 +32,8 @@ import com.adobe.marketing.mobile.WrapperType;
 import com.adobe.marketing.mobile.Places;
 import com.adobe.marketing.mobile.PlacesMonitor;
 import com.adobe.marketing.mobile.Campaign;
+import com.adobe.marketing.mobile.Assurance;
+
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
@@ -475,6 +477,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
             Identity.registerExtension();
             Lifecycle.registerExtension();
             Signal.registerExtension();
+            Assurance.registerExtension();  
             MobileCore.start(new AdobeCallback() {
                 @Override
                 public void call(Object o) {
