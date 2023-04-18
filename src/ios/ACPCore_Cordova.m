@@ -22,6 +22,7 @@
 #import <ACPPlaces/ACPPlaces.h>
 #import <ACPPlacesMonitor/ACPPlacesMonitor.h>
 #import <ACPCampaign/ACPCampaign.h>
+#import <AEPAssurance/AEPAssurance.h>
 #import <Cordova/CDV.h>
 #import <Foundation/Foundation.h>
 
@@ -289,6 +290,7 @@
     [ACPIdentity registerExtension];
     [ACPLifecycle registerExtension];
     [ACPSignal registerExtension];
+    [AEPAssurance registerExtension];
     [ACPCore start:^{
         [ACPCore lifecycleStart:nil];
     }];
