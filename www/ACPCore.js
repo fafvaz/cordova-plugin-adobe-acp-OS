@@ -43,6 +43,14 @@ var ACPCore = (function () {
   // ===========================================================================
   // public APIs
   // ===========================================================================
+  ACPCore.getPushNotificationStatus = function (success, fail) {
+    return exec(success, fail, PLUGIN_NAME, "getPushNotificationStatus", []);
+  };
+  
+  ACPCore.requestPushNotificationPermission = function (success, fail) {
+      return exec(success, fail, PLUGIN_NAME, "requestPushNotificationPermission", []);
+  };
+  
   ACPCore.dispatchEvent = function (sdkEvent, success, fail) {
     var FUNCTION_NAME = 'dispatchEvent';
 
