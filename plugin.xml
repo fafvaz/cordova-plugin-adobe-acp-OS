@@ -124,14 +124,13 @@
             <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
             <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
             <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-            
-            
           <!--  <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" /> -->
         </config-file>
 
         <!-- add receivers to AndroidManifest.xml -->
         <config-file parent="/manifest/application" target="AndroidManifest.xml">
             <receiver android:name="com.adobe.marketing.mobile.LocalNotificationHandler" />
+            <receiver android:name=".NotificationDismissedReceiver" />
             <activity android:name="com.adobe.marketing.mobile.FullscreenMessageActivity" />
             <activity android:name="com.adobe.marketing.mobile.MessageFullScreenActivity"
                       android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"
@@ -140,8 +139,9 @@
             <receiver android:name="com.adobe.marketing.mobile.MessageNotificationHandler" />
         </config-file>
 
-
-
+        <!-- add service-->
+        <source-file src="src/android/ACPFirebaseMessagingService.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
+ 
         <!-- plugin source -->
         <source-file src="src/android/ACPCore_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPIdentity_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />

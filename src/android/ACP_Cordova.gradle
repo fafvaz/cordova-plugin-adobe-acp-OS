@@ -16,4 +16,6 @@ dependencies {
     api(name:'places-monitor-android-phone-release', ext:'aar')
     implementation 'com.google.android.gms:play-services-location:16.0.0'
     implementation 'com.adobe.marketing.mobile:campaign:1.+'
+    implementation 'com.google.firebase:firebase-messaging:19.0.1'
+    implementation 'com.google.firebase:firebase-core:17.0.1'
 }
