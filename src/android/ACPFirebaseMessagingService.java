@@ -1,5 +1,6 @@
 package com.adobe.marketing.mobile.cordova;
 
+import android.content.Intent;
 import android.os.Bundle;
 import com.adobe.marketing.mobile.MobileCore;
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -14,6 +15,8 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
     // Aqui você lida com o recebimento da notificação push
     // Extrai as informações necessárias do objeto remoteMessage, como deliveryId, messageId e acsDeliveryTracking
 
+    System.out.println("onMessageReceived");
+
     Map<String, String> data = remoteMessage.getData();
     String deliveryId = data.get("_dId");
     String messageId = data.get("_mId");
@@ -22,6 +25,15 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
     if (acsDeliveryTracking == null) {
       acsDeliveryTracking = "on";
     }
+
+    System.out.println("deliveryId");
+    System.out.println(deliveryId);
+
+    System.out.println("messageId");
+    System.out.println(messageId);
+
+    System.out.println("acsDeliveryTracking");
+    System.out.println(acsDeliveryTracking);
 
     // Verifica se a notificação push contém os dados necessários para o rastreamento
     if (deliveryId != null && messageId != null && acsDeliveryTracking.equals("on")) {
@@ -36,13 +48,16 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
       MobileCore.trackAction("push_impression", contextData);
 
       // Rastreia o evento de clique da notificação push usando o Adobe Mobile SDK
-      contextData.put("action", "3"); // 3 representa o clique (click)
+      contextData.put("action", "2"); // 2 representa o clique (click)
       MobileCore.trackAction("push_click", contextData);
 
       // Rastreia o evento de abertura da notificação push usando o Adobe Mobile SDK
-      contextData.put("action", "2"); // 2 representa a abertura (open)
+      contextData.put("action", "1"); // 1 representa a abertura (open)
       MobileCore.trackAction("push_open", contextData);
+
+       
     }
 
   }
+ 
 }
