@@ -11,45 +11,29 @@
 
 package com.adobe.marketing.mobile.cordova;
 
-import android.app.Activity;
-import android.app.Application;
-import android.os.Bundle;
-import android.util.Log;
-import android.os.Handler;
-import android.os.Looper;
+import android.net.Uri;
 
-
-import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CallbackContext;
-import org.apache.cordova.PluginResult;
-
-import com.adobe.marketing.mobile.Target;
-import com.adobe.marketing.mobile.TargetOrder;
-import com.adobe.marketing.mobile.TargetParameters;
-import com.adobe.marketing.mobile.TargetRequest;
-import com.adobe.marketing.mobile.TargetProduct;
-import com.adobe.marketing.mobile.TargetPrefetch;
 import com.adobe.marketing.mobile.AdobeCallback;
-import com.adobe.marketing.mobile.Event;
-import com.adobe.marketing.mobile.Event.Builder;
-import com.adobe.marketing.mobile.ExtensionError;
-import com.adobe.marketing.mobile.ExtensionErrorCallback;
 import com.adobe.marketing.mobile.LoggingMode;
 import com.adobe.marketing.mobile.MobileCore;
-import com.adobe.marketing.mobile.MobilePrivacyStatus;
+import com.adobe.marketing.mobile.Target;
+import com.adobe.marketing.mobile.target.TargetOrder;
+import com.adobe.marketing.mobile.target.TargetParameters;
+import com.adobe.marketing.mobile.target.TargetPrefetch;
+import com.adobe.marketing.mobile.target.TargetProduct;
+import com.adobe.marketing.mobile.target.TargetRequest;
+
 import org.apache.cordova.CallbackContext;
-import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import java.util.HashMap;
-import java.util.List;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
-import android.net.Uri;
+import java.util.List;
 import java.util.Map;
 
 
@@ -138,59 +122,40 @@ public class ACPTarget_Cordova extends CordovaPlugin {
     }
 	
     private void getTntId(final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-				Target.getTntId(new AdobeCallback<String>() {
-				  @Override
-				  public void call(String tntId) {
-					callbackContext.success(tntId);
-				  }
-				});
-            }
-        });
+        cordova.getThreadPool().execute(() -> Target.getTntId(callbackContext::success));
     }
 	
 	private void resetExperience(final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                Target.resetExperience();
-                callbackContext.success();
-            }
+        cordova.getThreadPool().execute(() -> {
+            Target.resetExperience();
+            callbackContext.success();
         });
     }
 	
 	private void setThirdPartyId(final JSONArray args, final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final String thirdPartyId = args.getString(0);
-					Target.setThirdPartyId(thirdPartyId);
-                    callbackContext.success();
-                } catch (final Exception ex) {
-                    final String errorMessage = String.format("Exception in call to setThirdPartyId: %s", ex.getLocalizedMessage());
-                    MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
-                    callbackContext.error(errorMessage);
-                }
+        cordova.getThreadPool().execute(() -> {
+            try {
+                final String thirdPartyId = args.getString(0);
+                Target.setThirdPartyId(thirdPartyId);
+                callbackContext.success();
+            } catch (final Exception ex) {
+                final String errorMessage = String.format("Exception in call to setThirdPartyId: %s", ex.getLocalizedMessage());
+                MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
+                callbackContext.error(errorMessage);
             }
         });
     }
 	
 	private void setPreviewRestartDeepLink(final JSONArray args, final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final String deepLink = args.getString(0);
-					Target.setPreviewRestartDeepLink(Uri.parse(deepLink));
-                    callbackContext.success();
-                } catch (final Exception ex) {
-                    final String errorMessage = String.format("Exception in call to setThirdPartyId: %s", ex.getLocalizedMessage());
-                    MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
-                    callbackContext.error(errorMessage);
-                }
+        cordova.getThreadPool().execute(() -> {
+            try {
+                final String deepLink = args.getString(0);
+                Target.setPreviewRestartDeepLink(Uri.parse(deepLink));
+                callbackContext.success();
+            } catch (final Exception ex) {
+                final String errorMessage = String.format("Exception in call to setThirdPartyId: %s", ex.getLocalizedMessage());
+                MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
+                callbackContext.error(errorMessage);
             }
         });
     }
@@ -219,43 +184,34 @@ public class ACPTarget_Cordova extends CordovaPlugin {
 	
 	
 	private void locationClicked(final JSONArray args, final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-					TargetParameters locationParameters = getTargetParametersFromJson(args);
-					
-					String mboxName = args.getString(0);
+        cordova.getThreadPool().execute(() -> {
+            try {
+                TargetParameters locationParameters = getTargetParametersFromJson(args);
 
-					Target.locationClicked(mboxName, locationParameters);
-					
-                    callbackContext.success();
-                } catch (final Exception ex) {
-                    final String errorMessage = String.format("Exception in call to locationClicked: %s", ex.getLocalizedMessage());
-                    callbackContext.error(errorMessage);
-                }
+                String mboxName = args.getString(0);
+
+                Target.clickedLocation(mboxName, locationParameters);
+
+                callbackContext.success();
+            } catch (final Exception ex) {
+                final String errorMessage = String.format("Exception in call to locationClicked: %s", ex.getLocalizedMessage());
+                callbackContext.error(errorMessage);
             }
         });
     }
 	
 	private void locationsDisplayed(final JSONArray args, final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    
-					List<String> mboxList = getListFromArray(args.getJSONArray(0));
+        cordova.getThreadPool().execute(() -> {
+            try {
 
-		
-					TargetParameters parameters = getTargetParametersFromJson(args);
+                List<String> mboxList = getListFromArray(args.getJSONArray(0));
+                TargetParameters parameters = getTargetParametersFromJson(args);
+                Target.displayedLocations(mboxList, parameters);
 
-                    Target.locationsDisplayed(mboxList, parameters);
-					
-                    callbackContext.success();
-                } catch (final Exception ex) {
-                    final String errorMessage = String.format("Exception in call to locationsDisplayed: %s", ex.getLocalizedMessage());
-                    callbackContext.error(errorMessage);
-                }
+                callbackContext.success();
+            } catch (final Exception ex) {
+                final String errorMessage = String.format("Exception in call to locationsDisplayed: %s", ex.getLocalizedMessage());
+                callbackContext.error(errorMessage);
             }
         });
     }

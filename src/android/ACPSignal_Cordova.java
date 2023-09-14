@@ -37,12 +37,9 @@ public class ACPSignal_Cordova extends CordovaPlugin {
     // Signal Methods
     // ===============================================================
     private void extensionVersionSignal(final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                final String version = Signal.extensionVersion();
-                callbackContext.success(version);
-            }
+        cordova.getThreadPool().execute(() -> {
+            final String version = Signal.extensionVersion();
+            callbackContext.success(version);
         });
     }
 }

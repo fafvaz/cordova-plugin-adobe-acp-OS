@@ -10,24 +10,25 @@
  */
 
 package com.adobe.marketing.mobile.cordova;
-import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CallbackContext;
 
+import android.location.Location;
+
+import com.adobe.marketing.mobile.AdobeCallback;
+import com.adobe.marketing.mobile.Places;
+import com.adobe.marketing.mobile.places.PlacesAuthorizationStatus;
+import com.adobe.marketing.mobile.places.PlacesPOI;
+import com.google.android.gms.location.Geofence;
+
+import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.LOG;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import com.adobe.marketing.mobile.AdobeCallback;
-import com.adobe.marketing.mobile.Places;
-import com.adobe.marketing.mobile.PlacesAuthorizationStatus;
-import com.adobe.marketing.mobile.PlacesPOI;
-import com.adobe.marketing.mobile.PlacesRequestError;
 
-import java.util.List;
-import java.util.Iterator;
 import java.util.HashMap;
-import android.location.Location;
-import com.google.android.gms.location.Geofence;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * This class echoes a string called from JavaScript.
@@ -86,66 +87,42 @@ public class ACPPlaces_Cordova extends CordovaPlugin {
     }
 
     private void clear(final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                Places.clear();
-                callbackContext.success();
-            }
+        cordova.getThreadPool().execute(() -> {
+            Places.clear();
+            callbackContext.success();
         });
     }
 
     private void extensionVersion(final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                String extensionVersion = Places.extensionVersion();
-                if (extensionVersion.length() > 0) {
-                    callbackContext.success(extensionVersion);
-                } else {
-                    callbackContext.error("Extension version is null or empty");
-                }
+        cordova.getThreadPool().execute(() -> {
+            String extensionVersion = Places.extensionVersion();
+            if (extensionVersion.length() > 0) {
+                callbackContext.success(extensionVersion);
+            } else {
+                callbackContext.error("Extension version is null or empty");
             }
         });
     }
 
     private void getCurrentPointsOfInterest(final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                Places.getCurrentPointsOfInterest(new AdobeCallback<List<PlacesPOI>>() {
-                    @Override
-                    public void call(List<PlacesPOI> pois) {
-                        callbackContext.success(generatePOIString(pois));
-                    }
-                });
-            }
-        });
+        cordova.getThreadPool().execute(() -> Places.getCurrentPointsOfInterest(pois -> callbackContext.success(generatePOIString(pois))));
     }
 
     private void getLastKnownLocation(final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                Places.getLastKnownLocation(new AdobeCallback<Location>() {
-                    @Override
-                    public void call(Location location) {
-                        if(location != null) {
-                            JSONObject json = new JSONObject();;
-                            try {
-                                json.put(LATITUDE, location.getLatitude());
-                                json.put(LONGITUDE, location.getLongitude());
-                            } catch (JSONException e){
-                                LOG.d(LOG_TAG, "Error putting data into JSON: " + e.getLocalizedMessage());
-                            }
-                            callbackContext.success(json.toString());
-                        } else {
-                            callbackContext.error("Error retrieving last known location.");
-                        }
-                    }
-                });
+        cordova.getThreadPool().execute(() -> Places.getLastKnownLocation(location -> {
+            if(location != null) {
+                JSONObject json = new JSONObject();;
+                try {
+                    json.put(LATITUDE, location.getLatitude());
+                    json.put(LONGITUDE, location.getLongitude());
+                } catch (JSONException e){
+                    LOG.d(LOG_TAG, "Error putting data into JSON: " + e.getLocalizedMessage());
+                }
+                callbackContext.success(json.toString());
+            } else {
+                callbackContext.error("Error retrieving last known location.");
             }
-        });
+        }));
     }
 
     private void getNearbyPointsOfInterest(final JSONArray args, final CallbackContext callbackContext) {
@@ -174,12 +151,7 @@ public class ACPPlaces_Cordova extends CordovaPlugin {
                     public void call(List<PlacesPOI> pois) {
                         callbackContext.success(generatePOIString(pois));
                     }
-                }, new AdobeCallback<PlacesRequestError>() {
-                    @Override
-                    public void call(PlacesRequestError placesRequestError) {
-                        callbackContext.error(placesRequestError.toString());
-                    }
-                });
+                }, placesRequestError -> callbackContext.error(placesRequestError.toString()));
             }
         });
     }

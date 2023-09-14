@@ -32,7 +32,6 @@ import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.MobilePrivacyStatus;
 import com.adobe.marketing.mobile.MobileServices;
 import com.adobe.marketing.mobile.Places;
-import com.adobe.marketing.mobile.PlacesMonitor;
 import com.adobe.marketing.mobile.Signal;
 import com.adobe.marketing.mobile.Target;
 import com.adobe.marketing.mobile.UserProfile;
@@ -554,7 +553,6 @@ public class ACPCore_Cordova extends CordovaPlugin {
         try {
             Campaign.registerExtension();
             Places.registerExtension();
-            PlacesMonitor.registerExtension();
             Analytics.registerExtension();
             MobileServices.registerExtension();
             Target.registerExtension();
@@ -563,12 +561,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
             Lifecycle.registerExtension();
             Signal.registerExtension();
             Assurance.registerExtension();  
-            MobileCore.start(new AdobeCallback() {
-                @Override
-                public void call(Object o) {
-                    MobileCore.configureWithAppID(appId);
-                }
-            });
+            MobileCore.start((AdobeCallback) o -> MobileCore.configureWithAppID(appId));
             
         } catch (InvalidInitException e) {
         }
