@@ -78,6 +78,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
     final static String METHOD_CORE_GET_APP_ID = "getAppId";
     final static String METHOD_CORE_BEGIN_TEST = "beginTest";
     final static String METHOD_CORE_SET_PUSH_IDENTIFIER = "setPushIdentifier";
+    final static String METHOD_CORE_GET_TOKEN = "getToken";
 
     private String appId;
     private String initTime;
@@ -131,6 +132,9 @@ public class ACPCore_Cordova extends CordovaPlugin {
             return true;
         } else if (METHOD_CORE_SET_PUSH_IDENTIFIER.equals(action)) {
             this.setPushIdentifier(args, callbackContext);
+            return true;
+        }else if (METHOD_CORE_GET_TOKEN.equals(action)) {
+            this.getToken(callbackContext);
             return true;
         } else if (METHOD_CORE_BEGIN_TEST.equals(action)) {
             this.beginTest(callbackContext);
@@ -433,6 +437,42 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 } catch (final Exception ex) {
                     final String errorMessage = String.format("Exception in call to setPushIdentifier: %s",
                             ex.getLocalizedMessage());
+                    MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
+                    callbackContext.error(errorMessage);
+                }
+            }
+        });
+    }
+
+ private void getToken(final CallbackContext callbackContext) {
+        
+        cordova.getThreadPool().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+               
+                     final Context context = this.cordova.getActivity().getApplicationContext();
+                     FirebaseApp.initializeApp(context);
+               
+                     FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                         @Override 
+                         public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                            
+                             if (!task.isSuccessful()) {
+                                 System.out.println("Message App getInstanceId failed: " + task.getException());
+                                 return;
+                             } 
+                             
+                             String token = task.getResult().getToken();
+                             System.out.println("Get token: " +  token);
+                   
+                             callbackContext.success(token);
+              
+                         }
+                     });
+                   
+                } catch (final Exception ex) {
+                    final String errorMessage = String.format("Exception in call to getToken", ex.getLocalizedMessage());
                     MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
                     callbackContext.error(errorMessage);
                 }
