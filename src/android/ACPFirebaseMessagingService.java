@@ -39,21 +39,34 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
     if (deliveryId != null && messageId != null && acsDeliveryTracking.equals("on")) {
       // Cria um HashMap para armazenar os dados de contexto
       HashMap<String, String> contextData = new HashMap<>();
+      HashMap<String, Object> contextDataObj = new HashMap<>();
       // Adiciona os dados necessários ao HashMap
       contextData.put("deliveryId", deliveryId);
       contextData.put("broadlogId", messageId);
 
+
+      contextDataObj.put("deliveryId", deliveryId);
+      contextDataObj.put("broadlogId", messageId);
+
+
       // Rastreia o evento de impressão da notificação push usando o Adobe Mobile SDK
       contextData.put("action", "7"); // 7 representa a impressão (impression)
+      contextDataObj.put("action", "7"); // 7 representa a impressão (impression)
+
       MobileCore.trackAction("push_impression", contextData);
+      MobileCore.collectMessageInfo(contextDataObj);
 
       // Rastreia o evento de clique da notificação push usando o Adobe Mobile SDK
       contextData.put("action", "2"); // 2 representa o clique (click)
+      contextDataObj.put("action", "2"); // 2 representa o clique (click)
       MobileCore.trackAction("push_click", contextData);
+      MobileCore.collectMessageInfo(contextDataObj);
 
       // Rastreia o evento de abertura da notificação push usando o Adobe Mobile SDK
       contextData.put("action", "1"); // 1 representa a abertura (open)
+      contextDataObj.put("action", "1"); // 1 representa a abertura (open)
       MobileCore.trackAction("push_open", contextData);
+      MobileCore.collectMessageInfo(contextDataObj);
 
        
     }
