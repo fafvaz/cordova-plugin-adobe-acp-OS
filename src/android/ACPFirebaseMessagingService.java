@@ -45,15 +45,15 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
 
       // Rastreia o evento de impressão da notificação push usando o Adobe Mobile SDK
       contextData.put("action", "7"); // 7 representa a impressão (impression)
-      MobileCore.trackAction("push_impression", contextData);
+      MobileCore.trackAction("tracking", contextData);
 
       // Rastreia o evento de clique da notificação push usando o Adobe Mobile SDK
       contextData.put("action", "2"); // 2 representa o clique (click)
-      MobileCore.trackAction("push_click", contextData);
+      MobileCore.trackAction("tracking", contextData);
 
       // Rastreia o evento de abertura da notificação push usando o Adobe Mobile SDK
       contextData.put("action", "1"); // 1 representa a abertura (open)
-      MobileCore.trackAction("push_open", contextData);
+      MobileCore.trackAction("tracking", contextData);
 
        
     }
