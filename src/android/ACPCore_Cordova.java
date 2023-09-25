@@ -588,6 +588,14 @@ public class ACPCore_Cordova extends CordovaPlugin {
         super.onResume(multitasking);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
         MobileCore.lifecycleStart(null);
+
+        // Verifica se o aplicativo foi aberto a partir de uma notificação push
+        Bundle data = cordova.getActivity().getIntent().getExtras();
+        if (data != null && data.containsKey("deliveryId") && data.containsKey("broadlogId") && data.containsKey("acsDeliveryTracking")) {
+            // O aplicativo foi aberto a partir de uma notificação push, então realiza o rastreamento de impressão e abertura
+             System.out.println("App aberto a partir de uma notificacao!");
+            trackPushImpression(data.getString("deliveryId"), data.getString("broadlogId"), data.getString("acsDeliveryTracking"));
+        }
     }
  
     @Override
