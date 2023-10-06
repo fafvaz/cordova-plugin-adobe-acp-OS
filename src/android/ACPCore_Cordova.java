@@ -16,18 +16,18 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.core.app.NotificationManagerCompat;
 
-import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.Analytics;
 import com.adobe.marketing.mobile.Assurance;
 import com.adobe.marketing.mobile.Campaign;
 import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.ExtensionError;
 import com.adobe.marketing.mobile.ExtensionErrorCallback;
 import com.adobe.marketing.mobile.Identity;
-import com.adobe.marketing.mobile.InvalidInitException;
 import com.adobe.marketing.mobile.Lifecycle;
 import com.adobe.marketing.mobile.LoggingMode;
 import com.adobe.marketing.mobile.MobileCore;
@@ -48,8 +48,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 
 public class ACPCore_Cordova extends CordovaPlugin {
     final static String METHOD_CORE_DISPATCH_EVENT = "dispatchEvent";
@@ -143,12 +146,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 final HashMap<String, Object> eventMap = getObjectMapFromJSON(args.getJSONObject(0));
                 final Event event = getEventFromMap(eventMap);
 
-                MobileCore.dispatchEvent(event, new ExtensionErrorCallback<ExtensionError>() {
-                    @Override
-                    public void error(ExtensionError extensionError) {
-                        callbackContext.error(extensionError.getErrorName());
-                    }
-                });
+                MobileCore.dispatchEvent(event, extensionError -> callbackContext.error(extensionError.getErrorName()));
 
                 callbackContext.success();
             } catch (Exception ex) {
@@ -161,26 +159,23 @@ public class ACPCore_Cordova extends CordovaPlugin {
     }
     
     private void dispatchEventWithResponseCallback(final JSONArray args, final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final HashMap<String, Object> eventMap = getObjectMapFromJSON(args.getJSONObject(0));
-                    final Event event = getEventFromMap(eventMap);
-                    
-                    MobileCore.dispatchEventWithResponseCallback(event, event1 -> {
-                        final HashMap<String, Object> eventMap1 = getMapFromEvent(event1);
-                        final JSONObject eventJson = new JSONObject(eventMap1);
-                        callbackContext.success(eventJson);
-                    }, extensionError -> callbackContext.error(extensionError.getErrorName()));
-                    
-                    callbackContext.success();
-                } catch (Exception ex) {
-                    final String errorMessage = String.format(
-                    "Exception in call to dispatchEventWithResponseCallback: %s", ex.getLocalizedMessage());
-                    MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
-                    callbackContext.error(errorMessage);
-                }
+        cordova.getThreadPool().execute(() -> {
+            try {
+                final HashMap<String, Object> eventMap = getObjectMapFromJSON(args.getJSONObject(0));
+                final Event event = getEventFromMap(eventMap);
+                
+                MobileCore.dispatchEventWithResponseCallback(event, event1 -> {
+                    final HashMap<String, Object> eventMap1 = getMapFromEvent(event1);
+                    final JSONObject eventJson = new JSONObject(eventMap1);
+                    callbackContext.success(eventJson);
+                }, extensionError -> callbackContext.error(extensionError.getErrorName()));
+                
+                callbackContext.success();
+            } catch (Exception ex) {
+                final String errorMessage = String.format(
+                "Exception in call to dispatchEventWithResponseCallback: %s", ex.getLocalizedMessage());
+                MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
+                callbackContext.error(errorMessage);
             }
         });
     }
@@ -194,12 +189,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 final Event requestEvent = getEventFromMap(requestEventMap);
 
                 MobileCore.dispatchResponseEvent(responseEvent, requestEvent,
-                new ExtensionErrorCallback<ExtensionError>() {
-                    @Override
-                    public void error(ExtensionError extensionError) {
-                        callbackContext.error(extensionError.getErrorName());
-                    }
-                });
+                        extensionError -> callbackContext.error(extensionError.getErrorName()));
 
                 callbackContext.success();
             } catch (Exception ex) {
@@ -393,9 +383,9 @@ public class ACPCore_Cordova extends CordovaPlugin {
     }
     
     private Event getEventFromMap(final HashMap<String, Object> event) throws Exception {
-        return new Event.Builder(event.get("name").toString(), event.get("type").toString(),
-        event.get("source").toString())
-        .setEventData(getObjectMapFromJSON(new JSONObject(event.get("data").toString()))).build();
+        return new Event.Builder(Objects.requireNonNull(event.get("name")).toString(), Objects.requireNonNull(event.get("type")).toString(),
+        Objects.requireNonNull(event.get("source")).toString())
+        .setEventData(getObjectMapFromJSON(new JSONObject(Objects.requireNonNull(event.get("data")).toString()))).build();
     }
     
     private HashMap<String, Object> getMapFromEvent(final Event event) {
@@ -459,8 +449,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
 
     @Override
     public void onRequestPermissionResult(int requestCode, String[] permissions,
-    int[] grantResults) throws JSONException
-    {
+    int[] grantResults) {
         for(int r:grantResults)
         {
             if(r == PackageManager.PERMISSION_DENIED)
@@ -487,19 +476,27 @@ public class ACPCore_Cordova extends CordovaPlugin {
         appId = cordova.getActivity().getString(cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName()));
         
         try {
-            Campaign.registerExtension();
-            Places.registerExtension();
-            Analytics.registerExtension();
+
+            MobileCore.configureWithAppID(appId);
+            List<Class<? extends Extension>> extensions = new ArrayList<>();
+            extensions.add(Campaign.EXTENSION);
+            extensions.add(Places.EXTENSION);
+            extensions.add(Analytics.EXTENSION);
+            extensions.add(Target.EXTENSION);
+            extensions.add(UserProfile.EXTENSION);
+            extensions.add(Identity.EXTENSION);
+            extensions.add(Lifecycle.EXTENSION);
+            extensions.add(Signal.EXTENSION);
+            extensions.add(Assurance.EXTENSION);
+
+            MobileCore.registerExtensions(extensions, o -> {
+                Log.d("ACP_CORE", "AEP Mobile SDK is initialized");
+            });
+
             MobileServices.registerExtension();
-            Target.registerExtension();
-            UserProfile.registerExtension();                
-            Identity.registerExtension();
-            Lifecycle.registerExtension();
-            Signal.registerExtension();
-            Assurance.registerExtension();  
-            MobileCore.start((AdobeCallback) o -> MobileCore.configureWithAppID(appId));
             
-        } catch (InvalidInitException e) {
+        } catch (Exception e) {
+            Log.d("ACP_CORE", "Erro ao inicializar o SDK");
         }
         
         initTime = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date());
