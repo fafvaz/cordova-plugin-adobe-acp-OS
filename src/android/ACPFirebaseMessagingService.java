@@ -27,31 +27,7 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
       acsDeliveryTracking = "on";
     }
 
-    Toast.makeText(this, "Messagem recebida", Toast.LENGTH_LONG).show();
-    Toast.makeText(this, "Messagem recebida --> delivery track " + acsDeliveryTracking, Toast.LENGTH_LONG).show();
-
-    System.out.println("deliveryId");
-    System.out.println(deliveryId);
-
-    System.out.println("messageId");
-    System.out.println(messageId);
-
-    System.out.println("acsDeliveryTracking");
-    System.out.println(acsDeliveryTracking);
-
-    HashMap<String, String> contextDataTemp = new HashMap<>();
-    contextDataTemp.put("deliveryId", deliveryId);
-    contextDataTemp.put("broadlogId", messageId);
-    contextDataTemp.put("ronelio", "random");
-    MobileCore.trackAction("tracking", contextDataTemp);
-
-    HashMap<String, Object> contextDataObjTemp = new HashMap<>();
     // Adiciona os dados necessários ao HashMap
-    contextDataObjTemp.put("deliveryId", deliveryId);
-    contextDataObjTemp.put("broadlogId", messageId);
-    contextDataObjTemp.put("action", "7");
-    contextDataObjTemp.put("ronelio", "random");
-    MobileCore.collectMessageInfo(contextDataObjTemp);
 
     // Verifica se a notificação push contém os dados necessários para o rastreamento
     if (deliveryId != null && messageId != null && acsDeliveryTracking.equals("on")) {
@@ -85,6 +61,7 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
       contextDataObj.put("action", "1"); // 1 representa a abertura (open)
       MobileCore.trackAction("push_open", contextData);
       MobileCore.collectMessageInfo(contextDataObj);
+
 
     }
 

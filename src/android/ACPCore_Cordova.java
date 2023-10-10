@@ -438,11 +438,15 @@ public class ACPCore_Cordova extends CordovaPlugin {
             contextData.put("broadlogId", (Object) broadlogId);
 
             // Rastreia o evento de impressão da notificação push usando o Adobe Mobile SDK
-            contextData.put("action", "1"); // 1 representa a impressão (impression)
+            contextData.put("action", "1"); // 1 representa a click 
             MobileCore.collectMessageInfo(contextData);
 
             // Rastreia o evento de abertura da notificação push usando o Adobe Mobile SDK
             contextData.put("action", "2"); // 2 representa a abertura (open)
+            MobileCore.collectMessageInfo(contextData);
+
+             // Rastreia o evento de abertura da notificação push usando o Adobe Mobile SDK
+            contextData.put("action", "7"); // 7 representa impression
             MobileCore.collectMessageInfo(contextData);
         }
     }
