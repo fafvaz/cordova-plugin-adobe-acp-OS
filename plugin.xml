@@ -37,10 +37,6 @@
     <js-module name="cordova-acpplaces" src="www/ACPPlaces.js">
         <clobbers target="ACPPlaces" />
     </js-module>
-    <!-- use "ACPPlacesMonitor" to access the plugin APIs in javascript -->
-    <js-module name="cordova-acpplaces-monitor" src="www/ACPPlacesMonitor.js">
-        <clobbers target="ACPPlacesMonitor" />
-    </js-module>
     <!-- use "ACPCampaign" to access the plugin APIs in javascript -->
     <js-module name="cordova-ACPCampaign" src="www/ACPCampaign.js">
         <clobbers target="ACPCampaign" />
@@ -101,12 +97,6 @@
             </feature>
         </config-file>
         <config-file parent="/*" target="res/xml/config.xml">
-            <feature name="ACPPlacesMonitor_Cordova">
-                <param name="android-package" value="com.adobe.marketing.mobile.cordova.ACPPlacesMonitor_Cordova" />
-                <param name="onload" value="true" />
-            </feature>
-        </config-file>
-        <config-file parent="/*" target="res/xml/config.xml">
             <feature name="ACPCampaign_Cordova">
                 <param name="android-package" value="com.adobe.marketing.mobile.cordova.ACPCampaign_Cordova" />
                 <param name="onload" value="true" />
@@ -150,13 +140,11 @@
         <source-file src="src/android/ACPTarget_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPAnalytics_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPPlaces_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
-        <source-file src="src/android/ACPPlacesMonitor_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPCampaign_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/AEPAssurance_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
+        <source-file src="src/android/NotificationDismissedReceiver.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <!-- dependencies managed through included gradle file -->
         <framework custom="true" src="src/android/ACP_Cordova.gradle" type="gradleReference" />
-        <framework custom="true" src="src/android/AEPAssurance_Cordova.gradle" type="gradleReference" />
-        <lib-file src="src/android/places-monitor-android-phone-release.aar"/>
     </platform>
 
     <!-- configure ios platform -->
