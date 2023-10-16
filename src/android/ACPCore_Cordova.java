@@ -551,6 +551,8 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 MobileCore.collectMessageInfo(contextData);
                 contextData.put("action", "1");
                 MobileCore.collectMessageInfo(contextData);
+                contextData.put("action", "7");
+                MobileCore.collectMessageInfo(contextData);
             }
         }
     }
