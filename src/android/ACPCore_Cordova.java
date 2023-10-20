@@ -536,7 +536,14 @@ public class ACPCore_Cordova extends CordovaPlugin {
             //This was opened based on the notification, you need to get the tracking that was passed on.
             String deliveryId = data.getString("_dId");
             String messageId = data.getString("_mId");
-            String acsDeliveryTracking = data.getString("_acsDeliveryTracking");
+            String acsDeliveryTracking = data.getString("_acsDeliveryTracking"); 
+
+            System.out.println("### deliveryId ###");
+            System.out.println(deliveryId);
+            System.out.println("### messageId ###");
+            System.out.println(messageId);
+            System.out.println("### acsDeliveryTracking ###");
+            System.out.println(acsDeliveryTracking);
 
             if( acsDeliveryTracking == null) {
                 acsDeliveryTracking = "on";
