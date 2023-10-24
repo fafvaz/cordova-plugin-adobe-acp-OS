@@ -1,88 +1,68 @@
-/*
- Copyright 2020 Adobe. All rights reserved.
- This file is licensed to you under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License. You may obtain a copy
- of the License at http://www.apache.org/licenses/LICENSE-2.0
- Unless required by applicable law or agreed to in writing, software distributed under
- the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
- OF ANY KIND, either express or implied. See the License for the specific language
- governing permissions and limitations under the License.
- */
+import ACPCampaign
+import ACPCore
+import UserNotifications
 
-/********* cordova-acpcampaign.m Cordova Plugin Implementation *******/
+@objc(ACPCampaign_Cordova) class ACPCampaign_Cordova: CDVPlugin, UNUserNotificationCenterDelegate {
 
-//#import <Cordova/CDV.h>
+  var typeId: String!
 
-//#import <ACPCampaign/ACPCampaign.h>
-//#import <Cordova/CDVPluginResult.h>
-//#import <ACPCore/ACPCore.h>
-//#import <ACPCore/ACPIdentity.h>
-//#import <ACPCore/ACPLifecycle.h>
-//#import <ACPCore/ACPSignal.h>
-//#import "ACPUserProfile.h"
+  @objc(extensionVersion:)
+  func extensionVersion(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      var pluginResult: CDVPluginResult! = nil
+      let extensionVersion: String! = ACPCampaign.extensionVersion()
 
-import UserNotifications;
+      if extensionVersion != nil && extensionVersion.count > 0 {
+        pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: extensionVersion)
+      } else {
+        pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
+      }
 
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    })
+  }
 
-class ACPCampaign_Cordova : CDVPlugin {
+  @objc(setPushIdentifier:)
+  func setPushIdentifier(command: CDVInvokedUrlCommand!) {
 
-    var typeId:String!
+    let center: UNUserNotificationCenter! = UNUserNotificationCenter.current()
+    center.delegate = self
 
-    func extensionVersion(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            var pluginResult:CDVPluginResult! = nil
-            let extensionVersion:String! = ACPCampaign.extensionVersion()
+    center.requestAuthorization(
+      options: [.sound, .alert, .badge],
+      completionHandler: {
+        granted, error in
 
-            if extensionVersion != nil && extensionVersion.length() > 0 {
-                pluginResult = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:extensionVersion)
-            } else {
-                pluginResult = CDVPluginResult.resultWithStatus(CDVCommandStatus_ERROR)
-            }
+        self.typeId = Bundle.main.object(forInfoDictionaryKey: "TypeId") as? String
 
-            self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-        })
-    }
+        if error != nil {
 
-    func setPushIdentifier(command:CDVInvokedUrlCommand!) {
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  // in half a second...
+            let _: String! = command.arguments[0] as? String
+            let valueTypeId: String! = command.arguments[1] as? String
 
-        let center:UNUserNotificationCenter! = UNUserNotificationCenter.currentNotificationCenter()
-          center.delegate = self
-          center.requestAuthorizationWithOptions((UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionBadge), completionHandler:{ (granted:Bool,error:NSError?) in
+            ACPCore.collectPii([self.typeId: valueTypeId])
+            UIApplication.shared.registerForRemoteNotifications()
+          }
 
-             typeId = NSBundle.mainBundle().infoDictionary().valueForKey("TypeId")
+          NSLog("Push registration success.")
 
-            if !error  {
-                // required to get the app to do anything at all about push notifications
-                dispatch_async(dispatch_get_main_queue(), {
-                    let deviceToken:String! = command.arguments[0]
-                    let valueTypeId:String! = command.arguments[1]
+        } else {
+          NSLog("Push registration FAILED")
+          NSLog("ERROR: %@ " + (error?.localizedDescription ?? ""))
+        }
+      })
 
-                    let data:NSData! = deviceToken.dataUsingEncoding(NSUTF8StringEncoding)
+    ACPCore.setLogLevel(.debug)
+    let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
+    self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+  }
 
-                    ACPCore.collectPii([typeId: valueTypeId])
-                    UIApplication.sharedApplication().registerForRemoteNotifications()
-                })
-
-                NSLog("Push registration success.")
-
-            } else {
-                NSLog("Push registration FAILED")
-                NSLog("ERROR: %@ - %@", error.localizedFailureReason, error.localizedDescription)
-                NSLog("SUGGESTIONS: %@ - %@", error.localizedRecoveryOptions, error.localizedRecoverySuggestion)
-            }
-            })
-
-        ACPCore.logLevel = ACPMobileLogLevelDebug
-
-        let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK)
-
-        self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-    }
-
-    func getTypeId(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-             let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:typeId)
-            self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-        })
-    }
+  func getTypeId(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      let pluginResult: CDVPluginResult! = CDVPluginResult(
+        status: CDVCommandStatus_OK, messageAs: self.typeId)
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    })
+  }
 }
