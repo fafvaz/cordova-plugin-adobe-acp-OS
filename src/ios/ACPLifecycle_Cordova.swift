@@ -1,29 +1,15 @@
-/*
- Copyright 2020 Adobe. All rights reserved.
- This file is licensed to you under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License. You may obtain a copy
- of the License at http://www.apache.org/licenses/LICENSE-2.0
+import ACPCore
 
- Unless required by applicable law or agreed to in writing, software distributed under
- the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
- OF ANY KIND, either express or implied. See the License for the specific language
- governing permissions and limitations under the License.
- */
+@objc(ACPLifecycle_Cordova) class ACPLifecycle_Cordova: CDVPlugin {
 
-//#import <ACPCore/ACPCore.h>
-//#import <ACPCore/ACPLifecycle.h>
-//#import <Cordova/CDV.h>
-//#import <Foundation/Foundation.h>
+  @objc(extensionVersion:)
+  func extensionVersion(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      let version: String! = ACPLifecycle.extensionVersion()
 
-
-class ACPLifecycle_Cordova : CDVPlugin {
-
-    func extensionVersion(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            let version:String! = ACPLifecycle.extensionVersion()
-
-            let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:version)
-            self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-        })
-    }
+      let pluginResult: CDVPluginResult! = CDVPluginResult(
+        status: CDVCommandStatus_OK, messageAs: version)
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    })
+  }
 }
