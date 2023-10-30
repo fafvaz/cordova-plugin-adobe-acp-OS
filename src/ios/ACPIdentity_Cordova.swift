@@ -1,139 +1,182 @@
-/*
- Copyright 2020 Adobe. All rights reserved.
- This file is licensed to you under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License. You may obtain a copy
- of the License at http://www.apache.org/licenses/LICENSE-2.0
+import ACPCore
 
- Unless required by applicable law or agreed to in writing, software distributed under
- the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
- OF ANY KIND, either express or implied. See the License for the specific language
- governing permissions and limitations under the License.
- */
+let stateStrings = ["UNKNOWN", "AUTHENTICATED", "LOGGED_OUT"]
+let INVALID_AUTH_STATE = 3
 
-//#import <ACPCore/ACPCore.h>
-//#import <ACPCore/ACPIdentity.h>
-//#import <Cordova/CDV.h>
+@objc(ACPIdentity_Cordova) class ACPIdentity_Cordova: CDVPlugin {
 
+  @objc(extensionVersion:)
+  func extensionVersion(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      var pluginResult: CDVPluginResult! = nil
 
-let stateStrings:[String!]! = {"UNKNOWN", "AUTHENTICATED", "LOGGED_OUT"}
-let INVALID_AUTH_STATE:Int = 3
+      let version: String! = ACPIdentity.extensionVersion()
 
-class ACPIdentity_Cordova : CDVPlugin {
+      pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: version)
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    })
+  }
 
-    func extensionVersion(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            var pluginResult:CDVPluginResult! = nil
+  @objc(appendVisitorInfoForUrl:)
+  func appendVisitorInfoForUrl(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
 
-            let version:String! = ACPIdentity.extensionVersion()
+      guard let url = NSURL(string: command.arguments[0] as! String) else {
+        self.commandDelegate.send(
+          CDVPluginResult(
+            status: CDVCommandStatus_ERROR,
+            messageAs: "Unable appendVisitorInfoForUrl. Input was malformed"),
+          callbackId: command.callbackId)
+      }
 
-            pluginResult = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:version)
-            self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
+      ACPIdentity.append(
+        to: url.absoluteURL,
+        withCallback: { (urlWithVisitorData: URL?) in
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_OK, messageAs: urlWithVisitorData?.absoluteString)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
         })
-    }
 
-    func appendVisitorInfoForUrl(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            let url:NSURL! = NSURL.URLWithString(self.getCommandArg(command.arguments[0]))
-            ACPIdentity.appendToUrl(url, withCallback:{ (urlWithVisitorData:NSURL?) in
-                let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:urlWithVisitorData.absoluteString())
-                self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-            })
-        })
-    }
+    })
+  }
 
-    func getExperienceCloudId(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            ACPIdentity.getExperienceCloudId({ (experienceCloudId:String?) in
-                let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:experienceCloudId)
-                self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-            })
-        })
-    }
+  @objc(getExperienceCloudId:)
+  func getExperienceCloudId(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      ACPIdentity.getExperienceCloudId({ (experienceCloudId: String?) in
+        let pluginResult: CDVPluginResult! = CDVPluginResult(
+          status: CDVCommandStatus_OK, messageAs: experienceCloudId)
+        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      })
+    })
+  }
 
-    func getIdentifiers(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            ACPIdentity.getIdentifiers({ (visitorIDs:[AnyObject]?) in
-                var visitorIdsString:String! = ""
-                if !visitorIDs {
-                    visitorIdsString = "nil"
-                } else if visitorIDs.count() == 0 {
-                    visitorIdsString = "[]"
-                } else {
-                    for visitorId:ACPMobileVisitorId! in visitorIDs {
-                        visitorIdsString = visitorIdsString.stringByAppendingFormat("[Id: %@, Type: %@, Origin: %@, Authentication: %@] ", visitorId.identifier(), visitorId.idType(), visitorId.idOrigin(), stateStrings[(visitorId.authenticationState() as! unsigned long)])
-                     }
-                }
-                let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:visitorIdsString)
-                self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-            })
-        })
-    }
+  @objc(getIdentifiers:)
+  func getIdentifiers(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      ACPIdentity.getIdentifiers({ (visitorIDs: [AnyObject]?) in
+        var visitorIdsString: String! = ""
+        if visitorIDs == nil {
+          visitorIdsString = "nil"
+        } else if visitorIDs?.count == 0 {
+          visitorIdsString = "[]"
+        } else {
 
-    func getUrlVariables(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            ACPIdentity.getUrlVariables({ (urlVariables:String?) in
-                let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:urlVariables)
-                self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-            })
-        })
-    }
+          visitorIDs?.forEach({ (visitorId) in
+            visitorIdsString = visitorIdsString.appendingFormat(
+              "[Id: %@, Type: %@, Origin: %@, Authentication: %@] ", visitorId.identifier,
+              visitorId.idType ?? "", visitorId.idOrigin ?? "",
+              stateStrings[Int(visitorId.authenticationState?.rawValue ?? 0)])
+          })
+        }
+        let pluginResult: CDVPluginResult! = CDVPluginResult(
+          status: CDVCommandStatus_OK, messageAs: visitorIdsString)
+        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      })
+    })
+  }
 
-    func syncIdentifier(command:CDVInvokedUrlCommand!) {
-       self.commandDelegate.runInBackground({
-           let idType:String! = self.getCommandArg(command.arguments[0])
-           let idValue:String! = self.getCommandArg(command.arguments[1])
-           let state:Int = self.getAuthenticationStateValue(self.getCommandArg(command.arguments[2]))
+  @objc(getUrlVariables:)
+  func getUrlVariables(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      ACPIdentity.getUrlVariables({ (urlVariables: String?) in
+        let pluginResult: CDVPluginResult! = CDVPluginResult(
+          status: CDVCommandStatus_OK, messageAs: urlVariables)
+        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      })
+    })
+  }
 
-           ACPIdentity.syncIdentifier(idType, identifier:idValue, authentication:state)
-            let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:String(format:"Visitor ID synced: Id: %@, Type: %@, Authentication: %@", idType, idValue, stateStrings[state]))
-           self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-       })
-    }
+  @objc(syncIdentifier:)
+  func syncIdentifier(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      let idType: String! = command.arguments[0] as? String
+      let idValue: String! = command.arguments[1] as? String
+      let state: Int = self.getAuthenticationStateValue(
+        authState: command.arguments[2] as? NSNumber)
 
-    func syncIdentifiers(command:CDVInvokedUrlCommand!) {
-       self.commandDelegate.runInBackground({
-           var pluginResult:CDVPluginResult! = nil
-           let identifiers:NSDictionary! = self.getCommandArg(command.arguments[0])
-           let state:Int = self.getAuthenticationStateValue(self.getCommandArg(command.arguments[1]))
+      ACPIdentity.syncIdentifier(
+        idType, identifier: idValue,
+        authentication: self.getAuthenticationStateEnumValue(authState: state as NSNumber))
+      let pluginResult: CDVPluginResult! = CDVPluginResult(
+        status: CDVCommandStatus_OK,
+        messageAs: String(
+          format: "Visitor ID synced: Id: %@, Type: %@, Authentication: %@", idType, idValue,
+          stateStrings[state]))
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    })
+  }
 
-            if state < 3 {
-                ACPIdentity.syncIdentifiers(identifiers, authentication:state)
-                pluginResult = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:String(format:"Visitor IDs synced: %@, Authentication: %@", identifiers, stateStrings[state]))
-            } else {
-                ACPIdentity.syncIdentifiers(identifiers)
-                pluginResult = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:String(format:"Visitor IDs synced: %@", identifiers))
-            }
+  @objc(syncIdentifiers:)
+  func syncIdentifiers(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      var pluginResult: CDVPluginResult! = nil
+      let identifiers: NSDictionary! = command.arguments[0] as? NSDictionary
+      let state: Int = command.arguments[1] as? Int ?? 0
 
-           self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-       })
-    }
+      if state < 3 {
+        ACPIdentity.syncIdentifiers(
+          identifiers as? [AnyHashable: Any],
+          authentication: self.getAuthenticationStateEnumValue(authState: state as NSNumber))
+        pluginResult = CDVPluginResult(
+          status: CDVCommandStatus_OK,
+          messageAs: String(
+            format: "Visitor IDs synced: %@, Authentication: %@", identifiers, stateStrings[state]))
+      } else {
+        ACPIdentity.syncIdentifiers(identifiers as? [AnyHashable: Any])
+        pluginResult = CDVPluginResult(
+          status: CDVCommandStatus_OK,
+          messageAs: String(format: "Visitor IDs synced: %@", identifiers))
+      }
 
-    /*
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    })
+  }
+
+  /*
      * Helper functions
      */
 
-    func getCommandArg(argument:AnyObject!) -> AnyObject! {
-        return argument == (NSNull.null() as! id) ? nil : argument
+  func getAuthenticationStateValue(authState: NSNumber!) -> Int {
+    var authStateInt: Int = 3  // use 3 as the auth state values range from 0-2
+    if authState != nil {
+      switch authState.intValue {
+      case 0:
+        authStateInt = Int(ACPMobileVisitorAuthenticationState.unknown.rawValue)
+        break
+      case 1:
+        authStateInt = Int(ACPMobileVisitorAuthenticationState.authenticated.rawValue)
+        break
+      case 2:
+        authStateInt = Int(ACPMobileVisitorAuthenticationState.loggedOut.rawValue)
+        break
+      default:
+        authStateInt = INVALID_AUTH_STATE
+        break
+      }
     }
+    return authStateInt
+  }
 
-    func getAuthenticationStateValue(authState:NSNumber!) -> Int {
-        var authStateInt:Int = 3 // use 3 as the auth state values range from 0-2
-        if (authState != nil) {
-             switch(authState.integerValue()) {
-                 case 0:
-                     authStateInt = ACPMobileVisitorAuthenticationStateUnknown
-                     break
-                 case 1:
-                     authStateInt = ACPMobileVisitorAuthenticationStateAuthenticated
-                     break
-                 case 2:
-                     authStateInt = ACPMobileVisitorAuthenticationStateLoggedOut
-                     break
-                 default:
-                     authStateInt = INVALID_AUTH_STATE
-                     break
-             }
-        }
-        return authStateInt
+  func getAuthenticationStateEnumValue(authState: NSNumber!) -> ACPMobileVisitorAuthenticationState
+  {
+    var state = ACPMobileVisitorAuthenticationState.unknown
+    if authState != nil {
+      switch authState.intValue {
+      case 0:
+        state = ACPMobileVisitorAuthenticationState.unknown
+        break
+      case 1:
+        state = ACPMobileVisitorAuthenticationState.authenticated
+        break
+      case 2:
+        state = ACPMobileVisitorAuthenticationState.loggedOut
+        break
+      default:
+        state = ACPMobileVisitorAuthenticationState.unknown
+        break
+      }
     }
+    return state
+  }
 }
