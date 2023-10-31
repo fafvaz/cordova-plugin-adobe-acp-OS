@@ -1,42 +1,29 @@
-/*
-Copyright 2020 Adobe. All rights reserved.
-This file is licensed to you under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License. You may obtain a copy
-of the License at http://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
-OF ANY KIND, either express or implied. See the License for the specific language
-governing permissions and limitations under the License.
-*/
+import AEPAssurance
 
-/********* AEPAssurance_Cordova.m Cordova Plugin Implementation *******/
+@objc(AEPAssurance_Cordova) class AEPAssurance_Cordova: CDVPlugin {
 
-//#import <Cordova/CDV.h>
-//#import <AEPAssurance/AEPAssurance.h>
+  @objc(extensionVersion:)
+  func extensionVersion(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      var pluginResult: CDVPluginResult! = nil
+      let extensionVersion: String! = AEPAssurance.extensionVersion()
 
+      if extensionVersion != nil && extensionVersion.count > 0 {
+        pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: extensionVersion)
+      } else {
+        pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
+      }
 
-class AEPAssurance_Cordova : CDVPlugin {
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    })
+  }
 
-    func extensionVersion(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            var pluginResult:CDVPluginResult! = nil
-            let extensionVersion:String! = AEPAssurance.extensionVersion()
-
-            if extensionVersion != nil && extensionVersion.length() > 0 {
-                pluginResult = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:extensionVersion)
-            } else {
-                pluginResult = CDVPluginResult.resultWithStatus(CDVCommandStatus_ERROR)
-            }
-
-            self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-        })
-    }
-
-    func startSession(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            let url:NSURL! = NSURL.URLWithString(command.arguments.objectAtIndex(0))
-            AEPAssurance.startSession(url)
-            self.commandDelegate.sendPluginResult(nil, callbackId:command.callbackId)
-        })
-    }
+  @objc(startSession:)
+  func startSession(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      let url: URL! = URL.init(string: command.arguments[0] as! String)
+      AEPAssurance.startSession(url)
+      self.commandDelegate.send(nil, callbackId: command.callbackId)
+    })
+  }
 }
