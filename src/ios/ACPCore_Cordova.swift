@@ -24,6 +24,7 @@ import AEPAssurance
             status: CDVCommandStatus_ERROR,
             messageAs: "Unable to dispatch event. Input was malformed"),
           callbackId: command.callbackId)
+          return
       }
 
       let event: ACPExtensionEvent! = self.getExtensionEventFromJavascriptObject(event: eventInput)
@@ -53,6 +54,7 @@ import AEPAssurance
             status: CDVCommandStatus_ERROR,
             messageAs: "Unable to dispatch event. Input was malformed"),
           callbackId: command.callbackId)
+          return
       }
 
       let event: ACPExtensionEvent! = self.getExtensionEventFromJavascriptObject(event: eventInput)
@@ -87,6 +89,7 @@ import AEPAssurance
             status: CDVCommandStatus_ERROR,
             messageAs: "Unable to dispatch event. InputResponse was malformed"),
           callbackId: command.callbackId)
+          return
       }
 
       guard let inputRequestEvent = command.arguments[1] as? NSDictionary else {
@@ -95,6 +98,7 @@ import AEPAssurance
             status: CDVCommandStatus_ERROR,
             messageAs: "Unable to dispatch event. InputResquest was malformed"),
           callbackId: command.callbackId)
+          return
       }
 
       let responseEvent: ACPExtensionEvent! = self.getExtensionEventFromJavascriptObject(
@@ -246,6 +250,7 @@ import AEPAssurance
             status: CDVCommandStatus_ERROR,
             messageAs: "Unable to dispatch event. InputResponse was malformed"),
           callbackId: command.callbackId)
+          return
       }
 
       ACPCore.updateConfiguration(config)
@@ -282,6 +287,7 @@ import AEPAssurance
         ACPMobileLogLevel.warning, tag: "ACPCore",
         message: String(format: "Error creating ACPExtensionEvent: %@", error.localizedDescription))
     }
+      return nil
   }
 
   func getJavascriptDictionaryFromEvent(event: ACPExtensionEvent!) -> NSDictionary! {
