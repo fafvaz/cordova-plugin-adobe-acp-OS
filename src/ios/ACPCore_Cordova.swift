@@ -8,7 +8,7 @@ import ACPTarget
 import ACPUserProfile
 import AEPAssurance
 
-@objc(ACPCampaign_Cordova) class ACPCore_Cordova: CDVPlugin {
+@objc(ACPCore_Cordova) class ACPCore_Cordova: CDVPlugin {
 
   var appId: String!
   var initTime: String!
