@@ -1,421 +1,429 @@
-/*
- Copyright 2020 Adobe. All rights reserved.
- This file is licensed to you under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License. You may obtain a copy
- of the License at http://www.apache.org/licenses/LICENSE-2.0
- Unless required by applicable law or agreed to in writing, software distributed under
- the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
- OF ANY KIND, either express or implied. See the License for the specific language
- governing permissions and limitations under the License.
- */
+import ACPTarget
 
-/********* cordova-acptarget.m Cordova Plugin Implementation *******/
+@objc(ACPTarget_Cordova) class ACPTarget_Cordova: CDVPlugin {
 
-//#import <Cordova/CDV.h>
-//#import <ACPTarget/ACPTarget.h>
-//#import <ACPTarget/ACPTargetOrder.h>
-//#import <ACPTarget/ACPTargetParameters.h>
-//#import <ACPTarget/ACPTargetRequestObject.h>
-//#import <ACPTarget/ACPTargetProduct.h>
-//#import <ACPTarget/ACPTargetPrefetchObject.h>
-//#import <Cordova/CDVPluginResult.h>
+  @objc(clearPrefetchCache:)
+  func clearPrefetchCache(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      ACPTarget.clearPrefetchCache()
+      let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    })
+  }
 
+  @objc(extensionVersion:)
+  func extensionVersion(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      var pluginResult: CDVPluginResult! = nil
+      let extensionVersion: String! = ACPTarget.extensionVersion()
 
-class ACPTarget_Cordova : CDVPlugin {
+      if extensionVersion != nil && extensionVersion.count > 0 {
+        pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: extensionVersion)
+      } else {
+        pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
+      }
 
-    func clearPrefetchCache(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            ACPTarget.clearPrefetchCache()
-            let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK)
-            self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-        })
-    }
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    })
+  }
 
-    func extensionVersion(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            var pluginResult:CDVPluginResult! = nil
-            let extensionVersion:String! = ACPTarget.extensionVersion()
-
-            if extensionVersion != nil && extensionVersion.length() > 0 {
-                pluginResult = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:extensionVersion)
-            } else {
-                pluginResult = CDVPluginResult.resultWithStatus(CDVCommandStatus_ERROR)
-            }
-
-            self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-        })
-    }
-
-
-    func getThirdPartyId(comman:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            ACPTarget.getThirdPartyId({ (thirdPartyId:String?) in
-                let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:thirdPartyId)
-                self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-            })
-        })
-    }
-
-    func getTntId(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            ACPTarget.getTntId({ (tntId:String?) in
-                let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK, messageAsString:tntId)
-                self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-            })
-        })
-    }
-
-    func resetExperience(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            ACPTarget.resetExperience()
-            let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK)
-            self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-        })
-    }
-
-    func setThirdPartyId(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            let thirdPartyId:String! = self.getCommandArg(command.arguments[0])
-
-             ACPTarget.thirdPartyId = thirdPartyId
-
-            let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK)
-            self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-        })
-    }
-
-    func setPreviewRestartDeepLink(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            let deepLink:NSURL! = self.getCommandArg(command.arguments[0])
-
-            ACPTarget.previewRestartDeeplink = deepLink
-
-            let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK)
-            self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-        })
-    }
-
-    func retrieveLocationContent(command:CDVInvokedUrlCommand!) {
-      self.commandDelegate.runInBackground({
-        var error:NSError!
-        let locationRequests:NSDictionary! = command.arguments[0]
-        let requestArray:NSMutableArray! = NSMutableArray.array()
-        var profileParam:NSDictionary!
-        var mboxParam:NSDictionary!
-        var orderParam:NSDictionary!
-        var productParam:NSDictionary!
-        var profileLocParam:NSDictionary!
-        var mboxLocParam:NSDictionary!
-        var orderLocParam:NSDictionary!
-        var productLocParam:NSDictionary!
-        var orderParameters:ACPTargetOrder! = nil
-        var targetParameters:ACPTargetParameters! = nil
-        var productParameter:ACPTargetProduct! = nil
-        var orderLocParameters:ACPTargetOrder! = nil
-        var targetLocParameters:ACPTargetParameters! = nil
-        var productLocParameter:ACPTargetProduct! = nil
-        for key:AnyObject! in locationRequests {
-            let request:NSDictionary! = locationRequests.objectForKey(key)
-            let mboxName:String! = request.objectForKey("mboxName")
-            if request.objectForKey("mboxParameter").count() > 0 {
-                mboxParam = request.objectForKey("mboxParameter")
-            }
-            if request.objectForKey("profileParameter").count() > 0 {
-                profileParam = request.objectForKey("profileParameter")
-            }
-
-            if request.objectForKey("orderParameter").count() > 0 {
-                orderParam = request.objectForKey("orderParameter")
-                if orderParam.objectForKey("orderId") != nil {
-                    let orderId:String! = orderParam.objectForKey("orderId")
-                    let orderTotal:NSNumber! = orderParam.objectForKey("orderTotal")
-                    let orderPurchasedIds:[AnyObject]! = orderParam.objectForKey("orderPurchasedIds")
-                    orderParameters = ACPTargetOrder.targetOrderWithId(orderId, total:orderTotal, purchasedProductIds:orderPurchasedIds)
-                }
-
-            }
-
-            if request.objectForKey("productParameter").count() > 0 {
-                productParam = request.objectForKey("productParameter")
-                if productParam.objectForKey("id")  != nil {
-                  let id:String! = productParam.objectForKey("id")
-                  let categoryIdValue:String! = productParam.objectForKey("categoryId")
-                  productParameter = ACPTargetProduct.targetProductWithId(AnyObject, categoryId:categoryIdValue)
-                }
-            }
-
-
-            targetParameters = ACPTargetParameters.targetParametersWithParameters(mboxParam,
-                profileParameters:profileParam,
-                product:productParameter,
-                order:orderParameters)
-
-            let requestObject:ACPTargetRequestObject! = ACPTargetRequestObject.targetRequestObjectWithName(mboxName, targetParameters:targetParameters,
-                defaultContent:"defaultContent", callback:{ (content:String?) in
-                    let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK)
-                    self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-            })
-
-            requestArray.addObject(requestObject)
-
-         }
-
-
-        let requestLoc:NSDictionary! = command.arguments[1]
-
-        if requestLoc.objectForKey("mboxParameter").count() > 0 {
-            mboxLocParam = requestLoc.objectForKey("mboxParameter")
-
-        }
-        if requestLoc.objectForKey("profileParameter").count() > 0 {
-            profileLocParam = requestLoc.objectForKey("profileParameter")
-
-        }
-
-        if requestLoc.objectForKey("orderParameter").count() > 0 {
-            orderLocParam = requestLoc.objectForKey("orderParameter")
-            if orderLocParam.objectForKey("orderId")  != nil {
-                let orderId:String! = orderLocParam.objectForKey("orderId")
-                let orderTotal:NSNumber! = orderLocParam.objectForKey("orderTotal")
-                let orderPurchasedIds:[AnyObject]! = orderLocParam.objectForKey("orderPurchasedIds")
-                orderLocParameters = ACPTargetOrder.targetOrderWithId(orderId, total:orderTotal, purchasedProductIds:orderPurchasedIds)
-            }
-
-        }
-
-        if requestLoc.objectForKey("productParameter").count() > 0 {
-            productLocParam = requestLoc.objectForKey("productParameter")
-            if productLocParam.objectForKey("id")  != nil {
-              let id:String! = productLocParam.objectForKey("id")
-              let categoryIdValue:String! = productLocParam.objectForKey("categoryId")
-              productLocParameter = ACPTargetProduct.targetProductWithId(AnyObject, categoryId:categoryIdValue)
-            }
-
-        }
-
-        targetLocParameters = ACPTargetParameters.targetParametersWithParameters(mboxLocParam,
-                                                        profileParameters:profileLocParam,
-                                                                  product:productLocParameter,
-                                                                    order:orderLocParameters)
-
-        ACPTarget.retrieveLocationContent(requestArray, withParameters:targetLocParameters)
-
+  @objc(getThirdPartyId:)
+  func getThirdPartyId(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      ACPTarget.getThirdPartyId({ (thirdPartyId: String?) in
+        let pluginResult: CDVPluginResult! = CDVPluginResult(
+          status: CDVCommandStatus_OK, messageAs: thirdPartyId)
+        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
       })
-    }
+    })
+  }
 
-    func locationClicked(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
+  @objc(getTntId:)
+  func getTntId(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      ACPTarget.getTntId({ (tntId: String?) in
+        let pluginResult: CDVPluginResult! = CDVPluginResult(
+          status: CDVCommandStatus_OK, messageAs: tntId)
+        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      })
+    })
+  }
 
-            let mboxName:String! = self.getCommandArg(command.arguments[0])
-            let request:NSDictionary! = self.getCommandArg(command.arguments[1])
-            var profileParam:NSDictionary!
-            var mboxParam:NSDictionary!
-            var orderParam:NSDictionary!
-            var productParam:NSDictionary!
-            var orderParameters:ACPTargetOrder! = nil
-            var targetParameters:ACPTargetParameters! = nil
-            var productParameter:ACPTargetProduct! = nil
+  @objc(resetExperience:)
+  func resetExperience(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      ACPTarget.resetExperience()
+      let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    })
+  }
 
+  @objc(setThirdPartyId:)
+  func setThirdPartyId(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      let thirdPartyId: String! = command.arguments[0] as? String
 
-            if request.objectForKey("mboxParameter").count() > 0 {
-                mboxParam = request.objectForKey("mboxParameter")
-            }
-            if request.objectForKey("profileParameter").count() > 0 {
-                profileParam = request.objectForKey("profileParameter")
-            }
+      ACPTarget.setThirdPartyId(thirdPartyId)
 
-            if request.objectForKey("orderParameter").count() > 0 {
-                orderParam = request.objectForKey("orderParameter")
-                if orderParam.objectForKey("orderId") != nil {
-                    let orderId:String! = orderParam.objectForKey("orderId")
-                    let orderTotal:NSNumber! = orderParam.objectForKey("orderTotal")
-                    let orderPurchasedIds:[AnyObject]! = orderParam.objectForKey("orderPurchasedIds")
-                    orderParameters = ACPTargetOrder.targetOrderWithId(orderId, total:orderTotal, purchasedProductIds:orderPurchasedIds)
-                }
-            }
+      let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    })
+  }
 
-            if request.objectForKey("productParameter").count() > 0 {
-                productParam = request.objectForKey("productParameter")
-                if productParam.objectForKey("id")  != nil {
-                  let id:String! = productParam.objectForKey("id")
-                  let categoryIdValue:String! = productParam.objectForKey("categoryId")
-                  productParameter = ACPTargetProduct.targetProductWithId(AnyObject, categoryId:categoryIdValue)
-                }
-            }
+  @objc(setPreviewRestartDeepLink:)
+  func setPreviewRestartDeepLink(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
 
-            targetParameters = ACPTargetParameters.targetParametersWithParameters(mboxParam,
-                profileParameters:profileParam,
-                product:productParameter,
-                order:orderParameters)
+      guard let deepLink = URL(string: command.arguments[0] as! String) else {
+        self.commandDelegate.send(
+          CDVPluginResult(
+            status: CDVCommandStatus_ERROR,
+            messageAs: "Unable setPreviewRestartDeepLink. Input was malformed"),
+          callbackId: command.callbackId)
+        return
+      }
 
-            ACPTarget.locationClickedWithName(mboxName, targetParameters:targetParameters)
+      ACPTarget.setPreviewRestartDeeplink(deepLink)
 
-            let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK)
-            self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-        })
-    }
+      let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    })
+  }
 
-    func locationsDisplayed(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            let mboxLists:[AnyObject]! = self.getCommandArg(command.arguments[0])
-            let request:NSDictionary! = self.getCommandArg(command.arguments[1])
-            var profileParam:NSDictionary!
-            var mboxParam:NSDictionary!
-            var orderParam:NSDictionary!
-            var productParam:NSDictionary!
-            var orderParameters:ACPTargetOrder! = nil
-            var targetParameters:ACPTargetParameters! = nil
-            var productParameter:ACPTargetProduct! = nil
+  @objc(retrieveLocationContent:)
+  func retrieveLocationContent(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      let locationRequests: NSDictionary! = command.arguments[0] as? NSDictionary
+      let requestArray: NSMutableArray! = NSMutableArray.init()
+      var profileParam: NSDictionary!
+      var mboxParam: NSDictionary!
+      var orderParam: NSDictionary!
+      var productParam: NSDictionary!
+      var profileLocParam: NSDictionary!
+      var mboxLocParam: NSDictionary!
+      var orderLocParam: NSDictionary!
+      var productLocParam: NSDictionary!
+      var orderParameters: ACPTargetOrder! = nil
+      var targetParameters: ACPTargetParameters! = nil
+      var productParameter: ACPTargetProduct! = nil
+      var orderLocParameters: ACPTargetOrder! = nil
+      var targetLocParameters: ACPTargetParameters! = nil
+      var productLocParameter: ACPTargetProduct! = nil
 
+      locationRequests.forEach({ (key: Any, value: Any) in
+        let request: NSDictionary! = value as? NSDictionary
+        let mboxName: String! = request.object(forKey: "mboxName") as? String
 
-            if request.objectForKey("mboxParameter").count() > 0 {
-                mboxParam = request.objectForKey("mboxParameter")
-            }
-            if request.objectForKey("profileParameter").count() > 0 {
-                profileParam = request.objectForKey("profileParameter")
-            }
+        if request.object(forKey: "mboxParameter") != nil {
+          mboxParam = request.object(forKey: "mboxParameter") as? NSDictionary
+        }
 
-            if request.objectForKey("orderParameter").count() > 0 {
-                orderParam = request.objectForKey("orderParameter")
-                if orderParam.objectForKey("orderId") != nil {
-                    let orderId:String! = orderParam.objectForKey("orderId")
-                    let orderTotal:NSNumber! = orderParam.objectForKey("orderTotal")
-                    let orderPurchasedIds:[AnyObject]! = orderParam.objectForKey("orderPurchasedIds")
-                    orderParameters = ACPTargetOrder.targetOrderWithId(orderId, total:orderTotal, purchasedProductIds:orderPurchasedIds)
-                }
-            }
+        if request.object(forKey: "profileParameter") != nil {
+          profileParam = request.object(forKey: "profileParameter") as? NSDictionary
+        }
 
-            if request.objectForKey("productParameter").count() > 0 {
-                productParam = request.objectForKey("productParameter")
-                if productParam.objectForKey("id")  != nil {
-                  let id:String! = productParam.objectForKey("id")
-                  let categoryIdValue:String! = productParam.objectForKey("categoryId")
-                  productParameter = ACPTargetProduct.targetProductWithId(AnyObject, categoryId:categoryIdValue)
-                }
-            }
+        if request.object(forKey: "orderParameter") != nil {
+          orderParam = request.object(forKey: "orderParameter") as? NSDictionary
+          if orderParam.object(forKey: "orderId") != nil {
+            let orderId: String! = orderParam.object(forKey: "orderId") as? String
+            let orderTotal: NSNumber! = orderParam.object(forKey: "orderTotal") as? NSNumber
+            let orderPurchasedIds: [String]! =
+              orderParam.object(forKey: "orderPurchasedIds") as? [String]
+            orderParameters = ACPTargetOrder(
+              id: orderId, total: orderTotal, purchasedProductIds: orderPurchasedIds)
+          }
+        }
 
-            targetParameters = ACPTargetParameters.targetParametersWithParameters(mboxParam,
-                profileParameters:profileParam,
-                product:productParameter,
-                order:orderParameters)
+        if request.object(forKey: "productParameter") != nil {
+          productParam = request.object(forKey: "productParameter") as? NSDictionary
+          if productParam.object(forKey: "id") != nil {
+            let id: String! = productParam.object(forKey: "id") as? String
+            let categoryIdValue: String! = productParam.object(forKey: "categoryId") as? String
+            productParameter = ACPTargetProduct(id: id, categoryId: categoryIdValue)
+          }
+        }
 
+        targetParameters = ACPTargetParameters(
+          parameters: mboxParam as? [AnyHashable: Any],
+          profileParameters: profileParam as? [AnyHashable: Any],
+          product: productParameter,
+          order: orderParameters)
 
-            ACPTarget.locationsDisplayed(mboxLists, withTargetParameters:targetParameters)
-
-            let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK)
-            self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-        })
-    }
-
-    func prefetchContent(command:CDVInvokedUrlCommand!) {
-        self.commandDelegate.runInBackground({
-            var error:NSError!
-            let locationRequests:NSDictionary! = command.arguments[0]
-            let requestArray:NSMutableArray! = NSMutableArray.array()
-            var profileParam:NSDictionary!
-            var mboxParam:NSDictionary!
-            var orderParam:NSDictionary!
-            var productParam:NSDictionary!
-            var profileLocParam:NSDictionary!
-            var mboxLocParam:NSDictionary!
-            var orderLocParam:NSDictionary!
-            var productLocParam:NSDictionary!
-            var orderParameters:ACPTargetOrder! = nil
-            var targetParameters:ACPTargetParameters! = nil
-            var productParameter:ACPTargetProduct! = nil
-            var orderLocParameters:ACPTargetOrder! = nil
-            var targetLocParameters:ACPTargetParameters! = nil
-            var productLocParameter:ACPTargetProduct! = nil
-            for key:AnyObject! in locationRequests {
-                let request:NSDictionary! = locationRequests.objectForKey(key)
-                let mboxName:String! = request.objectForKey("mboxName")
-                if request.objectForKey("mboxParameter").count() > 0 {
-                    mboxParam = request.objectForKey("mboxParameter")
-                }
-                if request.objectForKey("profileParameter").count() > 0 {
-                    profileParam = request.objectForKey("profileParameter")
-                }
-
-                if request.objectForKey("orderParameter").count() > 0 {
-                    orderParam = request.objectForKey("orderParameter")
-                    if orderParam.objectForKey("orderId") != nil {
-                        let orderId:String! = orderParam.objectForKey("orderId")
-                        let orderTotal:NSNumber! = orderParam.objectForKey("orderTotal")
-                        let orderPurchasedIds:[AnyObject]! = orderParam.objectForKey("orderPurchasedIds")
-                        orderParameters = ACPTargetOrder.targetOrderWithId(orderId, total:orderTotal, purchasedProductIds:orderPurchasedIds)
-                    }
-                }
-
-                if request.objectForKey("productParameter").count() > 0 {
-                    productParam = request.objectForKey("productParameter")
-                    if productParam.objectForKey("id")  != nil {
-                      let id:String! = productParam.objectForKey("id")
-                      let categoryIdValue:String! = productParam.objectForKey("categoryId")
-                      productParameter = ACPTargetProduct.targetProductWithId(AnyObject, categoryId:categoryIdValue)
-                    }
-                }
-
-
-                targetParameters = ACPTargetParameters.targetParametersWithParameters(mboxParam,
-                    profileParameters:profileParam,
-                    product:productParameter,
-                    order:orderParameters)
-
-                let requestObject:ACPTargetPrefetchObject! = ACPTargetPrefetchObject.targetPrefetchObjectWithName(mboxName,
-                    targetParameters:targetParameters)
-
-                requestArray.addObject(requestObject)
-             }
-
-
-            let requestLoc:NSDictionary! = command.arguments[1]
-
-
-            if requestLoc.objectForKey("mboxParameter").count() > 0 {
-                mboxLocParam = requestLoc.objectForKey("mboxParameter")
-            }
-            if requestLoc.objectForKey("profileParameter").count() > 0 {
-                profileLocParam = requestLoc.objectForKey("profileParameter")
-            }
-
-            if requestLoc.objectForKey("orderParameter").count() > 0 {
-                orderLocParam = requestLoc.objectForKey("orderParameter")
-                if orderLocParam.objectForKey("orderId")  != nil {
-                    let orderId:String! = orderLocParam.objectForKey("orderId")
-                    let orderTotal:NSNumber! = orderLocParam.objectForKey("orderTotal")
-                    let orderPurchasedIds:[AnyObject]! = orderLocParam.objectForKey("orderPurchasedIds")
-                    orderLocParameters = ACPTargetOrder.targetOrderWithId(orderId, total:orderTotal, purchasedProductIds:orderPurchasedIds)
-                }
-            }
-
-            if requestLoc.objectForKey("productParameter").count() > 0 {
-                productLocParam = requestLoc.objectForKey("productParameter")
-                if productLocParam.objectForKey("id")  != nil {
-                  let id:String! = productLocParam.objectForKey("id")
-                  let categoryIdValue:String! = productLocParam.objectForKey("categoryId")
-                  productLocParameter = ACPTargetProduct.targetProductWithId(AnyObject, categoryId:categoryIdValue)
-                }
-            }
-
-            targetLocParameters = ACPTargetParameters.targetParametersWithParameters(mboxLocParam,
-                                                            profileParameters:profileLocParam,
-                                                                      product:productLocParameter,
-                                                                        order:orderLocParameters)
-
-            ACPTarget.prefetchContent(requestArray, withParameters:targetLocParameters, callback:{ (error:NSError?) in
-                    let pluginResult:CDVPluginResult! = CDVPluginResult.resultWithStatus(CDVCommandStatus_OK)
-                    self.commandDelegate.sendPluginResult(pluginResult, callbackId:command.callbackId)
-            })
-
-
+        let requestObject: ACPTargetRequestObject! = ACPTargetRequestObject(
+          name: mboxName, targetParameters: targetParameters,
+          defaultContent: "defaultContent",
+          callback: { (content: String?) in
+            let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
+            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
           })
-    }
 
-    /*
-     * Helper functions
-     */
+        requestArray.add(requestObject)
+      })
 
-    func getCommandArg(argument:AnyObject!) -> AnyObject! {
-        return argument == (NSNull.null() as! id) ? nil : argument
-    }
+      let requestLoc: NSDictionary! = command.arguments[1] as? NSDictionary
+
+      if requestLoc.object(forKey: "mboxParameter") != nil {
+        mboxLocParam = requestLoc.object(forKey: "mboxParameter") as? NSDictionary
+      }
+
+      if requestLoc.object(forKey: "profileParameter") != nil {
+        profileLocParam = requestLoc.object(forKey: "profileParameter") as? NSDictionary
+      }
+
+      if requestLoc.object(forKey: "orderParameter") != nil {
+        orderLocParam = requestLoc.object(forKey: "orderParameter") as? NSDictionary
+        if orderLocParam.object(forKey: "orderId") != nil {
+          let orderId: String! = orderLocParam.object(forKey: "orderId") as? String
+          let orderTotal: NSNumber! = orderLocParam.object(forKey: "orderTotal") as? NSNumber
+          let orderPurchasedIds: [String]! =
+            orderLocParam.object(forKey: "orderPurchasedIds") as? [String]
+          orderLocParameters = ACPTargetOrder(
+            id: orderId, total: orderTotal, purchasedProductIds: orderPurchasedIds)
+        }
+
+      }
+
+      if requestLoc.object(forKey: "productParameter") != nil {
+        productLocParam = requestLoc.object(forKey: "productParameter") as? NSDictionary
+        if productLocParam.object(forKey: "id") != nil {
+          let id: String! = productLocParam.object(forKey: "id") as? String
+          let categoryIdValue: String! = productLocParam.object(forKey: "categoryId") as? String
+          productLocParameter = ACPTargetProduct(id: id, categoryId: categoryIdValue)
+        }
+
+      }
+
+      targetLocParameters = ACPTargetParameters(
+        parameters: mboxLocParam as? [AnyHashable: Any],
+        profileParameters: profileLocParam as? [AnyHashable: Any],
+        product: productLocParameter,
+        order: orderLocParameters)
+
+      ACPTarget.retrieveLocationContent(
+        requestArray as! [ACPTargetRequestObject], with: targetLocParameters)
+
+    })
+  }
+
+  @objc(locationClicked:)
+  func locationClicked(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+
+      let mboxName: String! = command.arguments[0] as? String
+      let request: NSDictionary! = command.arguments[1] as? NSDictionary
+      var profileParam: NSDictionary!
+      var mboxParam: NSDictionary!
+      var orderParam: NSDictionary!
+      var productParam: NSDictionary!
+      var orderParameters: ACPTargetOrder! = nil
+      var targetParameters: ACPTargetParameters! = nil
+      var productParameter: ACPTargetProduct! = nil
+
+      if request.object(forKey: "mboxParameter") != nil {
+        mboxParam = request.object(forKey: "mboxParameter") as? NSDictionary
+      }
+      if request.object(forKey: "profileParameter") != nil {
+        profileParam = request.object(forKey: "profileParameter") as? NSDictionary
+      }
+
+      if request.object(forKey: "orderParameter") != nil {
+        orderParam = request.object(forKey: "orderParameter") as? NSDictionary
+        if orderParam.object(forKey: "orderId") != nil {
+          let orderId: String! = orderParam.object(forKey: "orderId") as? String
+          let orderTotal: NSNumber! = orderParam.object(forKey: "orderTotal") as? NSNumber
+          let orderPurchasedIds: [String]! =
+            orderParam.object(forKey: "orderPurchasedIds") as? [String]
+          orderParameters = ACPTargetOrder(
+            id: orderId, total: orderTotal, purchasedProductIds: orderPurchasedIds)
+        }
+      }
+
+      if request.object(forKey: "productParameter") != nil {
+        productParam = request.object(forKey: "productParameter") as? NSDictionary
+        if productParam.object(forKey: "id") != nil {
+          let id: String! = productParam.object(forKey: "id") as? String
+          let categoryIdValue: String! = productParam.object(forKey: "categoryId") as? String
+          productParameter = ACPTargetProduct(id: id, categoryId: categoryIdValue)
+        }
+      }
+
+      targetParameters = ACPTargetParameters(
+        parameters: mboxParam as? [AnyHashable: Any],
+        profileParameters: profileParam as? [AnyHashable: Any],
+        product: productParameter,
+        order: orderParameters)
+
+      ACPTarget.locationClicked(withName: mboxName, targetParameters: targetParameters)
+
+      let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    })
+  }
+
+  @objc(locationsDisplayed:)
+  func locationsDisplayed(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      let mboxLists: [String]! = command.arguments[0] as? [String]
+      let request: NSDictionary! = command.arguments[1] as? NSDictionary
+      var profileParam: NSDictionary!
+      var mboxParam: NSDictionary!
+      var orderParam: NSDictionary!
+      var productParam: NSDictionary!
+      var orderParameters: ACPTargetOrder! = nil
+      var targetParameters: ACPTargetParameters! = nil
+      var productParameter: ACPTargetProduct! = nil
+
+      if request.object(forKey: "mboxParameter") != nil {
+        mboxParam = request.object(forKey: "mboxParameter") as? NSDictionary
+      }
+      if request.object(forKey: "profileParameter") != nil {
+        profileParam = request.object(forKey: "profileParameter") as? NSDictionary
+      }
+
+      if request.object(forKey: "orderParameter") != nil {
+        orderParam = request.object(forKey: "orderParameter") as? NSDictionary
+        if orderParam.object(forKey: "orderId") != nil {
+          let orderId: String! = orderParam.object(forKey: "orderId") as? String
+          let orderTotal: NSNumber! = orderParam.object(forKey: "orderTotal") as? NSNumber
+          let orderPurchasedIds: [String]! =
+            orderParam.object(forKey: "orderPurchasedIds") as? [String]
+          orderParameters = ACPTargetOrder(
+            id: orderId, total: orderTotal, purchasedProductIds: orderPurchasedIds)
+        }
+      }
+
+      if request.object(forKey: "productParameter") != nil {
+        productParam = request.object(forKey: "productParameter") as? NSDictionary
+        if productParam.object(forKey: "id") != nil {
+          let id: String! = productParam.object(forKey: "id") as? String
+          let categoryIdValue: String! = productParam.object(forKey: "categoryId") as? String
+          productParameter = ACPTargetProduct(id: id, categoryId: categoryIdValue)
+        }
+      }
+
+      targetParameters = ACPTargetParameters(
+        parameters: mboxParam as? [AnyHashable: Any],
+        profileParameters: profileParam as? [AnyHashable: Any],
+        product: productParameter,
+        order: orderParameters)
+
+      ACPTarget.locationsDisplayed(mboxLists, with: targetParameters)
+
+      let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    })
+  }
+
+  @objc(prefetchContent:)
+  func prefetchContent(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+
+      let locationRequests: NSDictionary! = command.arguments[0] as? NSDictionary
+      let requestArray: NSMutableArray! = NSMutableArray.init()
+      var profileParam: NSDictionary!
+      var mboxParam: NSDictionary!
+      var orderParam: NSDictionary!
+      var productParam: NSDictionary!
+      var profileLocParam: NSDictionary!
+      var mboxLocParam: NSDictionary!
+      var orderLocParam: NSDictionary!
+      var productLocParam: NSDictionary!
+      var orderParameters: ACPTargetOrder! = nil
+      var targetParameters: ACPTargetParameters! = nil
+      var productParameter: ACPTargetProduct! = nil
+      var orderLocParameters: ACPTargetOrder! = nil
+      var targetLocParameters: ACPTargetParameters! = nil
+      var productLocParameter: ACPTargetProduct! = nil
+
+      locationRequests.forEach { (key: Any, valueObj: Any) in
+        let request: NSDictionary! = valueObj as? NSDictionary
+        let mboxName: String! = request.object(forKey: "mboxName") as? String
+
+        if request.object(forKey: "mboxParameter") != nil {
+          mboxParam = request.object(forKey: "mboxParameter") as? NSDictionary
+        }
+        if request.object(forKey: "profileParameter") != nil {
+          profileParam = request.object(forKey: "profileParameter") as? NSDictionary
+        }
+
+        if request.object(forKey: "orderParameter") != nil {
+          orderParam = request.object(forKey: "orderParameter") as? NSDictionary
+          if orderParam.object(forKey: "orderId") != nil {
+            let orderId: String! = orderParam.object(forKey: "orderId") as? String
+            let orderTotal: NSNumber! = orderParam.object(forKey: "orderTotal") as? NSNumber
+            let orderPurchasedIds: [String]! =
+              orderParam.object(forKey: "orderPurchasedIds") as? [String]
+            orderParameters = ACPTargetOrder(
+              id: orderId, total: orderTotal, purchasedProductIds: orderPurchasedIds)
+          }
+        }
+
+        if request.object(forKey: "productParameter") != nil {
+          productParam = request.object(forKey: "productParameter") as? NSDictionary
+          if productParam.object(forKey: "id") != nil {
+            let id: String! = productParam.object(forKey: "id") as? String
+            let categoryIdValue: String! = productParam.object(forKey: "categoryId") as? String
+            productParameter = ACPTargetProduct(id: id, categoryId: categoryIdValue)
+          }
+        }
+
+        targetParameters = ACPTargetParameters(
+          parameters: mboxParam as? [AnyHashable: Any],
+          profileParameters: profileParam as? [AnyHashable: Any],
+          product: productParameter,
+          order: orderParameters)
+
+        let requestObject: ACPTargetPrefetchObject! = ACPTargetPrefetchObject(
+          name: mboxName,
+          targetParameters: targetParameters)
+
+        requestArray.add(requestObject)
+
+      }
+
+      let requestLoc: NSDictionary! = command.arguments[1] as? NSDictionary
+
+      if requestLoc.object(forKey: "mboxParameter") != nil {
+        mboxLocParam = requestLoc.object(forKey: "mboxParameter") as? NSDictionary
+      }
+      if requestLoc.object(forKey: "profileParameter") != nil {
+        profileLocParam = requestLoc.object(forKey: "profileParameter") as? NSDictionary
+      }
+
+      if requestLoc.object(forKey: "orderParameter") != nil {
+        orderLocParam = requestLoc.object(forKey: "orderParameter") as? NSDictionary
+        if orderLocParam.object(forKey: "orderId") != nil {
+          let orderId: String! = orderLocParam.object(forKey: "orderId") as? String
+          let orderTotal: NSNumber! = orderLocParam.object(forKey: "orderTotal") as? NSNumber
+          let orderPurchasedIds: [String]! =
+            orderLocParam.object(forKey: "orderPurchasedIds") as? [String]
+          orderLocParameters = ACPTargetOrder(
+            id: orderId, total: orderTotal, purchasedProductIds: orderPurchasedIds)
+        }
+      }
+
+      if requestLoc.object(forKey: "productParameter") != nil {
+        productLocParam = requestLoc.object(forKey: "productParameter") as? NSDictionary
+        if productLocParam.object(forKey: "id") != nil {
+          let id: String! = productLocParam.object(forKey: "id") as? String
+          let categoryIdValue: String! = productLocParam.object(forKey: "categoryId") as? String
+          productLocParameter = ACPTargetProduct(id: id, categoryId: categoryIdValue)
+        }
+      }
+
+      targetLocParameters = ACPTargetParameters(
+        parameters: mboxLocParam as? [AnyHashable: Any],
+        profileParameters: profileLocParam as? [AnyHashable: Any],
+        product: productLocParameter,
+        order: orderLocParameters)
+
+      ACPTarget.prefetchContent(
+        requestArray as! [ACPTargetPrefetchObject], with: targetLocParameters,
+        callback: { (error) in
+          let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        })
+
+    })
+  }
 }
