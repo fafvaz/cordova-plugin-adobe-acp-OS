@@ -27,6 +27,7 @@ let INVALID_AUTH_STATE = 3
             status: CDVCommandStatus_ERROR,
             messageAs: "Unable appendVisitorInfoForUrl. Input was malformed"),
           callbackId: command.callbackId)
+          return
       }
 
       ACPIdentity.append(
