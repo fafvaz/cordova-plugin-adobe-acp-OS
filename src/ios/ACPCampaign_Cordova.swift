@@ -35,7 +35,7 @@ import UserNotifications
 
         self.typeId = Bundle.main.object(forInfoDictionaryKey: "TypeId") as? String
 
-        if error != nil {
+        if error == nil {
 
           DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  // in half a second...
             let _: String! = command.arguments[0] as? String
