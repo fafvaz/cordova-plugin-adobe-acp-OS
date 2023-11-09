@@ -1,4 +1,4 @@
-import ACPAnalytics
+import AEPAnalytics
 
 @objc(ACPAnalytics_Cordova) class ACPAnalytics_Cordova: CDVPlugin {
 
@@ -6,7 +6,7 @@ import ACPAnalytics
   func extensionVersion(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
       var pluginResult: CDVPluginResult! = nil
-      let extensionVersion: String! = ACPAnalytics.extensionVersion()
+      let extensionVersion: String! = Analytics.extensionVersion
 
       if extensionVersion != nil && extensionVersion.count > 0 {
         pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: extensionVersion)
@@ -21,7 +21,7 @@ import ACPAnalytics
   @objc(sendQueuedHits:)
   func sendQueuedHits(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPAnalytics.sendQueuedHits()
+      Analytics.sendQueuedHits()
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
     })
@@ -30,7 +30,7 @@ import ACPAnalytics
   @objc(clearQueue:)
   func clearQueue(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPAnalytics.clearQueue()
+      Analytics.clearQueue()
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
     })
@@ -39,10 +39,18 @@ import ACPAnalytics
   @objc(getQueueSize:)
   func getQueueSize(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPAnalytics.getQueueSize({ (queueSize: UInt) in
-        let pluginResult: CDVPluginResult! = CDVPluginResult(
-          status: CDVCommandStatus_OK, messageAs: String(format: "%@", queueSize))
-        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+
+      Analytics.getQueueSize(completion: { queueSize, error in
+
+        if error != nil {
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_ERROR, messageAs: error?.localizedDescription)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        } else {
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_OK, messageAs: String(format: "%@", queueSize))
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        }
       })
     })
   }
@@ -50,10 +58,19 @@ import ACPAnalytics
   @objc(getTrackingIdentifier:)
   func getTrackingIdentifier(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPAnalytics.getTrackingIdentifier({ (trackingIdentifier: String?) in
-        let pluginResult: CDVPluginResult! = CDVPluginResult(
-          status: CDVCommandStatus_OK, messageAs: trackingIdentifier)
-        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+
+      Analytics.getTrackingIdentifier(completion: { trackingIdentifier, error in
+
+        if error == nil {
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_OK, messageAs: trackingIdentifier)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        } else {
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_ERROR, messageAs: error?.localizedDescription)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        }
+
       })
     })
   }
@@ -61,10 +78,19 @@ import ACPAnalytics
   @objc(getVisitorIdentifier:)
   func getVisitorIdentifier(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPAnalytics.getVisitorIdentifier({ (visitorIdentifier: String?) in
-        let pluginResult: CDVPluginResult! = CDVPluginResult(
-          status: CDVCommandStatus_OK, messageAs: visitorIdentifier)
-        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+
+      Analytics.getVisitorIdentifier(completion: { visitorIdentifier, error in
+
+        if error == nil {
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_OK, messageAs: visitorIdentifier)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        } else {
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_ERROR, messageAs: error?.localizedDescription)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        }
+
       })
     })
   }
@@ -73,7 +99,7 @@ import ACPAnalytics
   func setVisitorIdentifier(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
       let vid: String! = command.arguments[0] as? String
-      ACPAnalytics.setVisitorIdentifier(vid)
+      Analytics.setVisitorIdentifier(visitorIdentifier: vid)
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
     })

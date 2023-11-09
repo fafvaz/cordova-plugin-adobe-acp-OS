@@ -1,4 +1,5 @@
-import ACPPlaces
+import AEPPlaces
+import CoreLocation
 
 @objc(ACPPlaces_Cordova) class ACPPlaces_Cordova: CDVPlugin {
 
@@ -17,7 +18,7 @@ import ACPPlaces
   @objc(clear:)
   func clear(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPPlaces.clear()
+      Places.clear()
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
     })
@@ -27,7 +28,7 @@ import ACPPlaces
   func extensionVersion(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
       var pluginResult: CDVPluginResult! = nil
-      let extensionVersion: String! = ACPPlaces.extensionVersion()
+      let extensionVersion: String! = Places.extensionVersion
 
       if extensionVersion != nil && extensionVersion.count > 0 {
         pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: extensionVersion)
@@ -44,10 +45,8 @@ import ACPPlaces
     self.commandDelegate.run(inBackground: {
       var currentPoisString: String! = self.EMPTY_ARRAY_STRING
 
-      ACPPlaces.getCurrentPoints(ofInterest: { (retrievedPois: [AnyObject]?) in
-        if retrievedPois != nil && retrievedPois?.count != 0 {
-          currentPoisString = self.generatePOIString(retrievedPois: retrievedPois)
-        }
+      Places.getCurrentPointsOfInterest({ retrievedPois in
+        currentPoisString = self.generatePOIString(retrievedPois: retrievedPois)
       })
 
       DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  // in half a second...
@@ -62,13 +61,13 @@ import ACPPlaces
   func getLastKnownLocation(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
 
-      ACPPlaces.getLastKnownLocation { [self] (lastLocation) in
+      Places.getLastKnownLocation { [self] (lastLocation) in
 
         do {
           let tempDict: NSMutableDictionary! = NSMutableDictionary()
           tempDict.setValue(lastLocation?.coordinate.latitude ?? 0, forKey: LATITUDE)
           tempDict.setValue(lastLocation?.coordinate.longitude ?? 0, forKey: LONGITUDE)
-          let jsonData: Data! = try JSONSerialization.data(withJSONObject: tempDict) as Data
+          let jsonData: Data! = try JSONSerialization.data(withJSONObject: tempDict!) as Data
           let pluginResult: CDVPluginResult! = CDVPluginResult(
             status: CDVCommandStatus_OK, messageAs: String(data: jsonData, encoding: .utf8))
           self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
@@ -91,19 +90,12 @@ import ACPPlaces
       let limit: UInt = command.arguments[1] as? UInt ?? 0
       var currentPoisString: String! = self.EMPTY_ARRAY_STRING
 
-      ACPPlaces.getNearbyPoints(
-        ofInterest: currentLocation, limit: limit,
-        callback: { (retrievedPois: [AnyObject]?) in
+      Places.getNearbyPointsOfInterest(
+        forLocation: currentLocation, withLimit: limit,
+        closure: { retrievedPois, responseCode in
           currentPoisString = self.generatePOIString(retrievedPois: retrievedPois)
-        },
-        errorCallback: { (error: ACPPlacesRequestError) in
-
-          self.commandDelegate.send(
-            CDVPluginResult(
-              status: CDVCommandStatus_ERROR,
-              messageAs: String(format: "Places request error code: %lu", error as! CVarArg)),
-            callbackId: command.callbackId)
         })
+
       DispatchQueue.main.asyncAfter(deadline: .now() + 1) {  // in half a second...
         let pluginResult: CDVPluginResult! = CDVPluginResult(
           status: CDVCommandStatus_OK, messageAs: currentPoisString)
@@ -118,8 +110,8 @@ import ACPPlaces
       let geofenceDict: NSDictionary! = command.arguments[0] as? NSDictionary
       let regionDict: NSDictionary! =
         geofenceDict.value(forKey: self.CIRCULAR_REGION) as? NSDictionary
-      let eventType: ACPRegionEventType =
-        command.arguments[1] as? ACPRegionEventType ?? ACPRegionEventType.none
+      let eventType: PlacesRegionEvent =
+        command.arguments[1] as? PlacesRegionEvent ?? PlacesRegionEvent.exit
       let latitude: CLLocationDegrees =
         regionDict.value(forKey: self.LOWERCASE_LATITUDE) as? Double ?? 0
       let longitude: CLLocationDegrees =
@@ -129,7 +121,7 @@ import ACPPlaces
       let identifier: String! = geofenceDict.value(forKey: self.REQUEST_ID) as? String
       let region: CLRegion! = CLCircularRegion(
         center: center, radius: CLLocationDistance(radius), identifier: identifier)
-      ACPPlaces.processRegionEvent(region, for: eventType)
+      Places.processRegionEvent(eventType, forRegion: region)
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
     })
@@ -139,7 +131,7 @@ import ACPPlaces
   func setAuthorizationStatus(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
       let status: Int = command.arguments[0] as? Int ?? 0
-      ACPPlaces.setAuthorizationStatus(self.convertToCLAuthorizationStatus(status: status))
+      Places.setAuthorizationStatus(self.convertToCLAuthorizationStatus(status: status))
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
     })
@@ -157,16 +149,16 @@ import ACPPlaces
         (anyCurrentPoi) in
 
         let tempDict: NSMutableDictionary! = NSMutableDictionary()
-        let currentPoi = anyCurrentPoi as! ACPPlacesPoi
+        let currentPoi = anyCurrentPoi as! PointOfInterest
         tempDict.setValue(currentPoi.name, forKey: self.POI)
         tempDict.setValue(currentPoi.latitude, forKey: self.LATITUDE)
         tempDict.setValue(currentPoi.longitude, forKey: self.LONGITUDE)
         tempDict.setValue(currentPoi.identifier, forKey: self.IDENTIFIER)
-        retrievedPoisArray.add(tempDict)
+        retrievedPoisArray.add(tempDict as Any)
       })
 
       do {
-        let jsonData: Data! = try JSONSerialization.data(withJSONObject: retrievedPoisArray)
+        let jsonData: Data! = try JSONSerialization.data(withJSONObject: retrievedPoisArray as Any)
         return String(data: jsonData, encoding: .utf8)
       } catch let error {
         print(error)

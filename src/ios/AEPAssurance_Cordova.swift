@@ -6,7 +6,7 @@ import AEPAssurance
   func extensionVersion(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
       var pluginResult: CDVPluginResult! = nil
-      let extensionVersion: String! = AEPAssurance.extensionVersion()
+      let extensionVersion: String! = Assurance.extensionVersion
 
       if extensionVersion != nil && extensionVersion.count > 0 {
         pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: extensionVersion)
@@ -22,7 +22,7 @@ import AEPAssurance
   func startSession(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
       let url: URL! = URL.init(string: command.arguments[0] as! String)
-      AEPAssurance.startSession(url)
+      Assurance.startSession(url: url)
       self.commandDelegate.send(nil, callbackId: command.callbackId)
     })
   }

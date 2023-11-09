@@ -1,19 +1,48 @@
-import ACPCore
+import AEPAnalytics
+import AEPAssurance
+import AEPCampaign
+import AEPCore
+import AEPIdentity
+import AEPLifecycle
+import AEPMobileServices
+import AEPPlaces
+import AEPSignal
+import AEPTarget
+import AEPUserProfile
 
+func application(
+  _ application: UIApplication,
+  didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+) -> Bool {
+  let appState = application.applicationState
+  let appId = Bundle.main.object(forInfoDictionaryKey: "AppId") as! String
 
-func application(application:UIApplication!, swizzleddidRegisterForRemoteNotificationsWithDeviceToken deviceToken:Data!) {
-  ACPCore.setPushIdentifier(deviceToken)
-  NSLog("ACPCampaign_didRegisterForRemoteNotificationsWithDeviceToken")
+  MobileCore.registerExtensions(
+    [
+      Signal.self,
+      Lifecycle.self,
+      UserProfile.self,
+      Identity.self,
+      Assurance.self,
+      Campaign.self,
+      Places.self,
+      Analytics.self,
+      AEPMobileServices.self,
+      Target.self,
+      Assurance.self,
+    ],
+    {
+      MobileCore.configureWith(appId: appId)
+      if appState != .background {
+        // only start lifecycle if the application is not in the background
+        MobileCore.lifecycleStart(additionalContextData: nil)
+      }
+    })
+  return true
 }
 
-func application(application:UIApplication!, didFailToRegisterForRemoteNotificationsWithError error:NSError!) {
-    NSLog("ACPCampaign_didFailToRegisterForRemoteNotificationsWithError")
-}
-
-func application(application:UIApplication!, didReceiveRemoteNotification userInfo:NSDictionary!, fetchCompletionHandler handler:(UIBackgroundFetchResult)->Void) {
-    NSLog("ACPCampaign_didReceiveNotification")
-}
-
-func applicationDidBecomeActive(application:UIApplication!) {
-    application.applicationIconBadgeNumber = 0
+func application(
+  _ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+) {
+  MobileCore.setPushIdentifier(deviceToken)
 }

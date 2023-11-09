@@ -1,5 +1,5 @@
-import ACPCampaign
-import ACPCore
+import AEPCampaign
+import AEPCore
 import UserNotifications
 
 @objc(ACPCampaign_Cordova) class ACPCampaign_Cordova: CDVPlugin, UNUserNotificationCenterDelegate {
@@ -10,7 +10,7 @@ import UserNotifications
   func extensionVersion(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
       var pluginResult: CDVPluginResult! = nil
-      let extensionVersion: String! = ACPCampaign.extensionVersion()
+      let extensionVersion: String! = Campaign.extensionVersion
 
       if extensionVersion != nil && extensionVersion.count > 0 {
         pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: extensionVersion)
@@ -41,7 +41,7 @@ import UserNotifications
             let _: String! = command.arguments[0] as? String
             let valueTypeId: String! = command.arguments[1] as? String
 
-            ACPCore.collectPii([self.typeId: valueTypeId])
+            MobileCore.collectPii([self.typeId: valueTypeId!])
             UIApplication.shared.registerForRemoteNotifications()
           }
 
@@ -53,7 +53,7 @@ import UserNotifications
         }
       })
 
-    ACPCore.setLogLevel(.debug)
+    MobileCore.setLogLevel(.debug)
     let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
     self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
   }

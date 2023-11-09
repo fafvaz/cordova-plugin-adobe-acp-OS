@@ -1,11 +1,11 @@
-import ACPTarget
+import AEPTarget
 
 @objc(ACPTarget_Cordova) class ACPTarget_Cordova: CDVPlugin {
 
   @objc(clearPrefetchCache:)
   func clearPrefetchCache(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPTarget.clearPrefetchCache()
+      Target.clearPrefetchCache()
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
     })
@@ -15,7 +15,7 @@ import ACPTarget
   func extensionVersion(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
       var pluginResult: CDVPluginResult! = nil
-      let extensionVersion: String! = ACPTarget.extensionVersion()
+      let extensionVersion: String! = Target.extensionVersion
 
       if extensionVersion != nil && extensionVersion.count > 0 {
         pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: extensionVersion)
@@ -30,10 +30,16 @@ import ACPTarget
   @objc(getThirdPartyId:)
   func getThirdPartyId(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPTarget.getThirdPartyId({ (thirdPartyId: String?) in
-        let pluginResult: CDVPluginResult! = CDVPluginResult(
-          status: CDVCommandStatus_OK, messageAs: thirdPartyId)
-        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      Target.getThirdPartyId({ (thirdPartyId: String?, error) in
+        if error == nil {
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_OK, messageAs: thirdPartyId)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        } else {
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_ERROR, messageAs: error?.localizedDescription)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        }
       })
     })
   }
@@ -41,10 +47,18 @@ import ACPTarget
   @objc(getTntId:)
   func getTntId(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPTarget.getTntId({ (tntId: String?) in
-        let pluginResult: CDVPluginResult! = CDVPluginResult(
-          status: CDVCommandStatus_OK, messageAs: tntId)
-        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      Target.getTntId({ (tntId: String?, error) in
+
+        if error == nil {
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_OK, messageAs: tntId)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        } else {
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_ERROR, messageAs: error?.localizedDescription)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        }
+
       })
     })
   }
@@ -52,7 +66,7 @@ import ACPTarget
   @objc(resetExperience:)
   func resetExperience(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPTarget.resetExperience()
+      Target.resetExperience()
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
     })
@@ -63,7 +77,7 @@ import ACPTarget
     self.commandDelegate.run(inBackground: {
       let thirdPartyId: String! = command.arguments[0] as? String
 
-      ACPTarget.setThirdPartyId(thirdPartyId)
+      Target.setThirdPartyId(thirdPartyId)
 
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
@@ -83,7 +97,7 @@ import ACPTarget
         return
       }
 
-      ACPTarget.setPreviewRestartDeeplink(deepLink)
+      Target.setPreviewRestartDeepLink(deepLink)
 
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
@@ -103,12 +117,12 @@ import ACPTarget
       var mboxLocParam: NSDictionary!
       var orderLocParam: NSDictionary!
       var productLocParam: NSDictionary!
-      var orderParameters: ACPTargetOrder! = nil
-      var targetParameters: ACPTargetParameters! = nil
-      var productParameter: ACPTargetProduct! = nil
-      var orderLocParameters: ACPTargetOrder! = nil
-      var targetLocParameters: ACPTargetParameters! = nil
-      var productLocParameter: ACPTargetProduct! = nil
+      var orderParameters: TargetOrder! = nil
+      var targetParameters: TargetParameters! = nil
+      var productParameter: TargetProduct! = nil
+      var orderLocParameters: TargetOrder! = nil
+      var targetLocParameters: TargetParameters! = nil
+      var productLocParameter: TargetProduct! = nil
 
       locationRequests.forEach({ (key: Any, value: Any) in
         let request: NSDictionary! = value as? NSDictionary
@@ -126,10 +140,10 @@ import ACPTarget
           orderParam = request.object(forKey: "orderParameter") as? NSDictionary
           if orderParam.object(forKey: "orderId") != nil {
             let orderId: String! = orderParam.object(forKey: "orderId") as? String
-            let orderTotal: NSNumber! = orderParam.object(forKey: "orderTotal") as? NSNumber
+            let orderTotal: Double! = orderParam.object(forKey: "orderTotal") as? Double
             let orderPurchasedIds: [String]! =
               orderParam.object(forKey: "orderPurchasedIds") as? [String]
-            orderParameters = ACPTargetOrder(
+            orderParameters = TargetOrder(
               id: orderId, total: orderTotal, purchasedProductIds: orderPurchasedIds)
           }
         }
@@ -139,25 +153,20 @@ import ACPTarget
           if productParam.object(forKey: "id") != nil {
             let id: String! = productParam.object(forKey: "id") as? String
             let categoryIdValue: String! = productParam.object(forKey: "categoryId") as? String
-            productParameter = ACPTargetProduct(id: id, categoryId: categoryIdValue)
+            productParameter = TargetProduct(productId: id, categoryId: categoryIdValue)
           }
         }
 
-        targetParameters = ACPTargetParameters(
-          parameters: mboxParam as? [AnyHashable: Any],
-          profileParameters: profileParam as? [AnyHashable: Any],
-          product: productParameter,
-          order: orderParameters)
+        targetParameters = TargetParameters(
+          parameters: mboxParam as? [String: String],
+          profileParameters: profileParam as? [String: String],
+          order: orderParameters, product: productParameter)
 
-        let requestObject: ACPTargetRequestObject! = ACPTargetRequestObject(
-          name: mboxName, targetParameters: targetParameters,
-          defaultContent: "defaultContent",
-          callback: { (content: String?) in
-            let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
-            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-          })
+        let requestObject: TargetRequest! = TargetRequest(
+          mboxName: mboxName, defaultContent: "defaultContent", targetParameters: targetParameters,
+          contentCallback: nil)
 
-        requestArray.add(requestObject)
+        requestArray.add(requestObject as Any)
       })
 
       let requestLoc: NSDictionary! = command.arguments[1] as? NSDictionary
@@ -174,10 +183,10 @@ import ACPTarget
         orderLocParam = requestLoc.object(forKey: "orderParameter") as? NSDictionary
         if orderLocParam.object(forKey: "orderId") != nil {
           let orderId: String! = orderLocParam.object(forKey: "orderId") as? String
-          let orderTotal: NSNumber! = orderLocParam.object(forKey: "orderTotal") as? NSNumber
+          let orderTotal: Double! = orderLocParam.object(forKey: "orderTotal") as? Double
           let orderPurchasedIds: [String]! =
             orderLocParam.object(forKey: "orderPurchasedIds") as? [String]
-          orderLocParameters = ACPTargetOrder(
+          orderLocParameters = TargetOrder(
             id: orderId, total: orderTotal, purchasedProductIds: orderPurchasedIds)
         }
 
@@ -188,19 +197,18 @@ import ACPTarget
         if productLocParam.object(forKey: "id") != nil {
           let id: String! = productLocParam.object(forKey: "id") as? String
           let categoryIdValue: String! = productLocParam.object(forKey: "categoryId") as? String
-          productLocParameter = ACPTargetProduct(id: id, categoryId: categoryIdValue)
+          productLocParameter = TargetProduct(productId: id, categoryId: categoryIdValue)
         }
 
       }
 
-      targetLocParameters = ACPTargetParameters(
-        parameters: mboxLocParam as? [AnyHashable: Any],
-        profileParameters: profileLocParam as? [AnyHashable: Any],
-        product: productLocParameter,
-        order: orderLocParameters)
+      targetLocParameters = TargetParameters(
+        parameters: mboxLocParam as? [String: String],
+        profileParameters: profileLocParam as? [String: String],
+        order: orderLocParameters, product: productLocParameter)
 
-      ACPTarget.retrieveLocationContent(
-        requestArray as! [ACPTargetRequestObject], with: targetLocParameters)
+      Target.retrieveLocationContent(
+        requestArray as! [TargetRequest], with: targetLocParameters)
 
     })
   }
@@ -215,9 +223,9 @@ import ACPTarget
       var mboxParam: NSDictionary!
       var orderParam: NSDictionary!
       var productParam: NSDictionary!
-      var orderParameters: ACPTargetOrder! = nil
-      var targetParameters: ACPTargetParameters! = nil
-      var productParameter: ACPTargetProduct! = nil
+      var orderParameters: TargetOrder! = nil
+      var targetParameters: TargetParameters! = nil
+      var productParameter: TargetProduct! = nil
 
       if request.object(forKey: "mboxParameter") != nil {
         mboxParam = request.object(forKey: "mboxParameter") as? NSDictionary
@@ -230,10 +238,10 @@ import ACPTarget
         orderParam = request.object(forKey: "orderParameter") as? NSDictionary
         if orderParam.object(forKey: "orderId") != nil {
           let orderId: String! = orderParam.object(forKey: "orderId") as? String
-          let orderTotal: NSNumber! = orderParam.object(forKey: "orderTotal") as? NSNumber
+          let orderTotal: Double! = orderParam.object(forKey: "orderTotal") as? Double
           let orderPurchasedIds: [String]! =
             orderParam.object(forKey: "orderPurchasedIds") as? [String]
-          orderParameters = ACPTargetOrder(
+          orderParameters = TargetOrder(
             id: orderId, total: orderTotal, purchasedProductIds: orderPurchasedIds)
         }
       }
@@ -243,17 +251,16 @@ import ACPTarget
         if productParam.object(forKey: "id") != nil {
           let id: String! = productParam.object(forKey: "id") as? String
           let categoryIdValue: String! = productParam.object(forKey: "categoryId") as? String
-          productParameter = ACPTargetProduct(id: id, categoryId: categoryIdValue)
+          productParameter = TargetProduct(productId: id, categoryId: categoryIdValue)
         }
       }
 
-      targetParameters = ACPTargetParameters(
-        parameters: mboxParam as? [AnyHashable: Any],
-        profileParameters: profileParam as? [AnyHashable: Any],
-        product: productParameter,
-        order: orderParameters)
+      targetParameters = TargetParameters(
+        parameters: mboxParam as? [String: String],
+        profileParameters: profileParam as? [String: String],
+        order: orderParameters, product: productParameter)
 
-      ACPTarget.locationClicked(withName: mboxName, targetParameters: targetParameters)
+      Target.clickedLocation(mboxName, targetParameters: targetParameters)
 
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
@@ -269,9 +276,9 @@ import ACPTarget
       var mboxParam: NSDictionary!
       var orderParam: NSDictionary!
       var productParam: NSDictionary!
-      var orderParameters: ACPTargetOrder! = nil
-      var targetParameters: ACPTargetParameters! = nil
-      var productParameter: ACPTargetProduct! = nil
+      var orderParameters: TargetOrder! = nil
+      var targetParameters: TargetParameters! = nil
+      var productParameter: TargetProduct! = nil
 
       if request.object(forKey: "mboxParameter") != nil {
         mboxParam = request.object(forKey: "mboxParameter") as? NSDictionary
@@ -284,10 +291,10 @@ import ACPTarget
         orderParam = request.object(forKey: "orderParameter") as? NSDictionary
         if orderParam.object(forKey: "orderId") != nil {
           let orderId: String! = orderParam.object(forKey: "orderId") as? String
-          let orderTotal: NSNumber! = orderParam.object(forKey: "orderTotal") as? NSNumber
+          let orderTotal: Double! = orderParam.object(forKey: "orderTotal") as? Double
           let orderPurchasedIds: [String]! =
             orderParam.object(forKey: "orderPurchasedIds") as? [String]
-          orderParameters = ACPTargetOrder(
+          orderParameters = TargetOrder(
             id: orderId, total: orderTotal, purchasedProductIds: orderPurchasedIds)
         }
       }
@@ -297,17 +304,16 @@ import ACPTarget
         if productParam.object(forKey: "id") != nil {
           let id: String! = productParam.object(forKey: "id") as? String
           let categoryIdValue: String! = productParam.object(forKey: "categoryId") as? String
-          productParameter = ACPTargetProduct(id: id, categoryId: categoryIdValue)
+          productParameter = TargetProduct(productId: id, categoryId: categoryIdValue)
         }
       }
 
-      targetParameters = ACPTargetParameters(
-        parameters: mboxParam as? [AnyHashable: Any],
-        profileParameters: profileParam as? [AnyHashable: Any],
-        product: productParameter,
-        order: orderParameters)
+      targetParameters = TargetParameters(
+        parameters: mboxParam as? [String: String],
+        profileParameters: profileParam as? [String: String],
+        order: orderParameters, product: productParameter)
 
-      ACPTarget.locationsDisplayed(mboxLists, with: targetParameters)
+      Target.displayedLocations(mboxLists, targetParameters: targetParameters)
 
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
@@ -328,12 +334,12 @@ import ACPTarget
       var mboxLocParam: NSDictionary!
       var orderLocParam: NSDictionary!
       var productLocParam: NSDictionary!
-      var orderParameters: ACPTargetOrder! = nil
-      var targetParameters: ACPTargetParameters! = nil
-      var productParameter: ACPTargetProduct! = nil
-      var orderLocParameters: ACPTargetOrder! = nil
-      var targetLocParameters: ACPTargetParameters! = nil
-      var productLocParameter: ACPTargetProduct! = nil
+      var orderParameters: TargetOrder! = nil
+      var targetParameters: TargetParameters! = nil
+      var productParameter: TargetProduct! = nil
+      var orderLocParameters: TargetOrder! = nil
+      var targetLocParameters: TargetParameters! = nil
+      var productLocParameter: TargetProduct! = nil
 
       locationRequests.forEach { (key: Any, valueObj: Any) in
         let request: NSDictionary! = valueObj as? NSDictionary
@@ -350,10 +356,10 @@ import ACPTarget
           orderParam = request.object(forKey: "orderParameter") as? NSDictionary
           if orderParam.object(forKey: "orderId") != nil {
             let orderId: String! = orderParam.object(forKey: "orderId") as? String
-            let orderTotal: NSNumber! = orderParam.object(forKey: "orderTotal") as? NSNumber
+            let orderTotal: Double! = orderParam.object(forKey: "orderTotal") as? Double
             let orderPurchasedIds: [String]! =
               orderParam.object(forKey: "orderPurchasedIds") as? [String]
-            orderParameters = ACPTargetOrder(
+            orderParameters = TargetOrder(
               id: orderId, total: orderTotal, purchasedProductIds: orderPurchasedIds)
           }
         }
@@ -363,21 +369,20 @@ import ACPTarget
           if productParam.object(forKey: "id") != nil {
             let id: String! = productParam.object(forKey: "id") as? String
             let categoryIdValue: String! = productParam.object(forKey: "categoryId") as? String
-            productParameter = ACPTargetProduct(id: id, categoryId: categoryIdValue)
+            productParameter = TargetProduct(productId: id, categoryId: categoryIdValue)
           }
         }
 
-        targetParameters = ACPTargetParameters(
-          parameters: mboxParam as? [AnyHashable: Any],
-          profileParameters: profileParam as? [AnyHashable: Any],
-          product: productParameter,
-          order: orderParameters)
+        targetParameters = TargetParameters(
+          parameters: mboxParam as? [String: String],
+          profileParameters: profileParam as? [String: String],
+          order: orderParameters, product: productParameter)
 
-        let requestObject: ACPTargetPrefetchObject! = ACPTargetPrefetchObject(
+        let requestObject: TargetPrefetch! = TargetPrefetch(
           name: mboxName,
           targetParameters: targetParameters)
 
-        requestArray.add(requestObject)
+        requestArray.add(requestObject as Any)
 
       }
 
@@ -394,10 +399,10 @@ import ACPTarget
         orderLocParam = requestLoc.object(forKey: "orderParameter") as? NSDictionary
         if orderLocParam.object(forKey: "orderId") != nil {
           let orderId: String! = orderLocParam.object(forKey: "orderId") as? String
-          let orderTotal: NSNumber! = orderLocParam.object(forKey: "orderTotal") as? NSNumber
+          let orderTotal: Double! = orderLocParam.object(forKey: "orderTotal") as? Double
           let orderPurchasedIds: [String]! =
             orderLocParam.object(forKey: "orderPurchasedIds") as? [String]
-          orderLocParameters = ACPTargetOrder(
+          orderLocParameters = TargetOrder(
             id: orderId, total: orderTotal, purchasedProductIds: orderPurchasedIds)
         }
       }
@@ -407,19 +412,18 @@ import ACPTarget
         if productLocParam.object(forKey: "id") != nil {
           let id: String! = productLocParam.object(forKey: "id") as? String
           let categoryIdValue: String! = productLocParam.object(forKey: "categoryId") as? String
-          productLocParameter = ACPTargetProduct(id: id, categoryId: categoryIdValue)
+          productLocParameter = TargetProduct(productId: id, categoryId: categoryIdValue)
         }
       }
 
-      targetLocParameters = ACPTargetParameters(
-        parameters: mboxLocParam as? [AnyHashable: Any],
-        profileParameters: profileLocParam as? [AnyHashable: Any],
-        product: productLocParameter,
-        order: orderLocParameters)
+      targetLocParameters = TargetParameters(
+        parameters: mboxLocParam as? [String: String],
+        profileParameters: profileLocParam as? [String: String],
+        order: orderLocParameters, product: productLocParameter)
 
-      ACPTarget.prefetchContent(
-        requestArray as! [ACPTargetPrefetchObject], with: targetLocParameters,
-        callback: { (error) in
+      Target.prefetchContent(
+        requestArray as! [TargetPrefetch], with: targetLocParameters,
+        { (error) in
           let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
           self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
         })

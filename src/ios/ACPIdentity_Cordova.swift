@@ -1,4 +1,5 @@
-import ACPCore
+import AEPCore
+import AEPIdentity
 
 let stateStrings = ["UNKNOWN", "AUTHENTICATED", "LOGGED_OUT"]
 let INVALID_AUTH_STATE = 3
@@ -10,7 +11,7 @@ let INVALID_AUTH_STATE = 3
     self.commandDelegate.run(inBackground: {
       var pluginResult: CDVPluginResult! = nil
 
-      let version: String! = ACPIdentity.extensionVersion()
+      let version: String! = Identity.extensionVersion
 
       pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: version)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
@@ -27,15 +28,22 @@ let INVALID_AUTH_STATE = 3
             status: CDVCommandStatus_ERROR,
             messageAs: "Unable appendVisitorInfoForUrl. Input was malformed"),
           callbackId: command.callbackId)
-          return
+        return
       }
 
-      ACPIdentity.append(
-        to: url.absoluteURL,
-        withCallback: { (urlWithVisitorData: URL?) in
-          let pluginResult: CDVPluginResult! = CDVPluginResult(
-            status: CDVCommandStatus_OK, messageAs: urlWithVisitorData?.absoluteString)
-          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      Identity.appendTo(
+        url: url.absoluteURL,
+        completion: { (urlWithVisitorData: URL?, error) in
+
+          if error == nil {
+            let pluginResult: CDVPluginResult! = CDVPluginResult(
+              status: CDVCommandStatus_OK, messageAs: urlWithVisitorData?.absoluteString)
+            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+          } else {
+            let pluginResult: CDVPluginResult! = CDVPluginResult(
+              status: CDVCommandStatus_ERROR, messageAs: error?.localizedDescription)
+            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+          }
         })
 
     })
@@ -44,10 +52,17 @@ let INVALID_AUTH_STATE = 3
   @objc(getExperienceCloudId:)
   func getExperienceCloudId(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPIdentity.getExperienceCloudId({ (experienceCloudId: String?) in
-        let pluginResult: CDVPluginResult! = CDVPluginResult(
-          status: CDVCommandStatus_OK, messageAs: experienceCloudId)
-        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      Identity.getExperienceCloudId(completion: { (experienceCloudId: String?, error) in
+        if error == nil {
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_OK, messageAs: experienceCloudId)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        } else {
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_ERROR, messageAs: error?.localizedDescription)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        }
+
       })
     })
   }
@@ -55,7 +70,8 @@ let INVALID_AUTH_STATE = 3
   @objc(getIdentifiers:)
   func getIdentifiers(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPIdentity.getIdentifiers({ (visitorIDs: [AnyObject]?) in
+
+      Identity.getIdentifiers(completion: { (visitorIDs: [Identifiable]?, error) in
         var visitorIdsString: String! = ""
         if visitorIDs == nil {
           visitorIdsString = "nil"
@@ -65,9 +81,9 @@ let INVALID_AUTH_STATE = 3
 
           visitorIDs?.forEach({ (visitorId) in
             visitorIdsString = visitorIdsString.appendingFormat(
-              "[Id: %@, Type: %@, Origin: %@, Authentication: %@] ", visitorId.identifier,
-              visitorId.idType ?? "", visitorId.idOrigin ?? "",
-              stateStrings[Int(visitorId.authenticationState?.rawValue ?? 0)])
+              "[Id: %@, Type: %@, Origin: %@, Authentication: %@] ", visitorId.identifier ?? "",
+              visitorId.type ?? "", visitorId.origin ?? "",
+              stateStrings[Int(visitorId.authenticationState.rawValue)])
           })
         }
         let pluginResult: CDVPluginResult! = CDVPluginResult(
@@ -80,7 +96,7 @@ let INVALID_AUTH_STATE = 3
   @objc(getUrlVariables:)
   func getUrlVariables(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPIdentity.getUrlVariables({ (urlVariables: String?) in
+      Identity.getUrlVariables(completion: { (urlVariables: String?, error) in
         let pluginResult: CDVPluginResult! = CDVPluginResult(
           status: CDVCommandStatus_OK, messageAs: urlVariables)
         self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
@@ -96,9 +112,9 @@ let INVALID_AUTH_STATE = 3
       let state: Int = self.getAuthenticationStateValue(
         authState: command.arguments[2] as? NSNumber)
 
-      ACPIdentity.syncIdentifier(
-        idType, identifier: idValue,
-        authentication: self.getAuthenticationStateEnumValue(authState: state as NSNumber))
+      Identity.syncIdentifier(
+        identifierType: idType, identifier: idValue,
+        authenticationState: self.getAuthenticationStateEnumValue(authState: state as NSNumber))
       let pluginResult: CDVPluginResult! = CDVPluginResult(
         status: CDVCommandStatus_OK,
         messageAs: String(
@@ -116,15 +132,15 @@ let INVALID_AUTH_STATE = 3
       let state: Int = command.arguments[1] as? Int ?? 0
 
       if state < 3 {
-        ACPIdentity.syncIdentifiers(
-          identifiers as? [AnyHashable: Any],
-          authentication: self.getAuthenticationStateEnumValue(authState: state as NSNumber))
+        Identity.syncIdentifiers(
+          identifiers: identifiers as? [String: String],
+          authenticationState: self.getAuthenticationStateEnumValue(authState: state as NSNumber))
         pluginResult = CDVPluginResult(
           status: CDVCommandStatus_OK,
           messageAs: String(
             format: "Visitor IDs synced: %@, Authentication: %@", identifiers, stateStrings[state]))
       } else {
-        ACPIdentity.syncIdentifiers(identifiers as? [AnyHashable: Any])
+        Identity.syncIdentifiers(identifiers: identifiers as? [String: String])
         pluginResult = CDVPluginResult(
           status: CDVCommandStatus_OK,
           messageAs: String(format: "Visitor IDs synced: %@", identifiers))
@@ -143,13 +159,13 @@ let INVALID_AUTH_STATE = 3
     if authState != nil {
       switch authState.intValue {
       case 0:
-        authStateInt = Int(ACPMobileVisitorAuthenticationState.unknown.rawValue)
+        authStateInt = Int(MobileVisitorAuthenticationState.unknown.rawValue)
         break
       case 1:
-        authStateInt = Int(ACPMobileVisitorAuthenticationState.authenticated.rawValue)
+        authStateInt = Int(MobileVisitorAuthenticationState.authenticated.rawValue)
         break
       case 2:
-        authStateInt = Int(ACPMobileVisitorAuthenticationState.loggedOut.rawValue)
+        authStateInt = Int(MobileVisitorAuthenticationState.loggedOut.rawValue)
         break
       default:
         authStateInt = INVALID_AUTH_STATE
@@ -159,22 +175,21 @@ let INVALID_AUTH_STATE = 3
     return authStateInt
   }
 
-  func getAuthenticationStateEnumValue(authState: NSNumber!) -> ACPMobileVisitorAuthenticationState
-  {
-    var state = ACPMobileVisitorAuthenticationState.unknown
+  func getAuthenticationStateEnumValue(authState: NSNumber!) -> MobileVisitorAuthenticationState {
+    var state = MobileVisitorAuthenticationState.unknown
     if authState != nil {
       switch authState.intValue {
       case 0:
-        state = ACPMobileVisitorAuthenticationState.unknown
+        state = MobileVisitorAuthenticationState.unknown
         break
       case 1:
-        state = ACPMobileVisitorAuthenticationState.authenticated
+        state = MobileVisitorAuthenticationState.authenticated
         break
       case 2:
-        state = ACPMobileVisitorAuthenticationState.loggedOut
+        state = MobileVisitorAuthenticationState.loggedOut
         break
       default:
-        state = ACPMobileVisitorAuthenticationState.unknown
+        state = MobileVisitorAuthenticationState.unknown
         break
       }
     }

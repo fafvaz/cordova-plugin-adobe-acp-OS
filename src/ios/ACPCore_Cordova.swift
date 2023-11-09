@@ -1,12 +1,11 @@
-import ACPAnalytics
-import ACPCampaign
-import ACPCore
-import ACPMobileServices
-import ACPPlaces
-import ACPPlacesMonitor
-import ACPTarget
-import ACPUserProfile
-import AEPAssurance
+import AEPAnalytics
+import AEPCampaign
+import AEPCore
+import AEPMobileServices
+import AEPPlaces
+import AEPServices
+import AEPTarget
+import AEPUserProfile
 
 @objc(ACPCore_Cordova) class ACPCore_Cordova: CDVPlugin {
 
@@ -24,23 +23,13 @@ import AEPAssurance
             status: CDVCommandStatus_ERROR,
             messageAs: "Unable to dispatch event. Input was malformed"),
           callbackId: command.callbackId)
-          return
+        return
       }
 
-      let event: ACPExtensionEvent! = self.getExtensionEventFromJavascriptObject(event: eventInput)
-
-      do {
-        try ACPCore.dispatchEvent(event)
-        let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
-        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-      } catch let error {
-        self.commandDelegate.send(
-          CDVPluginResult(
-            status: CDVCommandStatus_ERROR,
-            messageAs: String(format: "Error dispatching event: %@", error.localizedDescription)),
-          callbackId: command.callbackId)
-      }
-
+      let event: AEPCore.Event! = self.getExtensionEventFromJavascriptObject(event: eventInput)
+      MobileCore.dispatch(event: event)
+      let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
+      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
     })
   }
 
@@ -54,28 +43,20 @@ import AEPAssurance
             status: CDVCommandStatus_ERROR,
             messageAs: "Unable to dispatch event. Input was malformed"),
           callbackId: command.callbackId)
-          return
+        return
       }
 
-      let event: ACPExtensionEvent! = self.getExtensionEventFromJavascriptObject(event: eventInput)
+      let event: AEPCore.Event! = self.getExtensionEventFromJavascriptObject(event: eventInput)
 
-      do {
-        try ACPCore.dispatchEvent(
-          withResponseCallback: event,
-          responseCallback: { (response: ACPExtensionEvent) in
-            let responseEvent: NSDictionary! = self.getJavascriptDictionaryFromEvent(
-              event: response)
-            let pluginResult: CDVPluginResult! = CDVPluginResult(
-              status: CDVCommandStatus_OK, messageAs: responseEvent as? [AnyHashable: Any])
-            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-          })
-      } catch let error {
-        self.commandDelegate.send(
-          CDVPluginResult(
-            status: CDVCommandStatus_ERROR,
-            messageAs: String(format: "Error dispatching event: %@", error.localizedDescription)),
-          callbackId: command.callbackId)
-      }
+      MobileCore.dispatch(
+        event: event,
+        responseCallback: { (response: AEPCore.Event!) in
+          let responseEvent: NSDictionary! = self.getJavascriptDictionaryFromEvent(
+            event: response)
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_OK, messageAs: responseEvent as? [AnyHashable: Any])
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        })
     })
   }
 
@@ -89,7 +70,7 @@ import AEPAssurance
             status: CDVCommandStatus_ERROR,
             messageAs: "Unable to dispatch event. InputResponse was malformed"),
           callbackId: command.callbackId)
-          return
+        return
       }
 
       guard let inputRequestEvent = command.arguments[1] as? NSDictionary else {
@@ -98,26 +79,14 @@ import AEPAssurance
             status: CDVCommandStatus_ERROR,
             messageAs: "Unable to dispatch event. InputResquest was malformed"),
           callbackId: command.callbackId)
-          return
+        return
       }
 
-      let responseEvent: ACPExtensionEvent! = self.getExtensionEventFromJavascriptObject(
-        event: inputResponseEvent)
-      let requestEvent: ACPExtensionEvent! = self.getExtensionEventFromJavascriptObject(
-        event: inputRequestEvent)
-
-      do {
-        try ACPCore.dispatchResponseEvent(responseEvent, request: requestEvent)
-        let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
-        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-      } catch let error {
-        self.commandDelegate.send(
-          CDVPluginResult(
-            status: CDVCommandStatus_ERROR,
-            messageAs: String(
-              format: "Error dispatching response event: %@", error.localizedDescription)),
-          callbackId: command.callbackId)
-      }
+      self.commandDelegate.send(
+        CDVPluginResult(
+          status: CDVCommandStatus_ERROR,
+          messageAs: "Deprecated"),
+        callbackId: command.callbackId)
 
     })
   }
@@ -125,9 +94,7 @@ import AEPAssurance
   @objc(downloadRules:)
   func downloadRules(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPCore.downloadRules()
-
-      let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
+      let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_ERROR)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
     })
   }
@@ -136,7 +103,7 @@ import AEPAssurance
   func extensionVersion(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
 
-      let version: String! = self.initTime.appending(": ").appending(ACPCore.extensionVersion())
+      let version: String! = self.initTime.appending(": ").appending(MobileCore.extensionVersion)
       let pluginResult: CDVPluginResult! = CDVPluginResult(
         status: CDVCommandStatus_OK, messageAs: version)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
@@ -146,22 +113,25 @@ import AEPAssurance
   @objc(getPrivacyStatus:)
   func getPrivacyStatus(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPCore.getPrivacyStatus({ (status: ACPMobilePrivacyStatus) in
+
+      MobileCore.getPrivacyStatus { PrivacyStatus in
         let pluginResult: CDVPluginResult! = CDVPluginResult(
-          status: CDVCommandStatus_OK, messageAs: status.rawValue)
+          status: CDVCommandStatus_OK, messageAs: PrivacyStatus.rawValue)
         self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-      })
+      }
     })
   }
 
   @objc(getSdkIdentities:)
   func getSdkIdentities(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      ACPCore.getSdkIdentities({ (content: String?) in
-        let pluginResult: CDVPluginResult! = CDVPluginResult(
-          status: CDVCommandStatus_OK, messageAs: content)
-        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-      })
+      MobileCore.getSdkIdentities { content, error in
+        if error == nil {
+          let pluginResult: CDVPluginResult! = CDVPluginResult(
+            status: CDVCommandStatus_OK, messageAs: content)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        }
+      }
     })
   }
 
@@ -170,7 +140,7 @@ import AEPAssurance
     self.commandDelegate.run(inBackground: {
 
       let newIdentifier: String! = command.arguments[0] as? String
-      ACPCore.setAdvertisingIdentifier(newIdentifier)
+      MobileCore.setAdvertisingIdentifier(newIdentifier)
 
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
@@ -180,10 +150,11 @@ import AEPAssurance
   @objc(setLogLevel:)
   func setLogLevel(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      let logLevel: ACPMobileLogLevel =
-        command.arguments[0] as? ACPMobileLogLevel ?? ACPMobileLogLevel.warning
 
-      ACPCore.setLogLevel(logLevel)
+      let logLevel: AEPServices.LogLevel =
+        command.arguments[0] as? AEPServices.LogLevel ?? AEPServices.LogLevel.warning
+
+      MobileCore.setLogLevel(logLevel)
 
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
@@ -193,10 +164,10 @@ import AEPAssurance
   @objc(setPrivacyStatus:)
   func setPrivacyStatus(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
-      let privacyStatus: ACPMobilePrivacyStatus =
-        command.arguments[0] as? ACPMobilePrivacyStatus ?? ACPMobilePrivacyStatus.unknown
+      let privacyStatus: PrivacyStatus =
+        command.arguments[0] as? PrivacyStatus ?? PrivacyStatus.unknown
 
-      ACPCore.setPrivacyStatus(privacyStatus)
+      MobileCore.setPrivacyStatus(privacyStatus)
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
     })
@@ -209,11 +180,11 @@ import AEPAssurance
       let firstArg: AnyObject! = command.arguments[0] as AnyObject
       let secondArg: AnyObject! = command.arguments[1] as AnyObject
 
-      // allows the ACPCore.trackAction(cData) call
+      // allows the AEPCore.trackAction(cData) call
       if firstArg is NSDictionary {
-        ACPCore.trackAction(nil, data: firstArg as? [String: String])
+        MobileCore.track(action: nil, data: firstArg as? [String: String])
       } else {
-        ACPCore.trackAction(firstArg as? String, data: secondArg as? [String: String])
+        MobileCore.track(action: firstArg as? String, data: secondArg as? [String: String])
       }
 
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
@@ -228,11 +199,11 @@ import AEPAssurance
       let firstArg: AnyObject! = command.arguments[0] as AnyObject
       let secondArg: AnyObject! = command.arguments[1] as AnyObject
 
-      // allows the ACPCore.trackAction(cData) call
+      // allows the AEPCore.trackAction(cData) call
       if firstArg is NSDictionary {
-        ACPCore.trackState(nil, data: firstArg as? [String: String])
+        MobileCore.track(state: nil, data: firstArg as? [String: String])
       } else {
-        ACPCore.trackState(firstArg as? String, data: secondArg as? [String: String])
+        MobileCore.track(state: firstArg as? String, data: secondArg as? [String: String])
       }
 
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
@@ -244,16 +215,16 @@ import AEPAssurance
   func updateConfiguration(command: CDVInvokedUrlCommand!) {
     self.commandDelegate.run(inBackground: {
 
-      guard let config = command.arguments[0] as? [AnyHashable: Any] else {
+      guard let config = command.arguments[0] as? [String: Any] else {
         self.commandDelegate.send(
           CDVPluginResult(
             status: CDVCommandStatus_ERROR,
             messageAs: "Unable to dispatch event. InputResponse was malformed"),
           callbackId: command.callbackId)
-          return
+        return
       }
 
-      ACPCore.updateConfiguration(config)
+      MobileCore.updateConfigurationWith(configDict: config)
 
       let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
       self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
@@ -273,29 +244,23 @@ import AEPAssurance
   // helper functions
   // ===========================================================================
 
-  func getExtensionEventFromJavascriptObject(event: NSDictionary!) -> ACPExtensionEvent! {
+  func getExtensionEventFromJavascriptObject(event: NSDictionary!) -> AEPCore.Event! {
 
-    do {
-      let newEvent = try ACPExtensionEvent.init(
-        name: event.value(forKey: "name") as! String,
-        type: event.value(forKey: "type") as! String,
-        source: event.value(forKey: "source") as! String,
-        data: event.value(forKey: "data") as? [AnyHashable: String])
-      return newEvent
-    } catch let error {
-      ACPCore.log(
-        ACPMobileLogLevel.warning, tag: "ACPCore",
-        message: String(format: "Error creating ACPExtensionEvent: %@", error.localizedDescription))
-    }
-      return nil
+    let newEvent = AEPCore.Event.init(
+      name: event.value(forKey: "name") as! String,
+      type: event.value(forKey: "type") as! String,
+      source: event.value(forKey: "source") as! String,
+      data: event.value(forKey: "data") as? [String: String])
+
+    return newEvent
   }
 
-  func getJavascriptDictionaryFromEvent(event: ACPExtensionEvent!) -> NSDictionary! {
+  func getJavascriptDictionaryFromEvent(event: AEPCore.Event!) -> NSDictionary! {
     return [
-      "name": event.eventName,
-      "type": event.eventType,
-      "source": event.eventSource,
-      "data": event.eventData!,
+      "name": event.name,
+      "type": event.type,
+      "source": event.source,
+      "data": event.data!,
     ]
   }
 
@@ -303,25 +268,6 @@ import AEPAssurance
   // Plugin lifecycle events
   // ===============================================================
   override func pluginInitialize() {
-
-    self.appId = Bundle.main.object(forInfoDictionaryKey: "AppId") as? String
-    ACPCore.setLogLevel(ACPMobileLogLevel.debug)
-    ACPCore.configure(withAppId: appId)
-
-    ACPCampaign.registerExtension()
-    ACPPlaces.registerExtension()
-    ACPPlacesMonitor.registerExtension()
-    ACPAnalytics.registerExtension()
-    ACPMobileServices.registerExtension()
-    ACPTarget.registerExtension()
-    ACPUserProfile.registerExtension()
-    ACPIdentity.registerExtension()
-    ACPLifecycle.registerExtension()
-    ACPSignal.registerExtension()
-    AEPAssurance.registerExtension()
-    ACPCore.start({
-      ACPCore.lifecycleStart(nil)
-    })
 
     let date: NSDate! = NSDate()
     let dateFormatter: DateFormatter! = DateFormatter()
