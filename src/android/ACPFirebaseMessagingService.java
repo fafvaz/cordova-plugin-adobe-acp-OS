@@ -23,6 +23,14 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
     String messageId = data.get("_mId");
     String acsDeliveryTracking = data.get("_acsDeliveryTracking");
 
+    System.out.println("### deliveryId ###");
+    System.out.println(deliveryId);
+    System.out.println("### messageId ###");
+    System.out.println(messageId);
+    System.out.println("### acsDeliveryTracking ###");
+    System.out.println(acsDeliveryTracking);
+    
+
     if (acsDeliveryTracking == null) {
       acsDeliveryTracking = "on";
     }
