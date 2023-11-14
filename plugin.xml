@@ -232,7 +232,11 @@
             </feature>
         </config-file>
 
+        <!-- header -->
+        <header-file src="src/ios/AppDelegate+Push.h" />
+
         <!-- plugin source -->
+        <source-file src="src/ios/AppDelegate+Push.m" target-dir="cordova-adobe-acp"/>
         <source-file src="src/ios/ACPAnalytics_Cordova.swift" target-dir="cordova-adobe-acp"/>
         <source-file src="src/ios/ACPAppDelegatePush.swift" target-dir="cordova-adobe-acp"/>
         <source-file src="src/ios/ACPCampaign_Cordova.swift" target-dir="cordova-adobe-acp"/>

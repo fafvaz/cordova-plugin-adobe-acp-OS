@@ -10,14 +10,14 @@ import AEPSignal
 import AEPTarget
 import AEPUserProfile
 
-@objc class AppACPDelegate: CDVAppDelegate {
-  override func application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
-  ) -> Bool {
-    let appState = application.applicationState
-    let appId = Bundle.main.object(forInfoDictionaryKey: "AppId") as! String
+class ACPAppDelegatePush {
 
+  static func registerExtensions() {
+
+    let appId = Bundle.main.object(forInfoDictionaryKey: "AppId") as! String
+    let appState = UIApplication.shared.applicationState
+
+    MobileCore.setLogLevel(.trace)
     MobileCore.registerExtensions(
       [
         Signal.self,
@@ -33,20 +33,11 @@ import AEPUserProfile
         Assurance.self,
       ],
       {
+        MobileCore.setPrivacyStatus(.optedIn)
         MobileCore.configureWith(appId: appId)
         if appState != .background {
-          // only start lifecycle if the application is not in the background
-          MobileCore.lifecycleStart(additionalContextData: nil)
+            MobileCore.lifecycleStart(additionalContextData: nil)
         }
       })
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
-
-  override func application(
-    _ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
-  ) {
-    MobileCore.setPushIdentifier(deviceToken)
-    super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
-  }
-
 }
