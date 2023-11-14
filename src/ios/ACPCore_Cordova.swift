@@ -273,5 +273,6 @@ import AEPUserProfile
     let dateFormatter: DateFormatter! = DateFormatter()
     dateFormatter.dateFormat = "dd/MM/yyyy HH:mm:ss"
     initTime = dateFormatter.string(from: date as Date)
+    ACPAppDelegatePush.registerExtensions()
   }
 }
