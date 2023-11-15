@@ -273,6 +273,7 @@ import AEPUserProfile
     let dateFormatter: DateFormatter! = DateFormatter()
     dateFormatter.dateFormat = "dd/MM/yyyy HH:mm:ss"
     initTime = dateFormatter.string(from: date as Date)
+    self.appId = Bundle.main.object(forInfoDictionaryKey: "AppId") as? String
     ACPAppDelegatePush.registerExtensions()
   }
 }
