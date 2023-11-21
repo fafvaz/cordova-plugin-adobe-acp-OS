@@ -550,7 +550,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
             String messageId = data.getString("_mId");
             String acsDeliveryTracking = data.getString("_acsDeliveryTracking"); 
 
-            String deepLink = data.getString("deeplink");
+            String deepLink = data.getString("uri");
 
             System.out.println("##### DeepLink: " + deepLink);
             
