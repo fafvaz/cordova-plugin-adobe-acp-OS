@@ -24,7 +24,7 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
     String deliveryId = data.get("_dId");
     String messageId = data.get("_mId");
     String acsDeliveryTracking = data.get("_acsDeliveryTracking");
-    String deepLink = data.get("deepLink");  // Adicione esta linha para obter o deep link
+    String deepLink = data.get("uri");  // Adicione esta linha para obter o deep link
 
 
     System.out.println("### deliveryId ###");
@@ -58,7 +58,7 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
 
       // Adicione o deep link à Intent se estiver presente
       Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLink));
-      intent.putExtra("deeplink", deepLink);
+      intent.putExtra("uri", deepLink);
       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
        startActivity(intent);
