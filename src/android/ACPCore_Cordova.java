@@ -534,6 +534,8 @@ public class ACPCore_Cordova extends CordovaPlugin {
 
             System.out.println("##### PATH URI " + uri.getPath());
            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+
+           cordova.getActivity().getIntent().removeExtra("uri");
            cordova.getActivity().startActivity(intent);
             
         }
