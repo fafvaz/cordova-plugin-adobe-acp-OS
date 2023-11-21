@@ -2,6 +2,7 @@ package com.adobe.marketing.mobile.cordova;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
+import android.net.Uri;
 
 import com.adobe.marketing.mobile.MobileCore;
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -56,9 +57,9 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
       contextDataObj.put("broadlogId", messageId);
 
       // Adicione o deep link à Intent se estiver presente
-       Intent intent = new Intent(this, com.adobe.marketing.mobile.FullscreenMessageActivity.class);
-       intent.putExtra("deeplink", deepLink);
-       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);   
+      Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLink));
+      intent.putExtra("deeplink", deepLink);
+      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
        startActivity(intent);
 
