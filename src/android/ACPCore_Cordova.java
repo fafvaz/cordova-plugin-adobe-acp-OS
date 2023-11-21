@@ -526,6 +526,16 @@ public class ACPCore_Cordova extends CordovaPlugin {
         super.pluginInitialize();
     }
 
+    private void openScreenByDeepLink(String deepLink) {
+        if (deepLink != null) {
+            Uri uri = Uri.parse(deepLink);
+
+            System.out.println("##### PATH URI " + uri.getPath());
+           Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+           cordova.getActivity().startActivity(intent);
+            
+        }
+    }
 
     private void handleTracking() {
         //Check to see if this view was opened based on a notification
@@ -537,6 +547,15 @@ public class ACPCore_Cordova extends CordovaPlugin {
             String deliveryId = data.getString("_dId");
             String messageId = data.getString("_mId");
             String acsDeliveryTracking = data.getString("_acsDeliveryTracking"); 
+
+            String deepLink = data.getString("deeplink");
+
+            System.out.println("##### DeepLink: " + deepLink);
+            
+            if (deepLink != null) {
+                // Trate o deep link aqui, por exemplo, abrindo a tela correspondente
+                openScreenByDeepLink(deepLink);
+            }
 
             System.out.println("### deliveryId ###");
             System.out.println(deliveryId);
