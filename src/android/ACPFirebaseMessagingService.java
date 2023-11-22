@@ -51,11 +51,7 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
       // Adiciona os dados necessários ao HashMap
       contextData.put("deliveryId", deliveryId);
       contextData.put("broadlogId", messageId);
-
-
-      contextDataObj.put("deliveryId", deliveryId);
-      contextDataObj.put("broadlogId", messageId);
-
+ 
       // Adicione o deep link à Intent se estiver presente
       Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLink));
       intent.putExtra("uri", deepLink);
