@@ -532,12 +532,23 @@ public class ACPCore_Cordova extends CordovaPlugin {
         if (deepLink != null) {
             Uri uri = Uri.parse(deepLink);
 
-            System.out.println("##### PATH URI " + uri.getPath());
-           Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            if (uri != null) {
 
-           cordova.getActivity().getIntent().removeExtra("uri");
-           cordova.getActivity().startActivity(intent);
-            
+               System.out.println("##### PATH URI " + uri.getPath());
+        
+                 // Remover o extra "uri" da Intent atual
+                cordova.getActivity().getIntent().removeExtra("uri");
+
+               // Criar e iniciar a nova Intent 
+               Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+               intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+               cordova.getActivity().startActivity(intent);
+                
+                
+            } else {
+                System.out.println("A URI não é válida: " + deepLink);
+            }
+ 
         }
     }
 
