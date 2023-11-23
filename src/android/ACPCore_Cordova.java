@@ -81,8 +81,10 @@ public class ACPCore_Cordova extends CordovaPlugin {
     
     private String appId;
     private String initTime;
+    private String urlDeepLink;
     private CallbackContext _tmpCallbackContext;
     private boolean hasHandledDeepLink = false;
+    private boolean pushRecebido = false;
     private Handler handler = new Handler();
 
 
@@ -483,7 +485,23 @@ public class ACPCore_Cordova extends CordovaPlugin {
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
-        MobileCore.setLogLevel(LoggingMode.DEBUG);      
+        MobileCore.setLogLevel(LoggingMode.DEBUG);    
+
+        // Configurar WebViewClient para detectar o onPageFinished
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+
+                // Verificar se a notificação push foi recebida
+                if (pushRecebido) {
+                    // A notificação push foi recebida e a página WebView está completamente carregada
+
+                    // Abra o deep link
+                    openScreenByDeepLink(urlDeepLink);
+                }
+            }
+        });
         
         appId = cordova.getActivity().getString(cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName()));
         
@@ -528,6 +546,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
         MobileCore.lifecycleStart(null);
        
         if (!hasHandledDeepLink) {
+            
             System.out.println("Antes de handleTracking");
             this.handleTracking();
             System.out.println("Depois de handleTracking");
@@ -586,6 +605,9 @@ public class ACPCore_Cordova extends CordovaPlugin {
             System.out.println("##### DeepLink: " + deepLink);
             
             if (deepLink != null) {
+
+                pushRecebido = true;
+                urlDeepLink = deepLink;
                 // Trate o deep link aqui, por exemplo, abrindo a tela correspondente
                 
                 System.out.println("Antes de openScreenByDeepLink");
@@ -594,7 +616,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 @Override
                 public void run() {
                     System.out.println("### executed after 5 seconds ###");
-                    openScreenByDeepLink(deepLink);
+                   // openScreenByDeepLink(deepLink);
                      
                 System.out.println("Depois de openScreenByDeepLink");
                 }
