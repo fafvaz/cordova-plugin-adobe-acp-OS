@@ -538,12 +538,17 @@ public class ACPCore_Cordova extends CordovaPlugin {
 
     private void openScreenByDeepLink(String deepLink) {
         if (deepLink != null) {
+
+            System.out.println("##### openScreenByDeepLink DeepLink: " + deepLink);
+            
             Uri uri = Uri.parse(deepLink);
             //Uri uri = Uri.parse("http://www.google.com");
 
             if (uri != null) {
 
-               System.out.println("##### PATH URI " + uri.getPath());
+                System.out.println("##### PATH URI " + uri.getPath());
+                System.out.println("##### ProductId: " + uri.getQueryParameter("ProductId"));
+
         
                  // Remover o extra "uri" da Intent atual
                // cordova.getActivity().getIntent().removeExtra("uri");
