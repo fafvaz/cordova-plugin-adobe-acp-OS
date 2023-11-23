@@ -21,6 +21,8 @@ import android.net.Uri;
 import android.os.Handler;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import org.apache.cordova.engine.SystemWebViewEngine;
+
 
 
 
@@ -505,13 +507,12 @@ public class ACPCore_Cordova extends CordovaPlugin {
             }
         });*/
 
-
-        if (webView instanceof CordovaWebViewImpl) {
-            WebView androidWebView = ((CordovaWebViewImpl) webView).getEngine().getView();
+        if (webView.getEngine() instanceof SystemWebViewEngine) {
+            WebView androidWebView = ((SystemWebViewEngine) webView.getEngine()).getView();
             androidWebView.setWebViewClient(new WebViewClient() {
                 @Override
                 public void onPageFinished(WebView view, String url) {
-                    super.onPageFinished(view, url);
+                     super.onPageFinished(view, url);
 
                     // Verificar se a notificação push foi recebida
                     if (pushRecebido) {
@@ -520,6 +521,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 }
             });
         }
+ 
         
         appId = cordova.getActivity().getString(cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName()));
         
