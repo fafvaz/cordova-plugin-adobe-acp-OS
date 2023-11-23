@@ -23,7 +23,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import org.apache.cordova.engine.SystemWebViewEngine;
 import android.view.View;
-import org.apache.cordova.CordovaWebViewClient;
+import org.apache.cordova.engine.SystemWebViewClient;
 
 
 
@@ -513,7 +513,8 @@ public class ACPCore_Cordova extends CordovaPlugin {
 
         if (view instanceof CordovaWebView) {
             CordovaWebView cordovaWebView = (CordovaWebView) view;
-            cordovaWebView.setWebViewClient(new CordovaWebViewClient(this, cordovaWebView) {
+        
+            SystemWebViewClient webViewClient = new SystemWebViewClient(this, cordovaWebView) {
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     // Verificar se a notificação push foi recebida
@@ -521,7 +522,9 @@ public class ACPCore_Cordova extends CordovaPlugin {
                         openScreenByDeepLink(urlDeepLink);
                     }
                 }
-            });
+            };
+        
+            cordovaWebView.setWebViewClient(webViewClient);
         } else {
             // Lida com o caso em que a view não é uma instância de CordovaWebView
             System.out.println("### View não é uma instância de CordovaWebView");
