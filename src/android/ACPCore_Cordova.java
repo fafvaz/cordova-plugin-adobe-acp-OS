@@ -530,8 +530,8 @@ public class ACPCore_Cordova extends CordovaPlugin {
 
     private void openScreenByDeepLink(String deepLink) {
         if (deepLink != null) {
-            //Uri uri = Uri.parse(deepLink);
-            Uri uri = Uri.parse("http://www.google.com");
+            Uri uri = Uri.parse(deepLink);
+            //Uri uri = Uri.parse("http://www.google.com");
 
             if (uri != null) {
 
