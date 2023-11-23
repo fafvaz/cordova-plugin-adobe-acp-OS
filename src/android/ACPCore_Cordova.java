@@ -507,12 +507,12 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 }
             }
         });*/
-
+ 
         View view = ((SystemWebViewEngine) webView.getEngine()).getView();
 
-        if (view instanceof WebView) {
-            WebView androidWebView = (WebView) view;
-            androidWebView.setWebViewClient(new WebViewClient() {
+        if (view instanceof CordovaWebView) {
+            CordovaWebView cordovaWebView = (CordovaWebView) view;
+            cordovaWebView.setWebViewClient(new CordovaWebViewClient(this, cordovaWebView) {
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     // Verificar se a notificação push foi recebida
@@ -522,8 +522,8 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 }
             });
         } else {
-            // Lida com o caso em que a view não é uma instância de WebView
-            System.out.println("### View nao eh instancia de webview");
+            // Lida com o caso em que a view não é uma instância de CordovaWebView
+            System.out.println("### View não é uma instância de CordovaWebView");
         }
 
    
