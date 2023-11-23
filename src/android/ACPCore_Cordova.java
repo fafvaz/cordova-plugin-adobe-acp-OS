@@ -598,7 +598,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
                      
                 System.out.println("Depois de openScreenByDeepLink");
                 }
-            }, 5000); // Ajuste o atraso conforme necessário
+            }, 1000); // Ajuste o atraso conforme necessário
                 
                
             }
