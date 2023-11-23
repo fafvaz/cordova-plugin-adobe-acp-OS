@@ -490,7 +490,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
         MobileCore.setLogLevel(LoggingMode.DEBUG);    
 
         // Configurar WebViewClient para detectar o onPageFinished
-        webView.setWebViewClient(new WebViewClient() {
+    /*    webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
@@ -503,7 +503,23 @@ public class ACPCore_Cordova extends CordovaPlugin {
                     openScreenByDeepLink(urlDeepLink);
                 }
             }
-        });
+        });*/
+
+
+        if (webView instanceof CordovaWebViewImpl) {
+            WebView androidWebView = ((CordovaWebViewImpl) webView).getEngine().getView();
+            androidWebView.setWebViewClient(new WebViewClient() {
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    super.onPageFinished(view, url);
+
+                    // Verificar se a notificação push foi recebida
+                    if (pushRecebido) {
+                        openScreenByDeepLink(urlDeepLink);
+                    }
+                }
+            });
+        }
         
         appId = cordova.getActivity().getString(cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName()));
         
