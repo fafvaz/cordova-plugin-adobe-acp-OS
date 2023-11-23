@@ -23,9 +23,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.view.View;
  
-import org.apache.cordova.engine.systemwebview.SystemWebView;
-import org.apache.cordova.engine.systemwebview.SystemWebViewEngine;
-import org.apache.cordova.engine.systemwebview.SystemWebViewClient;
+import org.apache.cordova.engine.SystemWebView;
+import org.apache.cordova.engine.SystemWebViewEngine;
+import org.apache.cordova.engine.SystemWebViewClient;
  
 import androidx.core.app.NotificationManagerCompat;
 
