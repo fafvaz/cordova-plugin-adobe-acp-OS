@@ -129,13 +129,15 @@
             <receiver android:name="com.adobe.marketing.mobile.MessageNotificationHandler" />
         </config-file>
 
-        <intent-filter>
-            <action android:name="android.intent.action.VIEW" />
-            <category android:name="android.intent.category.DEFAULT" />
-            <category android:name="android.intent.category.BROWSABLE" />
-            <!--<data android:scheme="http" />-->
-            <data android:scheme="com.galp.adbmarkcloud.devop" />
-        </intent-filter>
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!--<data android:scheme="http" />-->
+                <data android:scheme="com.galp.adbmarkcloud.devop" />
+            </intent-filter>
+        </activity>
 
         <!-- add service-->
         <source-file src="src/android/ACPFirebaseMessagingService.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
