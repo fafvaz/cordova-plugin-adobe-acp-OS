@@ -512,8 +512,8 @@ public class ACPCore_Cordova extends CordovaPlugin {
 
         if (view instanceof SystemWebView) {
             SystemWebView systemWebView = (SystemWebView) view;
-        
-            SystemWebViewClient webViewClient = new SystemWebViewClient(systemWebView) {
+
+            SystemWebViewClient webViewClient = new SystemWebViewClient(new SystemWebView(systemWebView)) {
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     // Verificar se a notificação push foi recebida
