@@ -508,7 +508,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
             }
         });*/
  
-       View view = ((SystemWebViewEngine) webView.getEngine()).getView();
+      /* View view = ((SystemWebViewEngine) webView.getEngine()).getView();
 
         if (view instanceof SystemWebView) {
             SystemWebView systemWebView = (SystemWebView) view;
@@ -527,7 +527,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
         } else {
             // Lida com o caso em que a view não é uma instância de SystemWebView
             System.out.println("### View não é uma instância de SystemWebView");
-        }
+        }*/
 
    
  
@@ -644,12 +644,12 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    System.out.println("### executed after 5 seconds ###");
-                   // openScreenByDeepLink(deepLink);
+                    System.out.println("### executed after 3 seconds ###");
+                    openScreenByDeepLink(deepLink);
                      
                 System.out.println("Depois de openScreenByDeepLink");
                 }
-            }, 1000); // Ajuste o atraso conforme necessário
+            }, 3000); // Ajuste o atraso conforme necessário
                 
                
             }
