@@ -80,6 +80,8 @@ public class ACPCore_Cordova extends CordovaPlugin {
     private String appId;
     private String initTime;
     private CallbackContext _tmpCallbackContext;
+    private boolean hasHandledDeepLink = false;
+
     
     // ===============================================================
     // all calls filter through this method
@@ -520,7 +522,13 @@ public class ACPCore_Cordova extends CordovaPlugin {
         super.onResume(multitasking);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
         MobileCore.lifecycleStart(null);
-        this.handleTracking();
+       
+        if (!hasHandledDeepLink) {
+            System.out.println("Antes de handleTracking");
+            this.handleTracking();
+            System.out.println("Depois de handleTracking");
+            hasHandledDeepLink = true;
+        }
     }
  
     @Override
@@ -570,7 +578,10 @@ public class ACPCore_Cordova extends CordovaPlugin {
             
             if (deepLink != null) {
                 // Trate o deep link aqui, por exemplo, abrindo a tela correspondente
+                
+                System.out.println("Antes de openScreenByDeepLink");
                 openScreenByDeepLink(deepLink);
+                System.out.println("Depois de openScreenByDeepLink");
             }
 
             System.out.println("### deliveryId ###");
