@@ -21,13 +21,12 @@ import android.net.Uri;
 import android.os.Handler;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import org.apache.cordova.engine.SystemWebViewEngine;
 import android.view.View;
-import org.apache.cordova.engine.SystemWebViewClient;
-
-
-
-
+ 
+import org.apache.cordova.engine.systemwebview.SystemWebView;
+import org.apache.cordova.engine.systemwebview.SystemWebViewEngine;
+import org.apache.cordova.engine.systemwebview.SystemWebViewClient;
+ 
 import androidx.core.app.NotificationManagerCompat;
 
 import com.adobe.marketing.mobile.Analytics;
@@ -509,12 +508,12 @@ public class ACPCore_Cordova extends CordovaPlugin {
             }
         });*/
  
-        View view = ((SystemWebViewEngine) webView.getEngine()).getView();
+       View view = ((SystemWebViewEngine) webView.getEngine()).getView();
 
-        if (view instanceof CordovaWebView) {
-            CordovaWebView cordovaWebView = (CordovaWebView) view;
+        if (view instanceof SystemWebView) {
+            SystemWebView systemWebView = (SystemWebView) view;
         
-            SystemWebViewClient webViewClient = new SystemWebViewClient(this, cordovaWebView) {
+            SystemWebViewClient webViewClient = new SystemWebViewClient(systemWebView) {
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     // Verificar se a notificação push foi recebida
@@ -524,10 +523,10 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 }
             };
         
-            cordovaWebView.setWebViewClient(webViewClient);
+            systemWebView.setWebViewClient(webViewClient);
         } else {
-            // Lida com o caso em que a view não é uma instância de CordovaWebView
-            System.out.println("### View não é uma instância de CordovaWebView");
+            // Lida com o caso em que a view não é uma instância de SystemWebView
+            System.out.println("### View não é uma instância de SystemWebView");
         }
 
    
