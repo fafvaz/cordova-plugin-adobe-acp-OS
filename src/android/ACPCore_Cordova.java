@@ -18,6 +18,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.net.Uri;
+import android.os.Handler;
+
 
 
 import androidx.core.app.NotificationManagerCompat;
@@ -81,6 +83,8 @@ public class ACPCore_Cordova extends CordovaPlugin {
     private String initTime;
     private CallbackContext _tmpCallbackContext;
     private boolean hasHandledDeepLink = false;
+    private Handler handler = new Handler();
+
 
     
     // ===============================================================
@@ -585,8 +589,18 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 // Trate o deep link aqui, por exemplo, abrindo a tela correspondente
                 
                 System.out.println("Antes de openScreenByDeepLink");
-                openScreenByDeepLink(deepLink);
+
+                handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println("### executed after 5 seconds ###");
+                    openScreenByDeepLink(deepLink);
+                     
                 System.out.println("Depois de openScreenByDeepLink");
+                }
+            }, 5000); // Ajuste o atraso conforme necessário
+                
+               
             }
 
             System.out.println("### deliveryId ###");
