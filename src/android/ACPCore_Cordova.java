@@ -22,6 +22,7 @@ import android.os.Handler;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import org.apache.cordova.engine.SystemWebViewEngine;
+import android.view.View;
 
 
 
