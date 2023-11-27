@@ -26,6 +26,7 @@ import android.view.View;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.CordovaWebViewEngine;
 
 import android.webkit.WebView;
  
@@ -506,12 +507,15 @@ public class ACPCore_Cordova extends CordovaPlugin {
         super.initialize(cordova, webView);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
         MobileCore.setLogLevel(LoggingMode.DEBUG);  
-
-      // Obter a WebView associada ao CordovaWebView
+ 
+     // Obter a WebView associada ao CordovaWebView
         WebView systemWebView = (WebView) webView.getView();
 
+        // Obter o engine da WebView
+        CordovaWebViewEngine cordovaWebViewEngine = webView.getEngine();
+
         // Configurar o WebViewClient personalizado
-        systemWebView.setWebViewClient(new WebViewClient() {
+        cordovaWebViewEngine.setWebViewClient(new SystemWebViewClient(cordovaWebViewEngine) {
             @Override
             public void onPageFinished(WebView view, String url) {
                 System.out.println("##### onPageFinished - " + url);
