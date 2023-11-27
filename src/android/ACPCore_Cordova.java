@@ -482,6 +482,16 @@ public class ACPCore_Cordova extends CordovaPlugin {
         }
         
     }
+
+    @Override
+    public void onPageFinished(WebView view, String url) {
+        // Aqui você pode executar código quando a página terminar de carregar
+        // por exemplo, notificar a camada Cordova sobre o evento
+
+      System.out.println("##### onPageFinished - " + url);
+     
+        super.onPageFinished(view, url);
+    }
     
     // ===============================================================
     // Plugin lifecycle events
@@ -491,6 +501,8 @@ public class ACPCore_Cordova extends CordovaPlugin {
         super.initialize(cordova, webView);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
         MobileCore.setLogLevel(LoggingMode.DEBUG);    
+
+       
 
         // Configurar WebViewClient para detectar o onPageFinished
     /*    webView.setWebViewClient(new WebViewClient() {
