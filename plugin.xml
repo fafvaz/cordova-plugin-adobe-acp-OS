@@ -149,7 +149,7 @@
         <source-file src="src/android/ACPFirebaseMessagingService.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
  
         <!-- plugin source -->
-        <source-file src="src/android/WebViewEventPlugin.java.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
+        <source-file src="src/android/WebViewEventPlugin.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPCore_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPIdentity_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPLifecycle_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
