@@ -108,6 +108,12 @@
                 <param name="onload" value="true" />
             </feature>
         </config-file>
+         <config-file parent="/*" target="res/xml/config.xml">
+            <feature name="WebViewEventPlugin">
+                <param name="android-package" value="com.adobe.marketing.mobile.cordova.WebViewEventPlugin" />
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
         <!-- add required permissions to AndroidManifest.xml -->
         <config-file parent="/manifest" target="AndroidManifest.xml">
             <uses-permission android:name="android.permission.INTERNET" />
@@ -143,6 +149,7 @@
         <source-file src="src/android/ACPFirebaseMessagingService.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
  
         <!-- plugin source -->
+        <source-file src="src/android/WebViewEventPlugin.java.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPCore_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPIdentity_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPLifecycle_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
