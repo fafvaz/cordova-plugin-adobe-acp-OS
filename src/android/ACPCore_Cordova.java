@@ -485,20 +485,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
         }
         
     }
-
-    @Override
-    public void onPageFinished(WebView view, String url) {
-        // Aqui você pode executar código quando a página terminar de carregar
-        // por exemplo, notificar a camada Cordova sobre o evento
-
-      System.out.println("##### onPageFinished - " + url);
-
-      // Abra o deep link
-      openScreenByDeepLink(urlDeepLink);
-     
-      super.onPageFinished(view, url);
-    }
-    
+ 
     // ===============================================================
     // Plugin lifecycle events
     // ===============================================================
