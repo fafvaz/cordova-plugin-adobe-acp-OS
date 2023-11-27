@@ -507,20 +507,11 @@ public class ACPCore_Cordova extends CordovaPlugin {
         super.initialize(cordova, webView);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
         MobileCore.setLogLevel(LoggingMode.DEBUG);  
- 
-     // Obter a WebView associada ao CordovaWebView
-        WebView systemWebView = (WebView) webView.getView();
-
-        // Obter o engine da WebView
-        CordovaWebViewEngine cordovaWebViewEngine = webView.getEngine();
-
-        // Configurar o WebViewClient personalizado
-        cordovaWebViewEngine.setWebViewClient(new SystemWebViewClient(cordovaWebViewEngine) {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                System.out.println("##### onPageFinished - " + url);
-                openScreenByDeepLink(urlDeepLink);
-                super.onPageFinished(view, url);
+  
+      // Chamar o plugin WebViewEventPlugin para inicializar o evento onPageFinished
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                cordova.getPluginManager().exec("WebViewEventPlugin", "initialize", new JSONArray(), "WebViewEventPlugin");
             }
         });
   
