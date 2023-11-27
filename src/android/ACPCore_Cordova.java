@@ -508,12 +508,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
         MobileCore.setLogLevel(LoggingMode.DEBUG);  
   
-      // Chamar o plugin WebViewEventPlugin para inicializar o evento onPageFinished
-        cordova.getThreadPool().execute(new Runnable() {
-            public void run() {
-                cordova.getPluginManager().exec("WebViewEventPlugin", "initialize", new JSONArray(), "WebViewEventPlugin");
-            }
-        });
+       
   
         // Configurar WebViewClient para detectar o onPageFinished
     /*    webView.setWebViewClient(new WebViewClient() {
@@ -668,11 +663,11 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 @Override
                 public void run() {
                     System.out.println("### executed after 3 seconds ###");
-                //    openScreenByDeepLink(deepLink);
+                    openScreenByDeepLink(deepLink);
                      
                 System.out.println("Depois de openScreenByDeepLink");
                 }
-            }, 3000); // Ajuste o atraso conforme necessário
+            }, 5000); // Ajuste o atraso conforme necessário
                 
                
             }
