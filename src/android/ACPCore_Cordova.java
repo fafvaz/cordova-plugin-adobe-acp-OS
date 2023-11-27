@@ -26,6 +26,11 @@ import android.view.View;
 import org.apache.cordova.engine.SystemWebView;
 import org.apache.cordova.engine.SystemWebViewEngine;
 import org.apache.cordova.engine.SystemWebViewClient;
+
+import org.apache.cordova.CordovaInterface;
+import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.CordovaWebViewClient;
  
 import androidx.core.app.NotificationManagerCompat;
 
@@ -504,6 +509,22 @@ public class ACPCore_Cordova extends CordovaPlugin {
         super.initialize(cordova, webView);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
         MobileCore.setLogLevel(LoggingMode.DEBUG);    
+
+     CordovaWebViewClient webViewClient = new CordovaWebViewClient(webView) {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+               
+
+              System.out.println("##### onPageFinished - " + url);
+
+             // Abra o deep link
+             openScreenByDeepLink(urlDeepLink);
+             
+                super.onPageFinished(view, url);
+            }
+        };
+
+        webView.setWebViewClient(webViewClient);
 
        
 
