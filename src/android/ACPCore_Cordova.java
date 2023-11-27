@@ -489,8 +489,11 @@ public class ACPCore_Cordova extends CordovaPlugin {
         // por exemplo, notificar a camada Cordova sobre o evento
 
       System.out.println("##### onPageFinished - " + url);
+
+      // Abra o deep link
+      openScreenByDeepLink(urlDeepLink);
      
-        super.onPageFinished(view, url);
+      super.onPageFinished(view, url);
     }
     
     // ===============================================================
@@ -657,7 +660,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 @Override
                 public void run() {
                     System.out.println("### executed after 3 seconds ###");
-                    openScreenByDeepLink(deepLink);
+                //    openScreenByDeepLink(deepLink);
                      
                 System.out.println("Depois de openScreenByDeepLink");
                 }
