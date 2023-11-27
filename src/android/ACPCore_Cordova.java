@@ -28,8 +28,6 @@ import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
 
 import android.webkit.WebView;
-import org.apache.cordova.engine.SystemWebView;
-import org.apache.cordova.engine.SystemWebViewClient;
  
 import androidx.core.app.NotificationManagerCompat;
 
@@ -507,25 +505,21 @@ public class ACPCore_Cordova extends CordovaPlugin {
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
-        MobileCore.setLogLevel(LoggingMode.DEBUG);    
- 
-     // Configurar o WebViewClient personalizado
-        SystemWebView systemWebView = (SystemWebView) webView.getEngine().getView();
-        SystemWebViewClient webViewClient = new SystemWebViewClient(systemWebView) {
+        MobileCore.setLogLevel(LoggingMode.DEBUG);  
+
+      // Obter a WebView associada ao CordovaWebView
+        WebView systemWebView = (WebView) webView.getView();
+
+        // Configurar o WebViewClient personalizado
+        systemWebView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
                 System.out.println("##### onPageFinished - " + url);
-
-             // Abra o deep link
-             openScreenByDeepLink(urlDeepLink);
+                openScreenByDeepLink(urlDeepLink);
                 super.onPageFinished(view, url);
             }
-        };
-
-        systemWebView.setWebViewClient(webViewClient);
-
-       
-
+        });
+  
         // Configurar WebViewClient para detectar o onPageFinished
     /*    webView.setWebViewClient(new WebViewClient() {
             @Override
