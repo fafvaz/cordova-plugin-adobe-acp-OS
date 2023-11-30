@@ -98,6 +98,22 @@ var ACPPlacesMonitor = (function() {
         return exec(success, error, PLUGIN_NAME, FUNCTION_NAME, []);
     };
 
+    // Update the region for monitoring
+    ACPPlacesMonitor.startMonitoringForRegion = function (success, error, latitude, longitude, radius, identifier, notifyOnEnter, notifyOnExit ) {
+        var FUNCTION_NAME = "startMonitoringForRegion";
+
+        if (success && !isFunction(success)) {
+            printNotAFunction("success", FUNCTION_NAME);
+            return;
+        }
+
+        if (error && !isFunction(error)) {
+            printNotAFunction("error", FUNCTION_NAME);
+            return;
+        }
+        return exec(success, error, PLUGIN_NAME, FUNCTION_NAME, [latitude, longitude, radius, identifier, notifyOnEnter, notifyOnExit]);
+    };
+
     // Sets the type of location permission request for which the user is prompted to select.
     ACPPlacesMonitor.setRequestLocationPermission = function (locationPermission, success, error) {
         var FUNCTION_NAME = "setRequestLocationPermission";
