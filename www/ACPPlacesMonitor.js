@@ -62,13 +62,8 @@ var ACPPlacesMonitor = (function() {
     };
 
     // Stop tracking the device's location.
-    ACPPlacesMonitor.stop = function (shouldClearData, success, error) {
+    ACPPlacesMonitor.stop = function (success, error) {
         var FUNCTION_NAME = "stop";
-
-        if(shouldClearData && !acpIsBoolean(shouldClearData)) {
-            acpPrintNotABoolean("shouldClearData", FUNCTION_NAME);
-            return;
-        }
 
         if (success && !isFunction(success)) {
             printNotAFunction("success", FUNCTION_NAME);
@@ -79,7 +74,7 @@ var ACPPlacesMonitor = (function() {
             printNotAFunction("error", FUNCTION_NAME);
             return;
         }
-        return exec(success, error, PLUGIN_NAME, FUNCTION_NAME, [shouldClearData]);
+        return exec(success, error, PLUGIN_NAME, FUNCTION_NAME, []);
     };
 
     // Immediately update the device's location and refresh the nearby POIs that are monitored by the extension.
