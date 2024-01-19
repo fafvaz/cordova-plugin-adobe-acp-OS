@@ -1,6 +1,8 @@
 package com.adobe.marketing.mobile.cordova;
-
+import android.content.Intent;
+import android.os.Bundle;
 import android.widget.Toast;
+import android.net.Uri;
 
 import com.adobe.marketing.mobile.MobileCore;
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -22,6 +24,8 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
     String deliveryId = data.get("_dId");
     String messageId = data.get("_mId");
     String acsDeliveryTracking = data.get("_acsDeliveryTracking");
+    String deepLink = data.get("uri");  // Adicione esta linha para obter o deep link
+
 
     System.out.println("### deliveryId ###");
     System.out.println(deliveryId);
@@ -29,6 +33,8 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
     System.out.println(messageId);
     System.out.println("### acsDeliveryTracking ###");
     System.out.println(acsDeliveryTracking);
+    System.out.println("### deepLink ###");
+    System.out.println(deepLink);
     
 
     if (acsDeliveryTracking == null) {
@@ -45,11 +51,13 @@ public class ACPFirebaseMessagingService extends FirebaseMessagingService {
       // Adiciona os dados necessários ao HashMap
       contextData.put("deliveryId", deliveryId);
       contextData.put("broadlogId", messageId);
+ 
+      // Adicione o deep link à Intent se estiver presente
+      Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLink));
+      intent.putExtra("uri", deepLink);
+      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-
-      contextDataObj.put("deliveryId", deliveryId);
-      contextDataObj.put("broadlogId", messageId);
-
+       startActivity(intent);
 
       // Rastreia o evento de impressão da notificação push usando o Adobe Mobile SDK
       contextData.put("action", "7"); // 7 representa a impressão (impression)

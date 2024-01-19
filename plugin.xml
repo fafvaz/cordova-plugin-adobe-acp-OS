@@ -118,6 +118,7 @@
                 <param name="onload" value="true" />
             </feature>
         </config-file>
+         
         <!-- add required permissions to AndroidManifest.xml -->
         <config-file parent="/manifest" target="AndroidManifest.xml">
             <uses-permission android:name="android.permission.INTERNET" />
@@ -140,11 +141,21 @@
             <receiver android:name="com.adobe.marketing.mobile.MessageNotificationHandler" />
         </config-file>
 
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!--<data android:scheme="http" />-->
+                <data android:scheme="com.galp.adbmarkcloud.devop" />
+            </intent-filter>
+        </activity>
+
         <!-- add service-->
         <source-file src="src/android/ACPFirebaseMessagingService.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
  
         <!-- plugin source -->
-        <source-file src="src/android/ACPCore_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
+         <source-file src="src/android/ACPCore_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPIdentity_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPLifecycle_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
         <source-file src="src/android/ACPSignal_Cordova.java" target-dir="src/com/adobe/marketing/mobile/cordova" />

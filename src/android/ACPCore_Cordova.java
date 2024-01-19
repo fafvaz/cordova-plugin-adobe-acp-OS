@@ -17,7 +17,19 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.net.Uri;
+import android.os.Handler;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.view.View;
+ 
+import org.apache.cordova.CordovaInterface;
+import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.CordovaWebViewEngine;
 
+import android.webkit.WebView;
+ 
 import androidx.core.app.NotificationManagerCompat;
 
 import com.adobe.marketing.mobile.Analytics;
@@ -77,7 +89,13 @@ public class ACPCore_Cordova extends CordovaPlugin {
     
     private String appId;
     private String initTime;
+    private String urlDeepLink;
     private CallbackContext _tmpCallbackContext;
+    private boolean hasHandledDeepLink = false;
+    private boolean pushRecebido = false;
+    private Handler handler = new Handler();
+
+
     
     // ===============================================================
     // all calls filter through this method
@@ -467,7 +485,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
         }
         
     }
-    
+ 
     // ===============================================================
     // Plugin lifecycle events
     // ===============================================================
@@ -475,7 +493,49 @@ public class ACPCore_Cordova extends CordovaPlugin {
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
-        MobileCore.setLogLevel(LoggingMode.DEBUG);      
+        MobileCore.setLogLevel(LoggingMode.DEBUG);  
+  
+       
+  
+        // Configurar WebViewClient para detectar o onPageFinished
+    /*    webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+
+                // Verificar se a notificação push foi recebida
+                if (pushRecebido) {
+                    // A notificação push foi recebida e a página WebView está completamente carregada
+
+                    // Abra o deep link
+                    openScreenByDeepLink(urlDeepLink);
+                }
+            }
+        });*/
+ 
+      /* View view = ((SystemWebViewEngine) webView.getEngine()).getView();
+
+        if (view instanceof SystemWebView) {
+            SystemWebView systemWebView = (SystemWebView) view;
+
+            SystemWebViewClient webViewClient = new SystemWebViewClient(new SystemWebView(systemWebView)) {
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    // Verificar se a notificação push foi recebida
+                    if (pushRecebido) {
+                        openScreenByDeepLink(urlDeepLink);
+                    }
+                }
+            };
+        
+            systemWebView.setWebViewClient(webViewClient);
+        } else {
+            // Lida com o caso em que a view não é uma instância de SystemWebView
+            System.out.println("### View não é uma instância de SystemWebView");
+        }*/
+
+   
+ 
         
         appId = cordova.getActivity().getString(cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName()));
         
@@ -518,7 +578,14 @@ public class ACPCore_Cordova extends CordovaPlugin {
         super.onResume(multitasking);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
         MobileCore.lifecycleStart(null);
-        this.handleTracking();
+       
+        if (!hasHandledDeepLink) {
+            
+            System.out.println("Antes de handleTracking");
+            this.handleTracking();
+            System.out.println("Depois de handleTracking");
+            hasHandledDeepLink = true;
+        }
     }
  
     @Override
@@ -526,6 +593,35 @@ public class ACPCore_Cordova extends CordovaPlugin {
         super.pluginInitialize();
     }
 
+    private void openScreenByDeepLink(String deepLink) {
+        if (deepLink != null) {
+
+            System.out.println("##### openScreenByDeepLink DeepLink: " + deepLink);
+            
+            Uri uri = Uri.parse(deepLink);
+            //Uri uri = Uri.parse("http://www.google.com");
+
+            if (uri != null) {
+
+                System.out.println("##### PATH URI " + uri.getPath());
+                System.out.println("##### ProductId: " + uri.getQueryParameter("ProductId"));
+
+        
+                 // Remover o extra "uri" da Intent atual
+               // cordova.getActivity().getIntent().removeExtra("uri");
+
+               // Criar e iniciar a nova Intent 
+               Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+               intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+               cordova.getActivity().startActivity(intent);
+                
+                
+            } else {
+                System.out.println("A URI não é válida: " + deepLink);
+            }
+ 
+        }
+    }
 
     private void handleTracking() {
         //Check to see if this view was opened based on a notification
@@ -537,6 +633,31 @@ public class ACPCore_Cordova extends CordovaPlugin {
             String deliveryId = data.getString("_dId");
             String messageId = data.getString("_mId");
             String acsDeliveryTracking = data.getString("_acsDeliveryTracking"); 
+
+            String deepLink = data.getString("uri");
+
+            System.out.println("##### DeepLink: " + deepLink);
+            
+            if (deepLink != null) {
+
+                pushRecebido = true;
+                urlDeepLink = deepLink;
+                // Trate o deep link aqui, por exemplo, abrindo a tela correspondente
+                
+                System.out.println("Antes de openScreenByDeepLink");
+
+                handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println("### executed after 3 seconds ###");
+                    openScreenByDeepLink(deepLink);
+                     
+                System.out.println("Depois de openScreenByDeepLink");
+                }
+            }, 5000); // Ajuste o atraso conforme necessário
+                
+               
+            }
 
             System.out.println("### deliveryId ###");
             System.out.println(deliveryId);
