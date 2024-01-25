@@ -62,13 +62,8 @@ var ACPPlacesMonitor = (function() {
     };
 
     // Stop tracking the device's location.
-    ACPPlacesMonitor.stop = function (shouldClearData, success, error) {
+    ACPPlacesMonitor.stop = function (success, error) {
         var FUNCTION_NAME = "stop";
-
-        if(shouldClearData && !acpIsBoolean(shouldClearData)) {
-            acpPrintNotABoolean("shouldClearData", FUNCTION_NAME);
-            return;
-        }
 
         if (success && !isFunction(success)) {
             printNotAFunction("success", FUNCTION_NAME);
@@ -79,7 +74,7 @@ var ACPPlacesMonitor = (function() {
             printNotAFunction("error", FUNCTION_NAME);
             return;
         }
-        return exec(success, error, PLUGIN_NAME, FUNCTION_NAME, [shouldClearData]);
+        return exec(success, error, PLUGIN_NAME, FUNCTION_NAME, []);
     };
 
     // Immediately update the device's location and refresh the nearby POIs that are monitored by the extension.
@@ -96,6 +91,22 @@ var ACPPlacesMonitor = (function() {
             return;
         }
         return exec(success, error, PLUGIN_NAME, FUNCTION_NAME, []);
+    };
+
+    // Update the region for monitoring
+    ACPPlacesMonitor.startMonitoringForRegion = function (success, error, latitude, longitude, radius, identifier, notifyOnEnter, notifyOnExit ) {
+        var FUNCTION_NAME = "startMonitoringForRegion";
+
+        if (success && !isFunction(success)) {
+            printNotAFunction("success", FUNCTION_NAME);
+            return;
+        }
+
+        if (error && !isFunction(error)) {
+            printNotAFunction("error", FUNCTION_NAME);
+            return;
+        }
+        return exec(success, error, PLUGIN_NAME, FUNCTION_NAME, [latitude, longitude, radius, identifier, notifyOnEnter, notifyOnExit]);
     };
 
     // Sets the type of location permission request for which the user is prompted to select.
