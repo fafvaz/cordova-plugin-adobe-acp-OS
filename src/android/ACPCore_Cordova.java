@@ -81,12 +81,17 @@ public class ACPCore_Cordova extends CordovaPlugin {
     final static String METHOD_CORE_TRACK_STATE = "trackState";
     final static String METHOD_CORE_UPDATE_CONFIGURATION = "updateConfiguration";
     final static String METHOD_CORE_GET_APP_ID = "getAppId";
+
     final static String METHOD_CORE_PUSH_GET_STATUS = "getPushNotificationStatus";
     final static String METHOD_CORE_PUSH_REQUEST_PERMISSION = "requestPushNotificationPermission";
     final static int PERMISSION_REQUEST_CODE = 20230426;
     
     private static final String PERMISSION_POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS";
     
+
+    final static String METHOD_CORE_BEGIN_TEST = "beginTest";
+    final static String METHOD_CORE_SET_PUSH_IDENTIFIER = "setPushIdentifier";
+ 
     private String appId;
     private String initTime;
     private String urlDeepLink;
@@ -360,7 +365,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
             }
         });
     }
-    
+
     private void getAppId(final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(() -> callbackContext.success(appId));
     }
@@ -683,7 +688,5 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 MobileCore.collectMessageInfo(contextData);
             }
         }
-    }
-    
-    
+    } 
 }
