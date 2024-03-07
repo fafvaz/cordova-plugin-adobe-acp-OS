@@ -10,21 +10,20 @@
  governing permissions and limitations under the License.
  */
 
-var ACPLifecycle = (function() {
-    var ACPLifecycle = (typeof exports !== 'undefined') && exports || {};
-    var exec = cordova.require('cordova/exec'); // eslint-disable-line no-undef
+var ACPLifecycle = (function () {
+  var ACPLifecycle = (typeof exports !== 'undefined' && exports) || {};
+  var exec = cordova.require('cordova/exec'); // eslint-disable-line no-undef
 
-    var PLUGIN_NAME = "ACPLifecycle_Cordova";
+  var PLUGIN_NAME = 'ACPLifecycle_Cordova';
 
-    // ===========================================================================
-    // public APIs
-    // ===========================================================================
-    ACPLifecycle.extensionVersion = function(success, fail) {
-        return exec(success, fail, PLUGIN_NAME, "extensionVersion", []);
-    };
+  // ===========================================================================
+  // public APIs
+  // ===========================================================================
+  ACPLifecycle.extensionVersion = function (success, fail) {
+    return exec(success, fail, PLUGIN_NAME, 'extensionVersion', []);
+  };
 
-    return ACPLifecycle;
-
-}());
+  return ACPLifecycle;
+})();
 
 module.exports = ACPLifecycle;

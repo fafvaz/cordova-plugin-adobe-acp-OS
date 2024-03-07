@@ -8,7 +8,7 @@
  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
  OF ANY KIND, either express or implied. See the License for the specific language
  governing permissions and limitations under the License.
-V1*/
+*/
 
 var ACPCore = (function () {
   var ACPCore = (typeof exports !== 'undefined' && exports) || {};
@@ -43,6 +43,14 @@ var ACPCore = (function () {
   // ===========================================================================
   // public APIs
   // ===========================================================================
+/*  ACPCore.getPushNotificationStatus = function (success, fail) {
+    return exec(success, fail, PLUGIN_NAME, "getPushNotificationStatus", []);
+  };
+  
+  ACPCore.requestPushNotificationPermission = function (success, fail) {
+      return exec(success, fail, PLUGIN_NAME, "requestPushNotificationPermission", []);
+  };
+*/  
   ACPCore.dispatchEvent = function (sdkEvent, success, fail) {
     var FUNCTION_NAME = 'dispatchEvent';
 
@@ -62,8 +70,6 @@ var ACPCore = (function () {
 
     return exec(success, fail, PLUGIN_NAME, FUNCTION_NAME, [sdkEvent]);
   };
-
-
 
   ACPCore.dispatchEventWithResponseCallback = function (
     sdkEvent,
@@ -255,7 +261,11 @@ var ACPCore = (function () {
       acpPrintNotAString('action', FUNCTION_NAME);
       return;
     }
- 
+
+    if (contextData && !acpIsObject(contextData)) {
+      acpPrintNotAnObject('contextData', FUNCTION_NAME);
+      return;
+    }
 
     if (success && !acpIsFunction(success)) {
       acpPrintNotAFunction('success', FUNCTION_NAME);
@@ -281,7 +291,10 @@ var ACPCore = (function () {
       return;
     }
 
-   
+    if (contextData && !acpIsObject(contextData)) {
+      acpPrintNotAnObject('contextData', FUNCTION_NAME);
+      return;
+    }
 
     if (success && !acpIsFunction(success)) {
       acpPrintNotAFunction('success', FUNCTION_NAME);
@@ -301,7 +314,12 @@ var ACPCore = (function () {
 
   ACPCore.updateConfiguration = function (config, success, fail) {
     var FUNCTION_NAME = 'updateConfiguration';
- 
+
+    if (!acpIsObject(config)) {
+      acpPrintNotAnObject('config', FUNCTION_NAME);
+      return;
+    }
+
     if (success && !acpIsFunction(success)) {
       acpPrintNotAFunction('success', FUNCTION_NAME);
       return;
@@ -329,47 +347,6 @@ var ACPCore = (function () {
     }
 
     return exec(success, fail, PLUGIN_NAME, FUNCTION_NAME, []);
-  };
-
-  ACPCore.loadAdobe = function (success, fail) {
-    var FUNCTION_NAME = 'loadAdobe';
-
-    return exec(success, fail, PLUGIN_NAME, FUNCTION_NAME);
-  };
-
-  ACPCore.beginTest = function (success, fail) {
-    var FUNCTION_NAME = 'beginTest';
-
-    if (success && !acpIsFunction(success)) {
-      acpPrintNotAFunction('success', FUNCTION_NAME);
-      return;
-    }
-
-    if (fail && !acpIsFunction(fail)) {
-      acpPrintNotAFunction('fail', FUNCTION_NAME);
-      return;
-    }
-
-    return exec(success, fail, PLUGIN_NAME, FUNCTION_NAME, []);
-  }; 
-
-  ACPCore.setPushIdentifier = function (token, success, fail) {
-    var FUNCTION_NAME = 'setPushIdentifier';
-     
-    if (success && !acpIsFunction(success)) {
-      acpPrintNotAFunction('success', FUNCTION_NAME);
-      return;
-    }
-
-    if (fail && !acpIsFunction(fail)) {
-      acpPrintNotAFunction('fail', FUNCTION_NAME);
-      return;
-    }
-
-    console.log("token: " + token);
-
-    return exec(success, fail, PLUGIN_NAME, FUNCTION_NAME, [token]);
-    
   };
 
   return ACPCore;
@@ -420,17 +397,15 @@ window.acpIsObject = function (value) {
   return value && typeof value === 'object' && value.constructor === Object;
 };
 
-/*
 window.acpPrintNotAnObject = function (paramName, functionName) {
   console.log(
-    "..::Ignoring call to '" + 
+    "Ignoring call to '" +
       functionName +
       "'. The '" +
       paramName +
       "' parameter is required to be an Object."
   );
 };
-*/
 
 window.acpIsFunction = function (value) {
   return typeof value === 'function';
@@ -471,7 +446,3 @@ window.acpIsValidEvent = function (event) {
 };
 
 module.exports = ACPCore;
-/* 
-Test
-*/
-
