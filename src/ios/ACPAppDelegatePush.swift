@@ -55,26 +55,21 @@ import FirebaseMessaging
 
   @objc static func handleClickNotificationDispatched(notification: NSNotification) {
     sendTracking(notification: notification, action: "2")
+    sendTracking(notification: notification, action: "1")
   }
 
   static func sendTracking(notification: NSNotification, action: String) {
 
 
-     print("sendTracking", notification.object)
+    print("sendTracking", notification.object)
     
     if let userInfo = notification.object as? [String: Any] {
 
 
-      let pushPayloadAps = userInfo["aps"] as! [String: Any]
-      print("pushPayloadAps", pushPayloadAps)
-      
-      let pushPayloadAlert = pushPayloadAps["alert"] as! [String: Any]
-      print("pushPayloadAlert", pushPayloadAlert)
-
-      let deliveryId = pushPayloadAlert["_dId"] as? String
-      let broadlogId = pushPayloadAlert["_mId"] as? String
-      var acsDeliveryTracking = pushPayloadAlert["_acsDeliveryTracking"] as? String
-
+      let deliveryId = userInfo["_dId"] as? String
+      let broadlogId = userInfo["_mId"] as? String
+      var acsDeliveryTracking = userInfo["_acsDeliveryTracking"] as? String
+        
       if acsDeliveryTracking == nil {
         acsDeliveryTracking = "on"
       }
