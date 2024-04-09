@@ -56,6 +56,7 @@ import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.PermissionHelper;
 import org.apache.cordova.PluginResult;
+import org.apache.cordova.firebase.FirebasePlugin;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -87,18 +88,15 @@ public class ACPCore_Cordova extends CordovaPlugin {
     final static int PERMISSION_REQUEST_CODE = 20230426;
     
     private static final String PERMISSION_POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS";
-    
 
-    final static String METHOD_CORE_BEGIN_TEST = "beginTest";
-    final static String METHOD_CORE_SET_PUSH_IDENTIFIER = "setPushIdentifier";
- 
+
     private String appId;
     private String initTime;
-    private String urlDeepLink;
     private CallbackContext _tmpCallbackContext;
     private boolean hasHandledDeepLink = false;
-    private boolean pushRecebido = false;
-    private Handler handler = new Handler();
+    private final Handler handler = new Handler();
+
+    //private final ACPFirebaseMessagingService acpFirebaseMessagingService = new ACPFirebaseMessagingService();
 
 
     
@@ -490,6 +488,16 @@ public class ACPCore_Cordova extends CordovaPlugin {
         }
         
     }
+
+    @Override
+    public void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        final Bundle data = intent.getExtras();
+
+        if (data != null && data.containsKey("google.message_id")) {
+            ACPFirebaseMessagingService.handleMessage(data);
+        }
+    }
  
     // ===============================================================
     // Plugin lifecycle events
@@ -498,7 +506,8 @@ public class ACPCore_Cordova extends CordovaPlugin {
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
-        MobileCore.setLogLevel(LoggingMode.DEBUG);  
+        MobileCore.setLogLevel(LoggingMode.VERBOSE);
+        new ACPFirebaseMessagingService();
   
        
   
@@ -645,8 +654,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
             
             if (deepLink != null) {
 
-                pushRecebido = true;
-                urlDeepLink = deepLink;
+                boolean pushRecebido = true;
                 // Trate o deep link aqui, por exemplo, abrindo a tela correspondente
                 
                 System.out.println("Antes de openScreenByDeepLink");
