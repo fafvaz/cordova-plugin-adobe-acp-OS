@@ -14,22 +14,12 @@ package com.adobe.marketing.mobile.cordova;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
-import android.net.Uri;
 import android.os.Handler;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.view.View;
- 
-import org.apache.cordova.CordovaInterface;
-import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CordovaWebView;
-import org.apache.cordova.CordovaWebViewEngine;
+import android.util.Log;
 
-import android.webkit.WebView;
- 
 import androidx.core.app.NotificationManagerCompat;
 
 import com.adobe.marketing.mobile.Analytics;
@@ -37,8 +27,6 @@ import com.adobe.marketing.mobile.Assurance;
 import com.adobe.marketing.mobile.Campaign;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.Extension;
-import com.adobe.marketing.mobile.ExtensionError;
-import com.adobe.marketing.mobile.ExtensionErrorCallback;
 import com.adobe.marketing.mobile.Identity;
 import com.adobe.marketing.mobile.Lifecycle;
 import com.adobe.marketing.mobile.LoggingMode;
@@ -56,7 +44,6 @@ import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.PermissionHelper;
 import org.apache.cordova.PluginResult;
-import org.apache.cordova.firebase.FirebasePlugin;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -89,22 +76,18 @@ public class ACPCore_Cordova extends CordovaPlugin {
     
     private static final String PERMISSION_POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS";
 
-
     private String appId;
     private String initTime;
     private CallbackContext _tmpCallbackContext;
-    private boolean hasHandledDeepLink = false;
-    private final Handler handler = new Handler();
 
-    //private final ACPFirebaseMessagingService acpFirebaseMessagingService = new ACPFirebaseMessagingService();
-
-
+    public static ACPCore_Cordova intance;
     
     // ===============================================================
     // all calls filter through this method
     // ===============================================================
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+
         if (METHOD_CORE_DISPATCH_EVENT.equals(action)) {
             this.dispatchEvent(args, callbackContext);
             return true;
@@ -439,38 +422,6 @@ public class ACPCore_Cordova extends CordovaPlugin {
             callbackContext.success("GRANTED");
         }
     }
-    
-    private void trackPushImpression(String deliveryId, String broadlogId, String acsDeliveryTracking) {
-
-        System.out.println("trackPushImpression iniciado");
-        System.out.println("deliveryId");
-        System.out.println(deliveryId);
-        System.out.println("broadlogId");
-        System.out.println(broadlogId);
-        System.out.println("acsDeliveryTracking");
-        System.out.println(acsDeliveryTracking);
- 
-        // Verifique se a notificação push contém os dados necessários para o rastreamento
-        if (deliveryId != null && broadlogId != null && acsDeliveryTracking != null && acsDeliveryTracking.equals("on")) {
-            // Crie um HashMap para armazenar os dados de contexto
-            HashMap<String, Object> contextData = new HashMap<>();
-            // Adicione os dados necessários ao HashMap
-            contextData.put("deliveryId", (Object) deliveryId);
-            contextData.put("broadlogId", (Object) broadlogId);
-
-            // Rastreia o evento de impressão da notificação push usando o Adobe Mobile SDK
-            contextData.put("action", "1"); // 1 representa a click 
-            MobileCore.collectMessageInfo(contextData);
-
-            // Rastreia o evento de abertura da notificação push usando o Adobe Mobile SDK
-            contextData.put("action", "2"); // 2 representa a abertura (open)
-            MobileCore.collectMessageInfo(contextData);
-
-             // Rastreia o evento de abertura da notificação push usando o Adobe Mobile SDK
-            contextData.put("action", "7"); // 7 representa impression
-            MobileCore.collectMessageInfo(contextData);
-        }
-    }
 
     @Override
     public void onRequestPermissionResult(int requestCode, String[] permissions,
@@ -508,49 +459,8 @@ public class ACPCore_Cordova extends CordovaPlugin {
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
         MobileCore.setLogLevel(LoggingMode.VERBOSE);
         new ACPFirebaseMessagingService();
-  
-       
-  
-        // Configurar WebViewClient para detectar o onPageFinished
-    /*    webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
+        intance = this;
 
-                // Verificar se a notificação push foi recebida
-                if (pushRecebido) {
-                    // A notificação push foi recebida e a página WebView está completamente carregada
-
-                    // Abra o deep link
-                    openScreenByDeepLink(urlDeepLink);
-                }
-            }
-        });*/
- 
-      /* View view = ((SystemWebViewEngine) webView.getEngine()).getView();
-
-        if (view instanceof SystemWebView) {
-            SystemWebView systemWebView = (SystemWebView) view;
-
-            SystemWebViewClient webViewClient = new SystemWebViewClient(new SystemWebView(systemWebView)) {
-                @Override
-                public void onPageFinished(WebView view, String url) {
-                    // Verificar se a notificação push foi recebida
-                    if (pushRecebido) {
-                        openScreenByDeepLink(urlDeepLink);
-                    }
-                }
-            };
-        
-            systemWebView.setWebViewClient(webViewClient);
-        } else {
-            // Lida com o caso em que a view não é uma instância de SystemWebView
-            System.out.println("### View não é uma instância de SystemWebView");
-        }*/
-
-   
- 
-        
         appId = cordova.getActivity().getString(cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName()));
         
         try {
@@ -592,14 +502,6 @@ public class ACPCore_Cordova extends CordovaPlugin {
         super.onResume(multitasking);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
         MobileCore.lifecycleStart(null);
-       
-        if (!hasHandledDeepLink) {
-            
-            System.out.println("Antes de handleTracking");
-            this.handleTracking();
-            System.out.println("Depois de handleTracking");
-            hasHandledDeepLink = true;
-        }
     }
  
     @Override
@@ -607,94 +509,13 @@ public class ACPCore_Cordova extends CordovaPlugin {
         super.pluginInitialize();
     }
 
-    private void openScreenByDeepLink(String deepLink) {
+    public void openScreenByDeepLink(String deepLink) {
         if (deepLink != null) {
-
-            System.out.println("##### openScreenByDeepLink DeepLink: " + deepLink);
-            
-            Uri uri = Uri.parse(deepLink);
-            //Uri uri = Uri.parse("http://www.google.com");
-
-            if (uri != null) {
-
-                System.out.println("##### PATH URI " + uri.getPath());
-                System.out.println("##### ProductId: " + uri.getQueryParameter("ProductId"));
-
-        
-                 // Remover o extra "uri" da Intent atual
-               // cordova.getActivity().getIntent().removeExtra("uri");
-
-               // Criar e iniciar a nova Intent 
-               Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-               intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-               cordova.getActivity().startActivity(intent);
-                
-                
-            } else {
-                System.out.println("A URI não é válida: " + deepLink);
-            }
- 
+           // Criar e iniciar a nova Intent
+           Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLink));
+           intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+           cordova.getActivity().startActivity(intent);
         }
     }
 
-    private void handleTracking() {
-        //Check to see if this view was opened based on a notification
-        Intent intent = cordova.getActivity().getIntent();
-        Bundle data = intent.getExtras();
-
-        if (data != null) {
-            //This was opened based on the notification, you need to get the tracking that was passed on.
-            String deliveryId = data.getString("_dId");
-            String messageId = data.getString("_mId");
-            String acsDeliveryTracking = data.getString("_acsDeliveryTracking"); 
-
-            String deepLink = data.getString("uri");
-
-            System.out.println("##### DeepLink: " + deepLink);
-            
-            if (deepLink != null) {
-
-                boolean pushRecebido = true;
-                // Trate o deep link aqui, por exemplo, abrindo a tela correspondente
-                
-                System.out.println("Antes de openScreenByDeepLink");
-
-                handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    System.out.println("### executed after 3 seconds ###");
-                    openScreenByDeepLink(deepLink);
-                     
-                System.out.println("Depois de openScreenByDeepLink");
-                }
-            }, 5000); // Ajuste o atraso conforme necessário
-                
-               
-            }
-
-            System.out.println("### deliveryId ###");
-            System.out.println(deliveryId);
-            System.out.println("### messageId ###");
-            System.out.println(messageId);
-            System.out.println("### acsDeliveryTracking ###");
-            System.out.println(acsDeliveryTracking);
-
-            if( acsDeliveryTracking == null) {
-                acsDeliveryTracking = "on";
-            }
-
-            HashMap<String, Object> contextData = new HashMap<>();
-
-            if (deliveryId != null && messageId != null && acsDeliveryTracking.equals("on")) {
-                contextData.put("deliveryId", deliveryId);
-                contextData.put("broadlogId", messageId);
-                contextData.put("action", "2");
-                MobileCore.collectMessageInfo(contextData);
-                contextData.put("action", "1");
-                MobileCore.collectMessageInfo(contextData);
-                contextData.put("action", "7");
-                MobileCore.collectMessageInfo(contextData);
-            }
-        }
-    } 
 }
