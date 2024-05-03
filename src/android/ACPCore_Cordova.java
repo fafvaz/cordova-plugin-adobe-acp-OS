@@ -12,6 +12,8 @@ governing permissions and limitations under the License.
 
 package com.adobe.marketing.mobile.cordova;
 
+import static android.content.Intent.getIntent;
+
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -69,6 +71,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
     final static String METHOD_CORE_TRACK_STATE = "trackState";
     final static String METHOD_CORE_UPDATE_CONFIGURATION = "updateConfiguration";
     final static String METHOD_CORE_GET_APP_ID = "getAppId";
+    final static String METHOD_CORE_OPEN_DEEPLINK = "openDeepLink";
 
     final static String METHOD_CORE_PUSH_GET_STATUS = "getPushNotificationStatus";
     final static String METHOD_CORE_PUSH_REQUEST_PERMISSION = "requestPushNotificationPermission";
@@ -135,6 +138,9 @@ public class ACPCore_Cordova extends CordovaPlugin {
             return true;
         }  else if (METHOD_CORE_PUSH_REQUEST_PERMISSION.equals(action)) {
             this.requestPushNotificationPermission(callbackContext);
+            return true;
+        }  else if (METHOD_CORE_OPEN_DEEPLINK.equals(action)) {
+            this.openScreenByDeepLink(args.getString(0));
             return true;
         }
         
@@ -496,7 +502,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
         super.onPause(multitasking);
         MobileCore.lifecyclePause();
     }
-    
+
     @Override
     public void onResume(boolean multitasking) {
         super.onResume(multitasking);
@@ -506,10 +512,13 @@ public class ACPCore_Cordova extends CordovaPlugin {
  
     @Override
     public void pluginInitialize() {
+        ACPFirebaseMessagingService.handleMessage(this.cordova.getActivity().getIntent().getExtras());
         super.pluginInitialize();
     }
 
     public void openScreenByDeepLink(String deepLink) {
+
+        Log.d("DEEPLINK", "Abrindo o deeplink " + deepLink);
         if (deepLink != null) {
            // Criar e iniciar a nova Intent
            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLink));
