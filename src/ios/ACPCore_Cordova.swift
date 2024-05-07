@@ -240,6 +240,14 @@ import AEPUserProfile
     })
   }
 
+
+    @objc(openDeepLink:)
+    func openDeepLink(command: CDVInvokedUrlCommand!) {
+      self.commandDelegate.run(inBackground: {
+          ACPAppDelegatePush.openScreenByDeepLink(command.arguments[0] as! String)
+      })
+    }
+
   // ===========================================================================
   // helper functions
   // ===========================================================================
