@@ -349,6 +349,24 @@ var ACPCore = (function () {
     return exec(success, fail, PLUGIN_NAME, FUNCTION_NAME, []);
   };
 
+ 
+  ACPCore.openDeepLink = function (deepLink, success, fail) {
+    var FUNCTION_NAME = 'openDeepLink';
+
+    if (success && !acpIsFunction(success)) {
+      acpPrintNotAFunction('success', FUNCTION_NAME);
+      return;
+    }
+
+    if (fail && !acpIsFunction(fail)) {
+      acpPrintNotAFunction('fail', FUNCTION_NAME);
+      return;
+    }
+
+    return exec(success, fail, PLUGIN_NAME, FUNCTION_NAME, [deepLink]);
+  };
+
+
   return ACPCore;
 })();
 

@@ -36,7 +36,7 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
 
     // Verifica se a notificação push contém os dados necessários para o rastreamento
     if (deliveryId != null && messageId != null && acsDeliveryTracking.equals("on")) {
-      handleTracking(data, "7");
+      handleTracking(data, "7", false);
       return true;
     }
 
@@ -53,13 +53,13 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
         data.put(key, bundle.getString(key, null));
       }
 
-      handleTracking(data, "2");
-      handleTracking(data, "1");
+      handleTracking(data, "2", false);
+      handleTracking(data, "1", true);
       Log.d("ACPFirebaseMessagingService", "Handled successfully");
     }
   }
 
-  private static void handleTracking(Map<String, String> data, String action) {
+  private static void handleTracking(Map<String, String> data, String action, boolean skipDeepLink) {
 
 
     String deliveryId = data.get("_dId");
@@ -83,13 +83,8 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
 
       MobileCore.collectMessageInfo(contextData);
 
-      if (deepLink != null && !deepLink.isEmpty()) {
-        // Adicione o deep link à Intent se estiver presente
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLink));
-        intent.putExtra("uri", deepLink);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        //startActivity(c);
+      if (deepLink != null && !deepLink.isEmpty() && !skipDeepLink) {
+        ACPCore_Cordova.intance.openScreenByDeepLink(deepLink);
       }
       Log.d("ACPFirebaseMessagingService", "handleTracking successfully");
     }
