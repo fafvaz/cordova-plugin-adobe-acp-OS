@@ -40,8 +40,15 @@ import UserNotifications
           DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  // in half a second...
             let _: String! = command.arguments[0] as? String
             let valueTypeId: String! = command.arguments[1] as? String
-
-            MobileCore.collectPii([self.typeId: valueTypeId!])
+            let data = command.arguments[2] as AnyObject
+              
+            if data is NSDictionary {
+                var convert = data as! [String: Any]
+                convert[self.typeId] = valueTypeId
+                MobileCore.collectPii(convert)
+            } else {
+               MobileCore.collectPii([self.typeId: valueTypeId!])
+            }
             UIApplication.shared.registerForRemoteNotifications()
           }
 
