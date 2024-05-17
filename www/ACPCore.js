@@ -464,3 +464,17 @@ window.acpIsValidEvent = function (event) {
 };
 
 module.exports = ACPCore;
+
+
+window.handleACPCorePushMessage = function(payload) {
+  if(window.handleACPCorePushMessageCalback) {
+       window.handleACPCorePushMessageCalback(payload);
+  } else {
+    try {
+      const aps = JSON.parse(payload.aps);
+      alert(aps.alert.body);
+    } catch (e) {
+      alert(payload.aps.alert.body);
+    }
+  }
+}
