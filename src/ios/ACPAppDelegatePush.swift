@@ -85,27 +85,35 @@ import FirebaseMessaging
             }
             
             let deepLink = userInfo["uri"] as? String
-            if(deepLink != nil && skipDeepLink == "false") {
-                openScreenByDeepLink(deepLink!)
+            if(skipDeepLink == "false") {
+                handleCallback(userInfo)
             }
                 
         }
   }
     
+    
+    static func handleCallback(_ payload: [String: Any] ) {
+        DispatchQueue.main.async{
+            let jsonData = try! JSONSerialization.data(withJSONObject: payload)
+            let jsonString = String(data: jsonData, encoding: String.Encoding.utf8)
+            ACPCore_Cordova.instance.webViewEngine.evaluateJavaScript("handleACPCorePushMessage(" + jsonString! + ")", completionHandler: nil)
+        }
+    }
+    
     static func openScreenByDeepLink(_ deepLink: String) {
         print("Abrindo o deeplink " + deepLink)
 
-        if (deepLink != nil) {
-            guard let url = URL(string: deepLink) else {
-              return //be safe
-            }
+        guard let url = URL(string: deepLink) else {
+          return //be safe
+        }
 
-            if #available(iOS 10.0, *) {
-                UIApplication.shared.open(url, options: [:], completionHandler: nil)
-            } else {
-                UIApplication.shared.openURL(url)
-            }
+        if #available(iOS 10.0, *) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        } else {
+            UIApplication.shared.openURL(url)
         }
     }
+    
 
 }
