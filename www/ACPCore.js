@@ -467,8 +467,8 @@ module.exports = ACPCore;
 
 
 window.handleACPCorePushMessage = function(payload) {
-  if(window.handleACPCorePushMessageCalback) {
-       window.handleACPCorePushMessageCalback(payload);
+  if(window.handleACPCorePushMessageCallback) {
+       window.handleACPCorePushMessageCallback(payload);
   } else {
     try {
       const aps = JSON.parse(payload.aps);
