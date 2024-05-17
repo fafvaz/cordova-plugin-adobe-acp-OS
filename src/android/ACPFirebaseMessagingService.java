@@ -1,6 +1,8 @@
 package com.adobe.marketing.mobile.cordova;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,6 +11,7 @@ import com.adobe.marketing.mobile.MobileCore;
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.apache.cordova.firebase.FirebasePluginMessageReceiver;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -83,11 +86,18 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
 
       MobileCore.collectMessageInfo(contextData);
 
-      if (deepLink != null && !deepLink.isEmpty() && !skipDeepLink) {
-        ACPCore_Cordova.intance.openScreenByDeepLink(deepLink);
+      if(!skipDeepLink) {
+        handleCallback(data);
       }
       Log.d("ACPFirebaseMessagingService", "handleTracking successfully");
     }
+  }
+
+  private static void handleCallback(final Map<String, String> data){
+    ACPCore_Cordova.intance.cordova.getActivity().runOnUiThread(() -> {
+      JSONObject jsonObject = new JSONObject(data);
+      ACPCore_Cordova.intance.webView.loadUrl("javascript:handleACPCorePushMessage(" + jsonObject + ")");
+    });
   }
 
 }
