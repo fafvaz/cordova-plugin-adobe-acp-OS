@@ -12,6 +12,8 @@ import AEPUserProfile
   var appId: String!
   var initTime: String!
 
+  static var instance: ACPCore_Cordova!
+
   @objc(dispatchEvent:)
   func dispatchEvent(command: CDVInvokedUrlCommand!) {
 
@@ -282,6 +284,7 @@ import AEPUserProfile
     dateFormatter.dateFormat = "dd/MM/yyyy HH:mm:ss"
     initTime = dateFormatter.string(from: date as Date)
     self.appId = Bundle.main.object(forInfoDictionaryKey: "AppId") as? String
+    ACPCore_Cordova.instance = self
     ACPAppDelegatePush.registerExtensions()
   }
 }
