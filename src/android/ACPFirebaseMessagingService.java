@@ -1,10 +1,7 @@
 package com.adobe.marketing.mobile.cordova;
 
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 
 import com.adobe.marketing.mobile.MobileCore;
@@ -86,17 +83,23 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
 
       MobileCore.collectMessageInfo(contextData);
 
-      if(!skipDeepLink) {
+      if (!skipDeepLink) {
         handleCallback(data);
       }
       Log.d("ACPFirebaseMessagingService", "handleTracking successfully");
     }
   }
 
-  private static void handleCallback(final Map<String, String> data){
+  private static void handleCallback(final Map<String, String> data) {
     ACPCore_Cordova.intance.cordova.getActivity().runOnUiThread(() -> {
-      JSONObject jsonObject = new JSONObject(data);
-      ACPCore_Cordova.intance.webView.loadUrl("javascript:handleACPCorePushMessage(" + jsonObject + ")");
+
+      Handler handler = new Handler();
+      final Runnable r = () -> {
+        JSONObject jsonObject = new JSONObject(data);
+        ACPCore_Cordova.intance.webView.loadUrl("javascript:window.setTimeout(function(){ handleACPCorePushMessage(" + jsonObject + ")}, 500);");
+      };
+
+      handler.postDelayed(r, 1000);
     });
   }
 
