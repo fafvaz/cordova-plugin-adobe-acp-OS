@@ -13,7 +13,9 @@ package com.adobe.marketing.mobile.cordova;
 
 import static android.content.Intent.getIntent;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -53,6 +55,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class ACPCore_Cordova extends CordovaPlugin {
@@ -71,6 +74,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
     final static String METHOD_CORE_UPDATE_CONFIGURATION = "updateConfiguration";
     final static String METHOD_CORE_GET_APP_ID = "getAppId";
     final static String METHOD_CORE_OPEN_DEEPLINK = "openDeepLink";
+    final static String METHOD_CORE_SUBSCRIBER = "subscriber";
 
     final static String METHOD_CORE_PUSH_GET_STATUS = "getPushNotificationStatus";
     final static String METHOD_CORE_PUSH_REQUEST_PERMISSION = "requestPushNotificationPermission";
@@ -81,6 +85,8 @@ public class ACPCore_Cordova extends CordovaPlugin {
     private String appId;
     private String initTime;
     private CallbackContext _tmpCallbackContext;
+
+    private CallbackContext subscriberContext;
 
     public static ACPCore_Cordova intance;
 
@@ -140,6 +146,15 @@ public class ACPCore_Cordova extends CordovaPlugin {
             return true;
         }  else if (METHOD_CORE_OPEN_DEEPLINK.equals(action)) {
             this.openScreenByDeepLink(args.getString(0));
+            return true;
+        }  else if (METHOD_CORE_SUBSCRIBER.equals(action)) {
+            subscriberContext = callbackContext;
+
+            SharedPreferences pref = ACPCore_Cordova.intance.cordova.getContext()
+                    .getSharedPreferences("ACP_CORE_PUSH", Context.MODE_PRIVATE);
+            JSONObject prefJson = new JSONObject(pref.getString("LAST_PUSH", "{}"));
+            this.subscribe(prefJson);
+            clearPushPreferences();
             return true;
         }
 
@@ -451,7 +466,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
         final Bundle data = intent.getExtras();
 
         if (data != null && data.containsKey("google.message_id")) {
-            ACPFirebaseMessagingService.handleMessage(data);
+            ACPFirebaseMessagingService.handleMessage(data, false);
         }
     }
 
@@ -506,13 +521,13 @@ public class ACPCore_Cordova extends CordovaPlugin {
     public void onResume(boolean multitasking) {
         super.onResume(multitasking);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
-        ACPFirebaseMessagingService.handleMessage(this.cordova.getActivity().getIntent().getExtras());
+        ACPFirebaseMessagingService.handleMessage(this.cordova.getActivity().getIntent().getExtras(), false);
         MobileCore.lifecycleStart(null);
     }
 
     @Override
     public void pluginInitialize() {
-        ACPFirebaseMessagingService.handleMessage(this.cordova.getActivity().getIntent().getExtras());
+        ACPFirebaseMessagingService.handleMessage(this.cordova.getActivity().getIntent().getExtras(), true);
         super.pluginInitialize();
     }
 
@@ -525,6 +540,35 @@ public class ACPCore_Cordova extends CordovaPlugin {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             cordova.getActivity().startActivity(intent);
         }
+    }
+
+    public void subscribe(JSONObject result) {
+        if(this.subscriberContext != null) {
+            cordova.getThreadPool().execute(() -> {
+                try {
+                    PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, result);
+                    pluginResult.setKeepCallback(true);
+                    this.subscriberContext.sendPluginResult(pluginResult);
+                } catch (Exception e) {
+                    this.subscriberContext.error(e.getMessage());
+                }
+            });
+        }
+    }
+
+    public static void clearPushPreferences() {
+        SharedPreferences pref = ACPCore_Cordova.intance.cordova.getContext()
+                .getSharedPreferences("ACP_CORE_PUSH", Context.MODE_PRIVATE);
+        pref.edit().clear().apply();
+    }
+
+    public static void addPushToPreferences(Map<String, String> data) {
+        SharedPreferences pref = ACPCore_Cordova.intance.cordova.getContext()
+                .getSharedPreferences("ACP_CORE_PUSH", Context.MODE_PRIVATE);
+        pref.edit().clear().apply();
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString("ACP_CORE_LAST_PUSH", new JSONObject(data).toString());
+        editor.apply();
     }
 
 }
