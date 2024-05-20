@@ -96,7 +96,7 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
       Handler handler = new Handler();
       final Runnable r = () -> {
         JSONObject jsonObject = new JSONObject(data);
-        ACPCore_Cordova.intance.webView.loadUrl("javascript:window.setTimeout(function(){ handleACPCorePushMessage(" + jsonObject + ")}, 100);");
+        ACPCore_Cordova.intance.webView.loadUrl("javascript:window.setTimeout(function(){ handleACPCorePushMessage(" + jsonObject + ")}, 1000);");
       };
 
       handler.postDelayed(r, 5000);
