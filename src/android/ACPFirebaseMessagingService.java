@@ -1,5 +1,7 @@
 package com.adobe.marketing.mobile.cordova;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -43,29 +45,36 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
     return false;
   }
 
-  public static void handleMessage(Bundle bundle) {
+  public static void handleMessage(Bundle bundle, boolean fromBackground) {
     Log.d("ACPFirebaseMessagingService", "ACPFirebaseMessagingService called");
 
     if (bundle != null) {
       Map<String, String> data = new HashMap<>();
       Set<String> keys = bundle.keySet();
+
       for (String key : keys) {
         data.put(key, bundle.getString(key, null));
       }
 
-      handleTracking(data, "2", false);
-      handleTracking(data, "1", true);
+      if(fromBackground) {
+        ACPCore_Cordova.addPushToPreferences(data);
+        handleTracking(data, "2", false);
+        handleTracking(data, "1", false);
+      } else {
+        handleTracking(data, "2", false);
+        handleTracking(data, "1", true);
+      }
+
       Log.d("ACPFirebaseMessagingService", "Handled successfully");
     }
+
   }
 
   private static void handleTracking(Map<String, String> data, String action, boolean skipDeepLink) {
 
-
     String deliveryId = data.get("_dId");
     String messageId = data.get("_mId");
     String acsDeliveryTracking = data.get("_acsDeliveryTracking");
-    String deepLink = data.get("uri");
 
     if (acsDeliveryTracking == null) {
       acsDeliveryTracking = "on";
@@ -91,16 +100,8 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
   }
 
   private static void handleCallback(final Map<String, String> data) {
-    ACPCore_Cordova.intance.cordova.getActivity().runOnUiThread(() -> {
-
-      Handler handler = new Handler();
-      final Runnable r = () -> {
-        JSONObject jsonObject = new JSONObject(data);
-        ACPCore_Cordova.intance.webView.loadUrl("javascript:window.setTimeout(function(){ handleACPCorePushMessage(" + jsonObject + ")}, 500);");
-      };
-
-      handler.postDelayed(r, 1000);
-    });
+    JSONObject jsonObject = new JSONObject(data);
+    ACPCore_Cordova.intance.subscribe(jsonObject);
   }
 
 }
