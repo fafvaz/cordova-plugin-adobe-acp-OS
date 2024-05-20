@@ -366,7 +366,22 @@ var ACPCore = (function () {
     return exec(success, fail, PLUGIN_NAME, FUNCTION_NAME, [deepLink]);
   };
 
-
+  ACPCore.subscriber = function (success, fail) {
+    var FUNCTION_NAME = 'subscriber';
+  
+    if (success && !acpIsFunction(success)) {
+      acpPrintNotAFunction('success', FUNCTION_NAME);
+      return;
+    }
+  
+    if (fail && !acpIsFunction(fail)) {
+      acpPrintNotAFunction('fail', FUNCTION_NAME);
+      return;
+    }
+  
+    return exec(success, fail, PLUGIN_NAME, FUNCTION_NAME, []);
+  };
+ 
   return ACPCore;
 })();
 
