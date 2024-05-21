@@ -530,11 +530,17 @@ public class ACPCore_Cordova extends CordovaPlugin {
         ACPFirebaseMessagingService.handleMessage(this.cordova.getActivity().getIntent().getExtras(), false);
         MobileCore.lifecycleStart(null);
     }
-
+    
     @Override
     public void pluginInitialize() {
-        ACPFirebaseMessagingService.handleMessage(this.cordova.getActivity().getIntent().getExtras(), true);
         super.pluginInitialize();
+        final Bundle data = this.cordova.getActivity().getIntent().getExtras();
+
+        Log.d(ACP_CORE_PUSH_TAG_LOG, "public void pluginInitialize()");
+        if (data != null && data.containsKey("google.message_id")) {
+            ACPFirebaseMessagingService.handleMessage(data, true);
+        }
+        Log.d(ACP_CORE_PUSH_TAG_LOG, "public void pluginInitialize()");
     }
 
     public void openScreenByDeepLink(String deepLink) {
