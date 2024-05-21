@@ -11,7 +11,9 @@ governing permissions and limitations under the License.
 
 package com.adobe.marketing.mobile.cordova;
 
-import static android.content.Intent.getIntent;
+import static com.adobe.marketing.mobile.cordova.ACPFirebaseMessagingService.ACP_CORE_LAST_PUSH_KEY;
+import static com.adobe.marketing.mobile.cordova.ACPFirebaseMessagingService.ACP_CORE_LAST_PUSH_PREF_KEY;
+import static com.adobe.marketing.mobile.cordova.ACPFirebaseMessagingService.ACP_CORE_PUSH_TAG_LOG;
 
 import android.content.Context;
 import android.content.Intent;
@@ -20,7 +22,6 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 
 import androidx.core.app.NotificationManagerCompat;
@@ -150,11 +151,14 @@ public class ACPCore_Cordova extends CordovaPlugin {
         }  else if (METHOD_CORE_SUBSCRIBER.equals(action)) {
             subscriberContext = callbackContext;
 
+            Log.d(ACP_CORE_PUSH_TAG_LOG, "before subs");
             SharedPreferences pref = ACPCore_Cordova.intance.cordova.getContext()
-                    .getSharedPreferences("ACP_CORE_PUSH", Context.MODE_PRIVATE);
-            JSONObject prefJson = new JSONObject(pref.getString("LAST_PUSH", "{}"));
+                    .getSharedPreferences(ACP_CORE_LAST_PUSH_PREF_KEY, Context.MODE_PRIVATE);
+            JSONObject prefJson = new JSONObject(pref.getString(ACP_CORE_LAST_PUSH_KEY, "{}"));
+            Log.d(ACP_CORE_PUSH_TAG_LOG, "before subs --> json " + prefJson);
             this.subscribe(prefJson);
             clearPushPreferences();
+            Log.d(ACP_CORE_PUSH_TAG_LOG, "after subs");
             return true;
         }
 
@@ -464,9 +468,11 @@ public class ACPCore_Cordova extends CordovaPlugin {
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         final Bundle data = intent.getExtras();
-
+        Log.d(ACP_CORE_PUSH_TAG_LOG, "public void onNewIntent(Intent intent)");
         if (data != null && data.containsKey("google.message_id")) {
+            Log.d(ACP_CORE_PUSH_TAG_LOG, "newIntent before handleMessage");
             ACPFirebaseMessagingService.handleMessage(data, false);
+            Log.d(ACP_CORE_PUSH_TAG_LOG, "newIntent after handleMessage");
         }
     }
 
@@ -543,32 +549,39 @@ public class ACPCore_Cordova extends CordovaPlugin {
     }
 
     public void subscribe(JSONObject result) {
+        Log.d(ACP_CORE_PUSH_TAG_LOG, "public void subscribe(JSONObject result)" );
         if(this.subscriberContext != null) {
             cordova.getThreadPool().execute(() -> {
                 try {
+                    Log.d(ACP_CORE_PUSH_TAG_LOG, "subscriberContext");
                     PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, result);
                     pluginResult.setKeepCallback(true);
                     this.subscriberContext.sendPluginResult(pluginResult);
+                    Log.d(ACP_CORE_PUSH_TAG_LOG, "subscriberContext sent :::: " + pluginResult);
                 } catch (Exception e) {
                     this.subscriberContext.error(e.getMessage());
                 }
             });
+        } else {
+            Log.d(ACP_CORE_PUSH_TAG_LOG, "subscriberContext null");
         }
     }
 
     public static void clearPushPreferences() {
         SharedPreferences pref = ACPCore_Cordova.intance.cordova.getContext()
-                .getSharedPreferences("ACP_CORE_PUSH", Context.MODE_PRIVATE);
+                .getSharedPreferences(ACP_CORE_LAST_PUSH_PREF_KEY, Context.MODE_PRIVATE);
         pref.edit().clear().apply();
     }
 
     public static void addPushToPreferences(Map<String, String> data) {
+        Log.d(ACP_CORE_PUSH_TAG_LOG, "begin addPushToPreferences");
         SharedPreferences pref = ACPCore_Cordova.intance.cordova.getContext()
-                .getSharedPreferences("ACP_CORE_PUSH", Context.MODE_PRIVATE);
+                .getSharedPreferences(ACP_CORE_LAST_PUSH_PREF_KEY, Context.MODE_PRIVATE);
         pref.edit().clear().apply();
         SharedPreferences.Editor editor = pref.edit();
-        editor.putString("ACP_CORE_LAST_PUSH", new JSONObject(data).toString());
+        editor.putString(ACP_CORE_LAST_PUSH_KEY, new JSONObject(data).toString());
         editor.apply();
+        Log.d(ACP_CORE_PUSH_TAG_LOG, "end addPushToPreferences");
     }
 
 }
