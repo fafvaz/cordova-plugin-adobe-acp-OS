@@ -1,9 +1,6 @@
 package com.adobe.marketing.mobile.cordova;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 
 import com.adobe.marketing.mobile.MobileCore;
@@ -19,12 +16,15 @@ import java.util.Set;
 public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
 
 
+  final static String ACP_CORE_PUSH_TAG_LOG = "ACP_CORE_PUSH";
+  final static String ACP_CORE_LAST_PUSH_PREF_KEY = "ACP_LAST_PUSH_PREF";
+  final static String ACP_CORE_LAST_PUSH_KEY = "ACP_LAST_PUSH";
+
+
   @Override
   public boolean onMessageReceived(RemoteMessage remoteMessage) {
-    // Aqui você lida com o recebimento da notificação push
-    // Extrai as informações necessárias do objeto remoteMessage, como deliveryId, messageId e acsDeliveryTracking
 
-    System.out.println("ACPFirebaseMessagingService: onMessageReceived");
+    Log.d(ACP_CORE_PUSH_TAG_LOG, "begin onMessageReceived");
 
     Map<String, String> data = remoteMessage.getData();
 
@@ -42,11 +42,13 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
       return true;
     }
 
+    Log.d(ACP_CORE_PUSH_TAG_LOG, "end onMessageReceived");
+
     return false;
   }
 
   public static void handleMessage(Bundle bundle, boolean fromBackground) {
-    Log.d("ACPFirebaseMessagingService", "ACPFirebaseMessagingService called");
+    Log.d(ACP_CORE_PUSH_TAG_LOG, "begin handleMessage == background: " + fromBackground);
 
     if (bundle != null) {
       Map<String, String> data = new HashMap<>();
@@ -58,16 +60,17 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
 
       if(fromBackground) {
         ACPCore_Cordova.addPushToPreferences(data);
-        handleTracking(data, "2", false);
-        handleTracking(data, "1", false);
+        handleTracking(data, "2", true);
+        handleTracking(data, "1", true);
       } else {
         handleTracking(data, "2", false);
         handleTracking(data, "1", true);
       }
 
-      Log.d("ACPFirebaseMessagingService", "Handled successfully");
+    } else {
+      Log.d(ACP_CORE_PUSH_TAG_LOG, "bundle null. nothing to do || background: " + fromBackground);
     }
-
+    Log.d(ACP_CORE_PUSH_TAG_LOG, "end handleMessage || background: " + fromBackground);
   }
 
   private static void handleTracking(Map<String, String> data, String action, boolean skipDeepLink) {
@@ -80,7 +83,6 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
       acsDeliveryTracking = "on";
     }
 
-    Log.d("ACPFirebaseMessagingService", "handleTracking");
     // Verifica se a notificação push contém os dados necessários para o rastreamento
     if (deliveryId != null && messageId != null && acsDeliveryTracking.equals("on")) {
 
@@ -95,7 +97,7 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
       if (!skipDeepLink) {
         handleCallback(data);
       }
-      Log.d("ACPFirebaseMessagingService", "handleTracking successfully");
+      Log.d(ACP_CORE_PUSH_TAG_LOG, "handleTracking successfully");
     }
   }
 
