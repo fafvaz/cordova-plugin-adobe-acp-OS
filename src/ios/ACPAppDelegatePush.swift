@@ -84,7 +84,6 @@ import FirebaseMessaging
                 print("Trackin not delivered")
             }
             
-            let deepLink = userInfo["uri"] as? String
             if(skipDeepLink == "false") {
                 handleCallback(userInfo)
             }
@@ -95,9 +94,7 @@ import FirebaseMessaging
     
     static func handleCallback(_ payload: [String: Any] ) {
         DispatchQueue.main.async{
-            let jsonData = try! JSONSerialization.data(withJSONObject: payload)
-            let jsonString = String(data: jsonData, encoding: String.Encoding.utf8)
-            ACPCore_Cordova.instance.webViewEngine.evaluateJavaScript("handleACPCorePushMessage(" + jsonString! + ")", completionHandler: nil)
+            ACPCore_Cordova.instance.subscribe(payload)
         }
     }
     
