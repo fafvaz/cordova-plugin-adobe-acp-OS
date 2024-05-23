@@ -58,7 +58,7 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
         data.put(key, bundle.getString(key, null));
       }
 
-      data.put("background", fromBackground);
+      data.put("background", fromBackground ? "true" : "false");
       if(fromBackground) {
         ACPCore_Cordova.addPushToPreferences(data);
         handleTracking(data, "2", false);
