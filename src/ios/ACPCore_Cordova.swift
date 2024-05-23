@@ -12,8 +12,13 @@ import AEPUserProfile
   var appId: String!
   var initTime: String!
 
-  static var instance: ACPCore_Cordova!
+  static let ACP_CORE_PUSH_TAG_LOG = "ACP_CORE_PUSH"
+  static let ACP_CORE_LAST_PUSH_PREF_KEY = "ACP_LAST_PUSH_PREF"
+  static let ACP_CORE_LAST_PUSH_KEY = "ACP_LAST_PUSH"
+  var subscriberContextCallbackId: String?
 
+  static var instance: ACPCore_Cordova!
+    
   @objc(dispatchEvent:)
   func dispatchEvent(command: CDVInvokedUrlCommand!) {
 
@@ -250,9 +255,33 @@ import AEPUserProfile
       })
     }
 
+  @objc(subscriber:)
+  func subscriber(command: CDVInvokedUrlCommand!) {
+      self.subscriberContextCallbackId = command.callbackId
+      let preferences = UserDefaults.standard
+      let json = preferences.dictionary(forKey: ACPCore_Cordova.ACP_CORE_LAST_PUSH_PREF_KEY) ?? [String : Any]()
+      self.subscribe(json)
+      clearPushPreferences()
+    }
+    
+    func subscribe(_ json:  [String : Any]) {
+        
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: json)
+        pluginResult?.keepCallback = true
+        self.commandDelegate.send(pluginResult, callbackId: self.subscriberContextCallbackId!)
+    }
+  
+
   // ===========================================================================
   // helper functions
   // ===========================================================================
+
+    func clearPushPreferences() {
+        //TODO:
+    }
+    
+    
+  //  Log.d(ACP_CORE_PUSH_TAG_LOG, "bef
 
   func getExtensionEventFromJavascriptObject(event: NSDictionary!) -> AEPCore.Event! {
 
