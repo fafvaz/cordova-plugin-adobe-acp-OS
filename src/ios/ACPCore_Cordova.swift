@@ -265,10 +265,15 @@ import AEPUserProfile
     }
     
     func subscribe(_ json:  [String : Any]) {
-        
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: json)
-        pluginResult?.keepCallback = true
-        self.commandDelegate.send(pluginResult, callbackId: self.subscriberContextCallbackId!)
+        if(self.subscriberContextCallbackId != nil) {
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: json)
+            pluginResult?.keepCallback = true
+            self.commandDelegate.send(pluginResult, callbackId: self.subscriberContextCallbackId!)
+            clearPushPreferences()
+        } else {
+            let preferences = UserDefaults.standard
+            preferences.setValue(json, forKey: ACPCore_Cordova.ACP_CORE_LAST_PUSH_PREF_KEY)
+        }
     }
   
 
@@ -277,7 +282,8 @@ import AEPUserProfile
   // ===========================================================================
 
     func clearPushPreferences() {
-        //TODO:
+        let preferences = UserDefaults.standard
+        preferences.removeObject(forKey: ACPCore_Cordova.ACP_CORE_LAST_PUSH_PREF_KEY)
     }
     
     
