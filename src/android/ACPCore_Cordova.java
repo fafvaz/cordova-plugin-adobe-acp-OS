@@ -471,7 +471,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
         Log.d(ACP_CORE_PUSH_TAG_LOG, "public void onNewIntent(Intent intent)");
         if (data != null && data.containsKey("google.message_id")) {
             Log.d(ACP_CORE_PUSH_TAG_LOG, "newIntent before handleMessage");
-            ACPFirebaseMessagingService.handleMessage(data, false);
+            ACPFirebaseMessagingService.handleMessage(data, true);
             Log.d(ACP_CORE_PUSH_TAG_LOG, "newIntent after handleMessage");
         }
     }
@@ -527,7 +527,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
     public void onResume(boolean multitasking) {
         super.onResume(multitasking);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
-        ACPFirebaseMessagingService.handleMessage(this.cordova.getActivity().getIntent().getExtras(), false);
+        //ACPFirebaseMessagingService.handleMessage(this.cordova.getActivity().getIntent().getExtras(), true);
         MobileCore.lifecycleStart(null);
     }
     
