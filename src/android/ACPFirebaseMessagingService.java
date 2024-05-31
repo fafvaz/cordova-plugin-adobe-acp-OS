@@ -32,7 +32,8 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
     String messageId = data.get("_mId");
     String acsDeliveryTracking = data.get("_acsDeliveryTracking");
 
-
+    Log.d(ACP_CORE_PUSH_TAG_LOG, "onMessageReceived data || " + data);
+    
     if (acsDeliveryTracking == null) {
       acsDeliveryTracking = "on";
     }
