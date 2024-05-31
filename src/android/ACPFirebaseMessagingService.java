@@ -36,7 +36,7 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
     if (acsDeliveryTracking == null) {
       acsDeliveryTracking = "on";
     }
-    data.put("background", "false");
+    data.put("FromPushNotification", "false");
     // Verifica se a notificação push contém os dados necessários para o rastreamento
     if (deliveryId != null && messageId != null && acsDeliveryTracking.equals("on")) {
       handleTracking(data, "7", false);
@@ -59,7 +59,7 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
         data.put(key, bundle.getString(key, null));
       }
 
-      data.put("background", fromBackground ? "true" : "false");
+      data.put("FromPushNotification", fromBackground ? "true" : "false");
       if(fromBackground) {
         ACPCore_Cordova.addPushToPreferences(data);
         handleTracking(data, "2", false);
