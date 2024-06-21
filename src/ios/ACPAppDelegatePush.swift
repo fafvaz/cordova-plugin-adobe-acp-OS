@@ -84,28 +84,33 @@ import FirebaseMessaging
                 print("Trackin not delivered")
             }
             
-            let deepLink = userInfo["uri"] as? String
-            if(deepLink != nil && skipDeepLink == "false") {
-                openScreenByDeepLink(deepLink!)
+            if(skipDeepLink == "false") {
+                handleCallback(userInfo)
             }
                 
         }
   }
     
+    
+    static func handleCallback(_ payload: [String: Any] ) {
+        DispatchQueue.main.async{
+            ACPCore_Cordova.instance.subscribe(payload)
+        }
+    }
+    
     static func openScreenByDeepLink(_ deepLink: String) {
         print("Abrindo o deeplink " + deepLink)
 
-        if (deepLink != nil) {
-            guard let url = URL(string: deepLink) else {
-              return //be safe
-            }
+        guard let url = URL(string: deepLink) else {
+          return //be safe
+        }
 
-            if #available(iOS 10.0, *) {
-                UIApplication.shared.open(url, options: [:], completionHandler: nil)
-            } else {
-                UIApplication.shared.openURL(url)
-            }
+        if #available(iOS 10.0, *) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        } else {
+            UIApplication.shared.openURL(url)
         }
     }
+    
 
 }

@@ -12,6 +12,13 @@ import AEPUserProfile
   var appId: String!
   var initTime: String!
 
+  static let ACP_CORE_PUSH_TAG_LOG = "ACP_CORE_PUSH"
+  static let ACP_CORE_LAST_PUSH_PREF_KEY = "ACP_LAST_PUSH_PREF"
+  static let ACP_CORE_LAST_PUSH_KEY = "ACP_LAST_PUSH"
+  var subscriberContextCallbackId: String?
+
+  static var instance: ACPCore_Cordova!
+    
   @objc(dispatchEvent:)
   func dispatchEvent(command: CDVInvokedUrlCommand!) {
 
@@ -248,9 +255,39 @@ import AEPUserProfile
       })
     }
 
+  @objc(subscriber:)
+  func subscriber(command: CDVInvokedUrlCommand!) {
+      self.subscriberContextCallbackId = command.callbackId
+      let preferences = UserDefaults.standard
+      let json = preferences.dictionary(forKey: ACPCore_Cordova.ACP_CORE_LAST_PUSH_PREF_KEY) ?? [String : Any]()
+      self.subscribe(json)
+      clearPushPreferences()
+    }
+    
+    func subscribe(_ json:  [String : Any]) {
+        if(self.subscriberContextCallbackId != nil) {
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: json)
+            pluginResult?.keepCallback = true
+            self.commandDelegate.send(pluginResult, callbackId: self.subscriberContextCallbackId!)
+            clearPushPreferences()
+        } else {
+            let preferences = UserDefaults.standard
+            preferences.setValue(json, forKey: ACPCore_Cordova.ACP_CORE_LAST_PUSH_PREF_KEY)
+        }
+    }
+  
+
   // ===========================================================================
   // helper functions
   // ===========================================================================
+
+    func clearPushPreferences() {
+        let preferences = UserDefaults.standard
+        preferences.removeObject(forKey: ACPCore_Cordova.ACP_CORE_LAST_PUSH_PREF_KEY)
+    }
+    
+    
+  //  Log.d(ACP_CORE_PUSH_TAG_LOG, "bef
 
   func getExtensionEventFromJavascriptObject(event: NSDictionary!) -> AEPCore.Event! {
 
@@ -282,6 +319,7 @@ import AEPUserProfile
     dateFormatter.dateFormat = "dd/MM/yyyy HH:mm:ss"
     initTime = dateFormatter.string(from: date as Date)
     self.appId = Bundle.main.object(forInfoDictionaryKey: "AppId") as? String
+    ACPCore_Cordova.instance = self
     ACPAppDelegatePush.registerExtensions()
   }
 }
