@@ -19,34 +19,21 @@ let INVALID_AUTH_STATE = 3
   }
 
   @objc(appendVisitorInfoForUrl:)
-  func appendVisitorInfoForUrl(command: CDVInvokedUrlCommand!) {
-    self.commandDelegate.run(inBackground: {
-
-      guard let url = NSURL(string: command.arguments[0] as! String) else {
-        self.commandDelegate.send(
-          CDVPluginResult(
-            status: CDVCommandStatus_ERROR,
-            messageAs: "Unable appendVisitorInfoForUrl. Input was malformed"),
-          callbackId: command.callbackId)
-        return
-      }
-
-      Identity.appendTo(
-        url: url.absoluteURL,
-        completion: { (urlWithVisitorData: URL?, error) in
-
-          if error == nil {
-            let pluginResult: CDVPluginResult! = CDVPluginResult(
-              status: CDVCommandStatus_OK, messageAs: urlWithVisitorData?.absoluteString)
-            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-          } else {
-            let pluginResult: CDVPluginResult! = CDVPluginResult(
-              status: CDVCommandStatus_ERROR, messageAs: error?.localizedDescription)
-            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+  func appendVisitorInfoForUrl(command: CDVInvokedUrlCommand) {
+      self.commandDelegate.run(inBackground: {
+          guard let urlString = command.arguments[0] as? String,
+                let url = URL(string: urlString) else {
+              let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid URL")
+              self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+              return
           }
-        })
-
-    })
+          Identity.appendTo(url: url) { urlWithVisitorData, error in
+              let pluginResult = error == nil ?
+                  CDVPluginResult(status: CDVCommandStatus_OK, messageAs: urlWithVisitorData?.absoluteString) :
+                  CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: error?.localizedDescription)
+              self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+          }
+      })
   }
 
   @objc(getExperienceCloudId:)

@@ -13,24 +13,21 @@ import AEPUserProfile
   var initTime: String!
 
   @objc(dispatchEvent:)
-  func dispatchEvent(command: CDVInvokedUrlCommand!) {
-
-    self.commandDelegate.run(inBackground: {
-
-      guard let eventInput = command.arguments[0] as? NSDictionary else {
-        self.commandDelegate.send(
-          CDVPluginResult(
-            status: CDVCommandStatus_ERROR,
-            messageAs: "Unable to dispatch event. Input was malformed"),
-          callbackId: command.callbackId)
-        return
-      }
-
-      let event: AEPCore.Event! = self.getExtensionEventFromJavascriptObject(event: eventInput)
-      MobileCore.dispatch(event: event)
-      let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
-      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-    })
+  func dispatchEvent(command: CDVInvokedUrlCommand) {
+      self.commandDelegate.run(inBackground: {
+          guard let eventInput = command.arguments[0] as? [String: Any],
+                let name = eventInput["name"] as? String,
+                let type = eventInput["type"] as? String,
+                let source = eventInput["source"] as? String else {
+              let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid event data")
+              self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+              return
+          }
+          let event = Event(name: name, type: type, source: source, data: eventInput["data"] as? [String: String])
+          MobileCore.dispatch(event: event)
+          let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      })
   }
 
   @objc(dispatchEventWithResponseCallback:)

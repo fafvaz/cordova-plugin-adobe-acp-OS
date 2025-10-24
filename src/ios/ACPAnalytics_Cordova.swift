@@ -37,22 +37,18 @@ import AEPAnalytics
   }
 
   @objc(getQueueSize:)
-  func getQueueSize(command: CDVInvokedUrlCommand!) {
-    self.commandDelegate.run(inBackground: {
-
-      Analytics.getQueueSize(completion: { queueSize, error in
-
-        if error != nil {
-          let pluginResult: CDVPluginResult! = CDVPluginResult(
-            status: CDVCommandStatus_ERROR, messageAs: error?.localizedDescription)
-          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-        } else {
-          let pluginResult: CDVPluginResult! = CDVPluginResult(
-            status: CDVCommandStatus_OK, messageAs: String(format: "%@", queueSize))
-          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-        }
+  func getQueueSize(command: CDVInvokedUrlCommand) {
+      self.commandDelegate.run(inBackground: {
+          Analytics.getQueueSize { queueSize, error in
+              if let error = error {
+                  let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: error.localizedDescription)
+                  self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+              } else {
+                  let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: String(queueSize))
+                  self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+              }
+          }
       })
-    })
   }
 
   @objc(getTrackingIdentifier:)
@@ -96,12 +92,16 @@ import AEPAnalytics
   }
 
   @objc(setVisitorIdentifier:)
-  func setVisitorIdentifier(command: CDVInvokedUrlCommand!) {
-    self.commandDelegate.run(inBackground: {
-      let vid: String! = command.arguments[0] as? String
-      Analytics.setVisitorIdentifier(visitorIdentifier: vid)
-      let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
-      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-    })
+  func setVisitorIdentifier(command: CDVInvokedUrlCommand) {
+      self.commandDelegate.run(inBackground: {
+          guard let vid = command.arguments[0] as? String else {
+              let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid visitor ID")
+              self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+              return
+          }
+          Analytics.setVisitorIdentifier(visitorIdentifier: vid)
+          let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      })
   }
 }

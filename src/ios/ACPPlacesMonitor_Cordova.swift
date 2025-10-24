@@ -10,24 +10,20 @@ import CoreLocation
   var started = false
 
   @objc(start:)
-  func start(command: CDVInvokedUrlCommand!) {
-
-    locationManager?.requestWhenInUseAuthorization()
-
-    let authorizationStatus = CLLocationManager.authorizationStatus()
-
-    if authorizationStatus == CLAuthorizationStatus.notDetermined {
-      locationManager?.requestWhenInUseAuthorization()
-      let pluginResult: CDVPluginResult! = CDVPluginResult(
-        status: CDVCommandStatus_ERROR, messageAs: "GPS Permission ISsues")
-      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-    } else {
-      self.started = true
-      locationManager?.startUpdatingLocation()
-      let pluginResult: CDVPluginResult! = CDVPluginResult(
-        status: CDVCommandStatus_OK, messageAs: "Monitoring")
-      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-    }
+  func start(command: CDVInvokedUrlCommand) {
+      let authorizationStatus = CLLocationManager.authorizationStatus()
+      if authorizationStatus == .notDetermined {
+          locationManager?.requestWhenInUseAuthorization()
+          // Defer response until authorization is granted (handled in delegate)
+      } else if authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways {
+          self.started = true
+          locationManager?.startUpdatingLocation()
+          let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Monitoring")
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      } else {
+          let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "GPS Permission Denied")
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      }
   }
 
   @objc(updateLocation:)
@@ -53,34 +49,31 @@ import CoreLocation
   }
 
   @objc(startMonitoringForRegion:)
-  func startMonitoringForRegion(command: CDVInvokedUrlCommand!) {
-
-    if self.started {
+  func startMonitoringForRegion(command: CDVInvokedUrlCommand) {
+      guard started else {
+          let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Monitor not started")
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+          return
+      }
+      guard let lat = command.arguments[0] as? Double,
+            let lng = command.arguments[1] as? Double,
+            let radius = command.arguments[2] as? Double,
+            let identifier = command.arguments[3] as? String,
+            let notifyOnEntry = command.arguments[4] as? Bool,
+            let notifyOnExit = command.arguments[5] as? Bool else {
+          let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid arguments")
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+          return
+      }
       self.commandDelegate.run(inBackground: {
-
-        let lat = command.arguments[0] as! Double
-        let lng = command.arguments[1] as! Double
-        let radius = command.arguments[2] as! Double
-        let identifier = command.arguments[3] as! String
-        let center = CLLocationCoordinate2D(latitude: lat, longitude: lng)
-
-        let currentRegion = CLCircularRegion(center: center, radius: radius, identifier: identifier)
-
-        currentRegion.notifyOnEntry = command.arguments[4] as! Bool
-        currentRegion.notifyOnExit = command.arguments[5] as! Bool
-
-        self.locationManager?.startMonitoring(for: currentRegion)
-
-        let pluginResult: CDVPluginResult! = CDVPluginResult(
-          status: CDVCommandStatus_OK, messageAs: "Monitoring Region")
-        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-
+          let center = CLLocationCoordinate2D(latitude: lat, longitude: lng)
+          let currentRegion = CLCircularRegion(center: center, radius: radius, identifier: identifier)
+          currentRegion.notifyOnEntry = notifyOnEntry
+          currentRegion.notifyOnExit = notifyOnExit
+          self.locationManager?.startMonitoring(for: currentRegion)
+          let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Monitoring Region")
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
       })
-    } else {
-      let pluginResult: CDVPluginResult! = CDVPluginResult(
-        status: CDVCommandStatus_ERROR, messageAs: "Monitor not started")
-      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-    }
   }
 
   @objc(stop:)

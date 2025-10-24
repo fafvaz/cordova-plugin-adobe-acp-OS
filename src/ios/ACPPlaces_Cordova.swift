@@ -41,20 +41,14 @@ import CoreLocation
   }
 
   @objc(getCurrentPointsOfInterest:)
-  func getCurrentPointsOfInterest(command: CDVInvokedUrlCommand!) {
-    self.commandDelegate.run(inBackground: {
-      var currentPoisString: String! = self.EMPTY_ARRAY_STRING
-
-      Places.getCurrentPointsOfInterest({ retrievedPois in
-        currentPoisString = self.generatePOIString(retrievedPois: retrievedPois)
+  func getCurrentPointsOfInterest(command: CDVInvokedUrlCommand) {
+      self.commandDelegate.run(inBackground: {
+          Places.getCurrentPointsOfInterest { retrievedPois in
+              let currentPoisString = self.generatePOIString(retrievedPois: retrievedPois)
+              let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: currentPoisString)
+              self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+          }
       })
-
-      DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  // in half a second...
-        let pluginResult: CDVPluginResult! = CDVPluginResult(
-          status: CDVCommandStatus_OK, messageAs: currentPoisString)
-        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-      }
-    })
   }
 
   @objc(getLastKnownLocation:)
@@ -105,26 +99,26 @@ import CoreLocation
   }
 
   @objc(processGeofence:)
-  func processGeofence(command: CDVInvokedUrlCommand!) {
-    self.commandDelegate.run(inBackground: {
-      let geofenceDict: NSDictionary! = command.arguments[0] as? NSDictionary
-      let regionDict: NSDictionary! =
-        geofenceDict.value(forKey: self.CIRCULAR_REGION) as? NSDictionary
-      let eventType: PlacesRegionEvent =
-        command.arguments[1] as? PlacesRegionEvent ?? PlacesRegionEvent.exit
-      let latitude: CLLocationDegrees =
-        regionDict.value(forKey: self.LOWERCASE_LATITUDE) as? Double ?? 0
-      let longitude: CLLocationDegrees =
-        regionDict.value(forKey: self.LOWERCASE_LONGITUDE) as? Double ?? 0
-      let center: CLLocationCoordinate2D = CLLocationCoordinate2DMake(latitude, longitude)
-      let radius: UInt = regionDict.value(forKey: self.RADIUS) as? UInt ?? 0
-      let identifier: String! = geofenceDict.value(forKey: self.REQUEST_ID) as? String
-      let region: CLRegion! = CLCircularRegion(
-        center: center, radius: CLLocationDistance(radius), identifier: identifier)
-      Places.processRegionEvent(eventType, forRegion: region)
-      let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
-      self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-    })
+  func processGeofence(command: CDVInvokedUrlCommand) {
+      self.commandDelegate.run(inBackground: {
+          guard let geofenceDict = command.arguments[0] as? [String: Any],
+                let regionDict = geofenceDict[self.CIRCULAR_REGION] as? [String: Any],
+                let latitude = regionDict[self.LOWERCASE_LATITUDE] as? Double,
+                let longitude = regionDict[self.LOWERCASE_LONGITUDE] as? Double,
+                let radius = regionDict[self.RADIUS] as? Double,
+                let identifier = geofenceDict[self.REQUEST_ID] as? String,
+                let eventTypeRaw = command.arguments[1] as? Int,
+                let eventType = PlacesRegionEvent(rawValue: eventTypeRaw) else {
+              let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid geofence data")
+              self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+              return
+          }
+          let center = CLLocationCoordinate2DMake(latitude, longitude)
+          let region = CLCircularRegion(center: center, radius: radius, identifier: identifier)
+          Places.processRegionEvent(eventType, forRegion: region)
+          let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      })
   }
 
   @objc(setAuthorizationStatus:)

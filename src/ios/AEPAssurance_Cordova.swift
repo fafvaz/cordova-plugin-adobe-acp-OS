@@ -19,11 +19,16 @@ import AEPAssurance
   }
 
   @objc(startSession:)
-  func startSession(command: CDVInvokedUrlCommand!) {
-    self.commandDelegate.run(inBackground: {
-      let url: URL! = URL.init(string: command.arguments[0] as! String)
-      Assurance.startSession(url: url)
-      self.commandDelegate.send(nil, callbackId: command.callbackId)
-    })
+  func startSession(command: CDVInvokedUrlCommand) {
+      self.commandDelegate.run(inBackground: {
+          guard let urlString = command.arguments[0] as? String,
+                let url = URL(string: urlString) else {
+              let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid URL")
+              self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+              return
+          }
+          Assurance.startSession(url: url)
+          self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_OK), callbackId: command.callbackId)
+      })
   }
 }

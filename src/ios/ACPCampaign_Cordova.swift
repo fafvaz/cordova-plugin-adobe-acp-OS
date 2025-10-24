@@ -23,39 +23,27 @@ import UserNotifications
   }
 
   @objc(setPushIdentifier:)
-  func setPushIdentifier(command: CDVInvokedUrlCommand!) {
-
-    let center: UNUserNotificationCenter! = UNUserNotificationCenter.current()
-    center.delegate = self
-
-    center.requestAuthorization(
-      options: [.sound, .alert, .badge],
-      completionHandler: {
-        granted, error in
-
-        self.typeId = Bundle.main.object(forInfoDictionaryKey: "TypeId") as? String
-
-        if error == nil {
-
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  // in half a second...
-            let _: String! = command.arguments[0] as? String
-            let valueTypeId: String! = command.arguments[1] as? String
-
-            MobileCore.collectPii([self.typeId: valueTypeId!])
-            UIApplication.shared.registerForRemoteNotifications()
+  func setPushIdentifier(command: CDVInvokedUrlCommand) {
+      guard let valueTypeId = command.arguments[1] as? String else {
+          let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid type ID")
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+          return
+      }
+      let center = UNUserNotificationCenter.current()
+      center.delegate = self
+      center.requestAuthorization(options: [.sound, .alert, .badge]) { granted, error in
+          self.typeId = Bundle.main.object(forInfoDictionaryKey: "TypeId") as? String ?? ""
+          if error == nil {
+              MobileCore.collectPii([self.typeId: valueTypeId])
+              UIApplication.shared.registerForRemoteNotifications()
+              NSLog("Push registration success.")
+          } else {
+              NSLog("Push registration FAILED: %@", error?.localizedDescription ?? "")
           }
-
-          NSLog("Push registration success.")
-
-        } else {
-          NSLog("Push registration FAILED")
-          NSLog("ERROR: %@ " + (error?.localizedDescription ?? ""))
-        }
-      })
-
-    MobileCore.setLogLevel(.debug)
-    let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
-    self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+          let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      }
+      MobileCore.setLogLevel(.debug)
   }
 
   func getTypeId(command: CDVInvokedUrlCommand!) {
