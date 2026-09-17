@@ -578,30 +578,23 @@ public class ACPCore_Cordova extends CordovaPlugin {
      */
     private String getAPP_IDFromPreferences() {
         try {
-            // Method 1: Try to get variable from plugin entry
-            if (cordova != null && cordova.getPluginEntry() != null) {
-                String appId = cordova.getPluginEntry().getVariableValue("APP_ID");
-                if (appId != null && !appId.isEmpty() && !"INVALID".equals(appId)) {
-                    return appId;
-                }
-            }
-            
-            // Method 2: Try to get from preferences (some Cordova versions)
+            // Try to get from SharedPreferences (works in most Cordova versions)
             if (cordova != null && cordova.getActivity() != null) {
                 android.content.SharedPreferences prefs = cordova.getActivity()
                     .getSharedPreferences("plugin_preferences", android.content.Context.MODE_PRIVATE);
                 String appId = prefs.getString("APP_ID", null);
-                if (appId != null && !appId.isEmpty()) {
+                if (appId != null && !appId.isEmpty() && !"INVALID".equals(appId)) {
+                    Log.d("ACP_CORE", "APP_ID read from SharedPreferences: " + appId);
                     return appId;
+                } else if (appId != null) {
+                    Log.d("ACP_CORE", "APP_ID from SharedPreferences is empty or invalid: " + appId);
                 }
             }
             
-            // Method 3: Try reading from config.xml directly
-            if (cordova != null && cordova.getActivity() != null) {
-                android.content.res.XmlResourceParser parser = cordova.getActivity()
-                    .getResources().getXml(com.adobe.marketing.mobile.cordova.R.xml.config);
-                // This is complex, skip for now
-            }
+            // Note: Plugin variables from plugin.xml are typically accessible via
+            // the getVariable() method in CordovaPlugin, but this is protected.
+            // The SharedPreferences approach above should work for most cases.
+            // If APP_ID is not found, the string resource fallback will be used.
             
         } catch (Exception e) {
             Log.d("ACP_CORE", "Error reading APP_ID from preferences: " + e.getMessage());
