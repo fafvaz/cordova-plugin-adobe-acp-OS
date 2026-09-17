@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Adobe Experience Platform (AEP) / Adobe Experience Cloud (ACP) configuration -->
+    <!-- These values are replaced during build with the actual values from plugin variables -->
+    <string name="AppId">$APP_ID</string>
+    <string name="TypeId">$TYPE_ID</string>
+    <string name="acp_extension_name">ACPCore</string>
+</resources>

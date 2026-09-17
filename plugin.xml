@@ -62,6 +62,9 @@
             <string name="TypeId">$TYPE_ID</string>
             <string name="acp_extension_name">ACPCore</string>
         </config-file>
+
+        <!-- Include base strings.xml from plugin (will be modified by config-file above) -->
+        <resource-file src="src/android/res/values/strings.xml" target="app/src/main/res/values/strings.xml" />
         
         <!-- Also add to config.xml for runtime access if needed -->
         <config-file parent="/*" target="res/xml/config.xml">

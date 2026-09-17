@@ -541,7 +541,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
             
             return value;
             
-        } catch (Resources.NotFoundException e) {
+        } catch (android.content.res.Resources.NotFoundException e) {
             throw new IllegalStateException(
                 "String resource '" + resourceName + "' not found: " + e.getMessage(), e
             );
