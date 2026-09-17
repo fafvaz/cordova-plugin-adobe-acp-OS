@@ -468,8 +468,10 @@ public class ACPCore_Cordova extends CordovaPlugin {
         new ACPFirebaseMessagingService();
         intance = this;
 
-        appId = cordova.getActivity().getString(cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName()));
-        
+        // Get AppId string resource - MUST exist, no fallback
+        appId = getStringResourceRequired(cordova.getActivity(), "AppId");
+        Log.d("ACP_CORE", "AppId loaded: " + appId);
+
         try {
 
             MobileCore.configureWithAppID(appId);
@@ -492,9 +494,58 @@ public class ACPCore_Cordova extends CordovaPlugin {
             
         } catch (Exception e) {
             Log.d("ACP_CORE", "Erro ao inicializar o SDK");
+            e.printStackTrace();
         }
         
         initTime = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date());
+    }
+    
+    /**
+     * Get string resource - REQUIRED. Throws exception if not found.
+     * Prevents crash from getString(0) but fails clearly if resource is missing.
+     * 
+     * @param context Android context
+     * @param resourceName Name of the string resource (e.g., "AppId")
+     * @return The string value
+     * @throws IllegalStateException if resource is not found
+     */
+    private String getStringResourceRequired(android.content.Context context, String resourceName) {
+        if (context == null) {
+            throw new IllegalStateException("Context is null - cannot load string resource: " + resourceName);
+        }
+        
+        if (resourceName == null || resourceName.isEmpty()) {
+            throw new IllegalStateException("Resource name is null or empty - cannot load string resource");
+        }
+        
+        try {
+            // Get the resource ID
+            int resourceId = context.getResources().getIdentifier(resourceName, "string", context.getPackageName());
+            
+            // Check if resource ID is valid (not 0)
+            if (resourceId == 0) {
+                throw new IllegalStateException(
+                    "String resource '" + resourceName + "' NOT FOUND in " + context.getPackageName() + 
+                    "/res/values/strings.xml. The plugin <config-file> may not have injected it properly, " +
+                    "or the OutSystems extensibility configuration is missing the APP_ID variable."
+                );
+            }
+            
+            // Get the string value
+            String value = context.getString(resourceId);
+            if (value == null || value.isEmpty()) {
+                throw new IllegalStateException(
+                    "String resource '" + resourceName + "' is empty in strings.xml"
+                );
+            }
+            
+            return value;
+            
+        } catch (Resources.NotFoundException e) {
+            throw new IllegalStateException(
+                "String resource '" + resourceName + "' not found: " + e.getMessage(), e
+            );
+        }
     }
     
     

@@ -52,19 +52,23 @@
 
     <!-- configure android platform -->
     <platform name="android">
+        <!-- Define variables with defaults -->
+        <variable name="APP_ID" string="true" default="6495a7895c9a/78672f12ac93/launch-86a02caa8ebf" />
+        <variable name="TYPE_ID" string="true" default="fiscalnumber" />
+        
+        <!-- Inject into strings.xml - will be replaced with actual values during build -->
         <config-file target="res/values/strings.xml" parent="/*">
             <string name="AppId">$APP_ID</string>
-        </config-file>
-        <config-file target="res/values/strings.xml" parent="/*">
             <string name="TypeId">$TYPE_ID</string>
+            <string name="acp_extension_name">ACPCore</string>
         </config-file>
+        
+        <!-- Also add to config.xml for runtime access if needed -->
         <config-file parent="/*" target="res/xml/config.xml">
             <feature name="ACPCore_Cordova">
                 <param name="android-package" value="com.adobe.marketing.mobile.cordova.ACPCore_Cordova" />
                 <param name="onload" value="true" />
             </feature>
-        </config-file>
-        <config-file parent="/*" target="res/xml/config.xml">
             <feature name="ACPIdentity_Cordova">
                 <param name="android-package" value="com.adobe.marketing.mobile.cordova.ACPIdentity_Cordova" />
                 <param name="onload" value="true" />
