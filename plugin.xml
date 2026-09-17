@@ -56,23 +56,24 @@
         <variable name="APP_ID" string="true" default="6495a7895c9a/78672f12ac93/launch-86a02caa8ebf" />
         <variable name="TYPE_ID" string="true" default="fiscalnumber" />
         
-        <!-- Inject into strings.xml - will be replaced with actual values during build -->
-        <!-- Support both MABS 11 (strings.xml) and MABS 12 (cdv_strings.xml) -->
-        <config-file target="res/values/strings.xml" parent="/*">
-            <string name="AppId">$APP_ID</string>
-            <string name="TypeId">$TYPE_ID</string>
-            <string name="acp_extension_name">ACPCore</string>
-        </config-file>
-        <config-file target="res/values/cdv_strings.xml" parent="/*">
-            <string name="AppId">$APP_ID</string>
-            <string name="TypeId">$TYPE_ID</string>
-            <string name="acp_extension_name">ACPCore</string>
-        </config-file>
-
-        <!-- Include base strings.xml from plugin (will be modified by config-file above) -->
+        <!-- Include base strings.xml from plugin FIRST (must exist before we can modify it) -->
         <!-- Support both MABS 11 (strings.xml) and MABS 12 (cdv_strings.xml) -->
         <resource-file src="src/android/res/values/strings.xml" target="app/src/main/res/values/strings.xml" />
         <resource-file src="src/android/res/values/strings.xml" target="app/src/main/res/values/cdv_strings.xml" />
+
+        <!-- THEN inject values into strings.xml - will be replaced with actual values during build -->
+        <!-- Support both MABS 11 (strings.xml) and MABS 12 (cdv_strings.xml) -->
+        <!-- Use full path app/src/main/res/values/ for MABS 12 compatibility -->
+        <config-file target="app/src/main/res/values/strings.xml" parent="/*">
+            <string name="AppId">$APP_ID</string>
+            <string name="TypeId">$TYPE_ID</string>
+            <string name="acp_extension_name">ACPCore</string>
+        </config-file>
+        <config-file target="app/src/main/res/values/cdv_strings.xml" parent="/*">
+            <string name="AppId">$APP_ID</string>
+            <string name="TypeId">$TYPE_ID</string>
+            <string name="acp_extension_name">ACPCore</string>
+        </config-file>
         
         <!-- Also add to config.xml for runtime access if needed -->
         <config-file parent="/*" target="res/xml/config.xml">

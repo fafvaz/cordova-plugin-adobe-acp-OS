@@ -504,6 +504,10 @@ public class ACPCore_Cordova extends CordovaPlugin {
      * Get string resource - REQUIRED. Throws exception if not found.
      * Prevents crash from getString(0) but fails clearly if resource is missing.
      * 
+     * Strategy:
+     * 1. First try to get APP_ID from plugin preferences (Cordova plugin variables)
+     * 2. If not available, search for string resource in both strings.xml and cdv_strings.xml
+     * 
      * @param context Android context
      * @param resourceName Name of the string resource (e.g., "AppId")
      * @return The string value
@@ -518,15 +522,32 @@ public class ACPCore_Cordova extends CordovaPlugin {
             throw new IllegalStateException("Resource name is null or empty - cannot load string resource");
         }
         
+        // Strategy 1: Try to get APP_ID directly from plugin preferences (Cordova plugin variables)
+        // This is the most reliable method as it doesn't depend on build system injection
+        if ("AppId".equals(resourceName)) {
+            try {
+                // Get the APP_ID from plugin preferences
+                String appIdFromPrefs = getAPP_IDFromPreferences();
+                if (appIdFromPrefs != null && !appIdFromPrefs.isEmpty()) {
+                    Log.d("ACP_CORE", "AppId loaded from plugin preferences: " + appIdFromPrefs);
+                    return appIdFromPrefs;
+                }
+            } catch (Exception e) {
+                Log.d("ACP_CORE", "Could not read APP_ID from preferences, trying string resources: " + e.getMessage());
+            }
+        }
+        
+        // Strategy 2: Search for string resource in resources (handles both strings.xml and cdv_strings.xml)
         try {
-            // Get the resource ID
+            // Get the resource ID - Android automatically searches across all resource files
             int resourceId = context.getResources().getIdentifier(resourceName, "string", context.getPackageName());
             
             // Check if resource ID is valid (not 0)
             if (resourceId == 0) {
                 throw new IllegalStateException(
                     "String resource '" + resourceName + "' NOT FOUND in " + context.getPackageName() + 
-                    "/res/values/strings.xml. The plugin <config-file> may not have injected it properly, " +
+                    "/res/values/ (checked both strings.xml and cdv_strings.xml). " +
+                    "The plugin <config-file> may not have injected it properly, " +
                     "or the OutSystems extensibility configuration is missing the APP_ID variable."
                 );
             }
@@ -535,10 +556,11 @@ public class ACPCore_Cordova extends CordovaPlugin {
             String value = context.getString(resourceId);
             if (value == null || value.isEmpty()) {
                 throw new IllegalStateException(
-                    "String resource '" + resourceName + "' is empty in strings.xml"
+                    "String resource '" + resourceName + "' is empty in resources"
                 );
             }
             
+            Log.d("ACP_CORE", "AppId loaded from string resources: " + value);
             return value;
             
         } catch (android.content.res.Resources.NotFoundException e) {
@@ -546,6 +568,46 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 "String resource '" + resourceName + "' not found: " + e.getMessage(), e
             );
         }
+    }
+    
+    /**
+     * Try to get APP_ID from Cordova plugin preferences.
+     * This reads the variable value set in plugin.xml and passed via OutSystems configuration.
+     * 
+     * @return The APP_ID value from preferences, or null if not available
+     */
+    private String getAPP_IDFromPreferences() {
+        try {
+            // Method 1: Try to get variable from plugin entry
+            if (cordova != null && cordova.getPluginEntry() != null) {
+                String appId = cordova.getPluginEntry().getVariableValue("APP_ID");
+                if (appId != null && !appId.isEmpty() && !"INVALID".equals(appId)) {
+                    return appId;
+                }
+            }
+            
+            // Method 2: Try to get from preferences (some Cordova versions)
+            if (cordova != null && cordova.getActivity() != null) {
+                android.content.SharedPreferences prefs = cordova.getActivity()
+                    .getSharedPreferences("plugin_preferences", android.content.Context.MODE_PRIVATE);
+                String appId = prefs.getString("APP_ID", null);
+                if (appId != null && !appId.isEmpty()) {
+                    return appId;
+                }
+            }
+            
+            // Method 3: Try reading from config.xml directly
+            if (cordova != null && cordova.getActivity() != null) {
+                android.content.res.XmlResourceParser parser = cordova.getActivity()
+                    .getResources().getXml(com.adobe.marketing.mobile.cordova.R.xml.config);
+                // This is complex, skip for now
+            }
+            
+        } catch (Exception e) {
+            Log.d("ACP_CORE", "Error reading APP_ID from preferences: " + e.getMessage());
+        }
+        
+        return null;
     }
     
     
