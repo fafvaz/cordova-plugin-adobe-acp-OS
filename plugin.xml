@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-acp" version="0.0.2"
+<plugin xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-acp" version="0.0.3"
     xmlns="http://apache.org/cordova/ns/plugins/1.0">
     <name>cordova-acp</name>
     <description>ACP Plugins bundle for Cordova</description>
@@ -56,6 +56,13 @@
             <string name="AppId">$APP_ID</string>
         </config-file>
         <config-file target="res/values/strings.xml" parent="/*">
+            <string name="TypeId">$TYPE_ID</string>
+        </config-file>
+        <!-- MABS 12+: res/values/strings.xml is renamed to cdv_strings.xml -->
+        <config-file target="res/values/cdv_strings.xml" parent="/*">
+            <string name="AppId">$APP_ID</string>
+        </config-file>
+        <config-file target="res/values/cdv_strings.xml" parent="/*">
             <string name="TypeId">$TYPE_ID</string>
         </config-file>
         <config-file parent="/*" target="res/xml/config.xml">
@@ -279,20 +286,20 @@
 
         <podspec>
             <config>
-                <source url="https://github.com/CocoaPods/Specs.git" />
+                <source url="https://cdn.cocoapods.org/"/>
             </config>
             <pods use-frameworks="true">
-                <pod name="AEPCore" spec="~> 4"/>
-                <pod name="AEPLifecycle" spec="~> 4"/>
-                <pod name="AEPIdentity" spec="~> 4"/>
-                <pod name="AEPSignal" spec="~> 4"/>
-                <pod name="AEPTarget" spec="~> 4"/>
-                <pod name="AEPAnalytics" spec="~> 4"/>
-                <pod name="AEPUserProfile" spec="~> 4"/>
-                <pod name="AEPMobileServices" spec="~> 3"/>
-                <pod name="AEPPlaces" spec="~> 4"/>
-                <pod name="AEPCampaign" spec="~> 4"/>
-                <pod name="AEPAssurance" spec="~> 4"/>
+                <pod name="AEPCore" spec="~> 5" />
+                <pod name="AEPLifecycle" spec="~> 5" />
+                <pod name="AEPIdentity" spec="~> 5" />
+                <pod name="AEPSignal" spec="~> 5" />
+                <pod name="AEPTarget" spec="~> 5" />
+                <pod name="AEPAnalytics" spec="~> 5" />
+                <pod name="AEPUserProfile" spec="~> 5" />
+                <pod name="AEPMobileServices" spec="~> 1" />
+                <pod name="AEPPlaces" spec="~> 5" />
+                <pod name="AEPCampaign" spec="~> 5" />
+                <pod name="AEPAssurance" spec="~> 5" />
             </pods>
         </podspec>
      
