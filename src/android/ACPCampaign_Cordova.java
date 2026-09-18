@@ -76,7 +76,7 @@
          // Read the Type Id from config.xml preferences (plugin variable TYPE_ID).
         // MABS 12 (cordova-android 13) ignores plugin config-file injections targeting
         // res/values/*strings*.xml, so the "TypeId" string resource may not exist.
-        typeId = webView.getPreferences().getPreference("TYPE_ID", null);
+        typeId = webView.getPreferences().getString("TYPE_ID", null);
         if (typeId == null || typeId.isEmpty()) {
             int typeIdResId = cordova.getActivity().getResources().getIdentifier("TypeId", "string", cordova.getActivity().getPackageName());
             if (typeIdResId != 0) {
