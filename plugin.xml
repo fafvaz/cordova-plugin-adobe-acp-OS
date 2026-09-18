@@ -52,16 +52,16 @@
 
     <!-- configure android platform -->
     <platform name="android">
+        <!-- NOTE (MABS 12+ / cordova-android 13): config-file injections targeting
+             res/values/*strings*.xml are resolved to the nonexistent strings.xml and
+             silently ignored by MABS, so these AppId/TypeId string resources are NOT
+             guaranteed to exist at runtime. The native code therefore reads APP_ID /
+             TYPE_ID from the config.xml preferences instead (see ACPCore_Cordova.java).
+             The strings.xml injection is kept as a working fallback on MABS 11. -->
         <config-file target="res/values/strings.xml" parent="/*">
             <string name="AppId">$APP_ID</string>
         </config-file>
         <config-file target="res/values/strings.xml" parent="/*">
-            <string name="TypeId">$TYPE_ID</string>
-        </config-file>
-        <config-file target="res/values/cdv_strings.xml" parent="/*">
-            <string name="AppId">$APP_ID</string>
-        </config-file>
-        <config-file target="res/values/cdv_strings.xml" parent="/*">
             <string name="TypeId">$TYPE_ID</string>
         </config-file>
         <config-file parent="/*" target="res/xml/config.xml">
