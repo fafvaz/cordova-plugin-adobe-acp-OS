@@ -497,7 +497,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
         // and plugin config-file injections targeting res/values/*strings*.xml are
         // resolved back to strings.xml and ignored — so we can no longer rely on the
         // "AppId" string resource. It is kept only as a legacy fallback.
-        appId = webView.getConfig().getPreference("APP_ID", null);
+        appId = webView.getPreferences().getPreference("APP_ID", null);
         if (appId == null || appId.isEmpty()) {
             int appIdResId = cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName());
             if (appIdResId != 0) {
