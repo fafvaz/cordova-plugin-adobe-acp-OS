@@ -1,36 +1,25 @@
-repositories {
-    google()
-    mavenCentral()
-    flatDir {
+repositories{
+    
+    jcenter()
+    flatDir{
         dirs 'libs'
     }
 }
 
 dependencies {
-    // Adobe Experience Platform (Adobe Experience Cloud) Mobile SDK
-    // Pinned to confirmed-available Maven artifacts. The 3.x line is current;
-    // 2.x is EOL. Avoid 2.+ wildcards because they resolve unpredictably.
-    implementation 'com.adobe.marketing.mobile:core:3.9.0'
-    implementation 'com.adobe.marketing.mobile:analytics:3.0.2'
-    implementation 'com.adobe.marketing.mobile:identity:3.0.2'
-    implementation 'com.adobe.marketing.mobile:lifecycle:3.0.2'
-    implementation 'com.adobe.marketing.mobile:signal:3.0.1'
-    implementation 'com.adobe.marketing.mobile:target:3.0.2'
-    implementation 'com.adobe.marketing.mobile:places:3.0.2'
-    implementation 'com.adobe.marketing.mobile:campaign:3.0.3'
-    implementation 'com.adobe.marketing.mobile:assurance:3.0.7'
-    // MobileServices has no 2.x/3.x line — latest is 1.1.5 (last updated 2021-10).
-    implementation 'com.adobe.marketing.mobile:mobileservices:1.1.5'
-
-    // Firebase Cloud Messaging — version must be >= the Firebase plugin's pin so the
-    // two plugins share a compatible firebase-messaging API surface.
-    // MABS 12.1 is built with Kotlin 1.9; Firebase Android SDKs built with Kotlin 2.x
-    // (metadata 2.1+) cause "metadata is 2.1.0, expected version is 1.9.0" errors.
-    // firebase-messaging 24.0.3 is Kotlin-1.9-compatible (metadata 2.0) and matches
-    // the Firebase plugin's MABS 12.1 pin.
-    implementation 'com.google.firebase:firebase-messaging:24.0.3'
-
-    // firebase-core is a deprecated alias of firebase-analytics — do not declare it.
-    // Play Services Location — pinned to 21.0.1 for MABS 12.1 Kotlin 1.9 compatibility (21.4.0 needs Kotlin metadata 2.3.0).
+    // adobe
+    implementation 'com.adobe.marketing.mobile:analytics:2.+' 
+    implementation 'com.adobe.marketing.mobile:mobileservices:1.+' // Não tem update. Remover
+    implementation 'com.adobe.marketing.mobile:target:2.+' 
+    implementation 'com.adobe.marketing.mobile:userprofile:2.+'
+    implementation 'com.adobe.marketing.mobile:core:2.+'
+    implementation 'com.adobe.marketing.mobile:lifecycle:2.+'
+    implementation 'com.adobe.marketing.mobile:identity:2.+'
+    implementation 'com.adobe.marketing.mobile:signal:2.+'
+    implementation 'com.adobe.marketing.mobile:places:2.+'
+    implementation 'com.adobe.marketing.mobile:campaign:2.+'
+    implementation 'com.google.firebase:firebase-messaging:19.0.1'
+    implementation 'com.google.firebase:firebase-core:17.0.1'
     implementation 'com.google.android.gms:play-services-location:21.0.1'
+    implementation 'com.adobe.marketing.mobile:assurance:2.+'
 }
