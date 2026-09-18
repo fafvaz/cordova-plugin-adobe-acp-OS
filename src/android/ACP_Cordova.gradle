@@ -31,6 +31,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-messaging:24.0.3'
 
     // firebase-core is a deprecated alias of firebase-analytics — do not declare it.
-    // Play Services Location — updated to latest stable 21.4.0.
-    implementation 'com.google.android.gms:play-services-location:21.4.0'
+    // Play Services Location — pinned to 21.0.1 for MABS 12.1 Kotlin 1.9 compatibility (21.4.0 needs Kotlin metadata 2.3.0).
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
 }
