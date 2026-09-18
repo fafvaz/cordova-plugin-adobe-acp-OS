@@ -35,7 +35,7 @@ var ACPCampaign = (function () {
   };
  
   //Call setPushIdentifer to send the push identifier that is received from the APNS or FCM to the Adobe Identity service
-  ACPCampaign.setPushIdentifier = function (DeviceToken, FiscalNumber, success, error) {
+  ACPCampaign.setPushIdentifier = function (DeviceToken, FiscalNumber, contextData, success, error) {
     var FUNCTION_NAME = 'setPushIdentifier';
     if (success && !isFunction(success)) {
       printNotAFunction('success', FUNCTION_NAME);
@@ -46,7 +46,11 @@ var ACPCampaign = (function () {
       return;
     }
 
-  exec(success, error, PLUGIN_NAME, FUNCTION_NAME, [DeviceToken, FiscalNumber]);
+    if (contextData && !acpIsObject(contextData)) {
+      contextData = {};
+    }
+
+    exec(success, error, PLUGIN_NAME, FUNCTION_NAME, [DeviceToken, FiscalNumber, contextData]);
   
   };
 

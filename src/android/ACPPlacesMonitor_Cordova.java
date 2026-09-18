@@ -180,10 +180,10 @@ public class ACPPlacesMonitor_Cordova extends CordovaPlugin {
     @SuppressLint("MissingPermission")
     private void startLocationUpdates() {
 
-        LocationRequest locationRequest = new LocationRequest.Builder(
-                LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY, 10000)
-                .setMinUpdateIntervalMillis(5000)
-                .build();
+        LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
         fusedLocationClient.requestLocationUpdates(locationRequest,
                 locationCallback,
                 Looper.getMainLooper());

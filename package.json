@@ -1,6 +1,6 @@
 {
   "name": "@adobe/cordova-acp",
-  "version": "0.0.3",
+  "version": "0.0.2",
   "description": "Adobe Experience Platform - Plugins bundle for Cordova apps.",
   "cordova": {
     "id": "cordova-acp",

@@ -1,34 +1,25 @@
 repositories{
-    // jcenter() removed - Bintray/JCenter is shut down and randomly fails builds.
-    // All Adobe AEP artifacts are published to Maven Central.
-    mavenCentral()
-    google()
+    
+    jcenter()
     flatDir{
         dirs 'libs'
     }
 }
 
 dependencies {
-    // Adobe Experience Platform Mobile SDK - pinned to the latest 2.x releases
-    // (Android 3.x exists but MobileServices was never released past 1.x, so the
-    //  2.x line is the last one fully compatible with this plugin bundle.)
-    implementation 'com.adobe.marketing.mobile:analytics:2.0.3'
-    implementation 'com.adobe.marketing.mobile:campaign:2.0.6'
-    implementation 'com.adobe.marketing.mobile:core:2.6.4'
-    implementation 'com.adobe.marketing.mobile:identity:2.0.3'
-    implementation 'com.adobe.marketing.mobile:lifecycle:2.0.4'
-    implementation 'com.adobe.marketing.mobile:places:2.1.0'
-    implementation 'com.adobe.marketing.mobile:signal:2.0.1'
-    implementation 'com.adobe.marketing.mobile:target:2.0.3'
-    implementation 'com.adobe.marketing.mobile:userprofile:2.0.1'
-    implementation 'com.adobe.marketing.mobile:assurance:2.2.2'
-    // Deprecated by Adobe, never updated past 1.x - kept for backward compatibility
-    implementation 'com.adobe.marketing.mobile:mobileservices:1.1.5'
-
-    // Firebase (must stay compatible with cordova-plugin-firebasex, which provides
-    // the FirebasePluginMessageReceiver base class used by ACPFirebaseMessagingService)
-    implementation 'com.google.firebase:firebase-messaging:23.4.1'
-
-    // Location / geofencing
-    implementation 'com.google.android.gms:play-services-location:21.3.0'
+    // adobe
+    implementation 'com.adobe.marketing.mobile:analytics:2.+' 
+    implementation 'com.adobe.marketing.mobile:mobileservices:1.+' // Não tem update. Remover
+    implementation 'com.adobe.marketing.mobile:target:2.+' 
+    implementation 'com.adobe.marketing.mobile:userprofile:2.+'
+    implementation 'com.adobe.marketing.mobile:core:2.+'
+    implementation 'com.adobe.marketing.mobile:lifecycle:2.+'
+    implementation 'com.adobe.marketing.mobile:identity:2.+'
+    implementation 'com.adobe.marketing.mobile:signal:2.+'
+    implementation 'com.adobe.marketing.mobile:places:2.+'
+    implementation 'com.adobe.marketing.mobile:campaign:2.+'
+    implementation 'com.google.firebase:firebase-messaging:19.0.1'
+    implementation 'com.google.firebase:firebase-core:17.0.1'
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
+    implementation 'com.adobe.marketing.mobile:assurance:2.+'
 }

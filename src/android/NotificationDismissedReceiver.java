@@ -1,4 +1,4 @@
-package com.adobe.marketing.mobile.cordova;
+package com.galp.bluetooh;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

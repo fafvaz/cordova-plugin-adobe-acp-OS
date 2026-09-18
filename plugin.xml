@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-acp" version="0.0.3"
+<plugin xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-acp" version="0.0.2"
     xmlns="http://apache.org/cordova/ns/plugins/1.0">
     <name>cordova-acp</name>
     <description>ACP Plugins bundle for Cordova</description>
@@ -52,35 +52,19 @@
 
     <!-- configure android platform -->
     <platform name="android">
-        <!-- Define variables with defaults -->
-        <variable name="APP_ID" string="true" default="6495a7895c9a/78672f12ac93/launch-86a02caa8ebf" />
-        <variable name="TYPE_ID" string="true" default="fiscalnumber" />
-        
-        <!-- Include base strings.xml from plugin FIRST (must exist before we can modify it) -->
-        <!-- Support both MABS 11 (strings.xml) and MABS 12 (cdv_strings.xml) -->
-        <resource-file src="src/android/res/values/strings.xml" target="app/src/main/res/values/strings.xml" />
-        <resource-file src="src/android/res/values/strings.xml" target="app/src/main/res/values/cdv_strings.xml" />
-
-        <!-- THEN inject values into strings.xml - will be replaced with actual values during build -->
-        <!-- Support both MABS 11 (strings.xml) and MABS 12 (cdv_strings.xml) -->
-        <!-- Use full path app/src/main/res/values/ for MABS 12 compatibility -->
-        <config-file target="app/src/main/res/values/strings.xml" parent="/*">
+        <config-file target="res/values/strings.xml" parent="/*">
             <string name="AppId">$APP_ID</string>
-            <string name="TypeId">$TYPE_ID</string>
-            <string name="acp_extension_name">ACPCore</string>
         </config-file>
-        <config-file target="app/src/main/res/values/cdv_strings.xml" parent="/*">
-            <string name="AppId">$APP_ID</string>
+        <config-file target="res/values/strings.xml" parent="/*">
             <string name="TypeId">$TYPE_ID</string>
-            <string name="acp_extension_name">ACPCore</string>
         </config-file>
-        
-        <!-- Also add to config.xml for runtime access if needed -->
         <config-file parent="/*" target="res/xml/config.xml">
             <feature name="ACPCore_Cordova">
                 <param name="android-package" value="com.adobe.marketing.mobile.cordova.ACPCore_Cordova" />
                 <param name="onload" value="true" />
             </feature>
+        </config-file>
+        <config-file parent="/*" target="res/xml/config.xml">
             <feature name="ACPIdentity_Cordova">
                 <param name="android-package" value="com.adobe.marketing.mobile.cordova.ACPIdentity_Cordova" />
                 <param name="onload" value="true" />
@@ -147,7 +131,7 @@
         <!-- add receivers to AndroidManifest.xml -->
         <config-file parent="/manifest/application" target="AndroidManifest.xml">
             <receiver android:name="com.adobe.marketing.mobile.LocalNotificationHandler" />
-            <receiver android:name="com.adobe.marketing.mobile.cordova.NotificationDismissedReceiver" />
+            <receiver android:name=".NotificationDismissedReceiver" />
             <receiver android:name="com.adobe.marketing.mobile.cordova.GeofenceBroadcastReceiver" />
             <activity android:name="com.adobe.marketing.mobile.FullscreenMessageActivity" />
             <activity android:name="com.adobe.marketing.mobile.MessageFullScreenActivity"
@@ -156,6 +140,16 @@
             </activity>
             <receiver android:name="com.adobe.marketing.mobile.MessageNotificationHandler" />
         </config-file>
+
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!--<data android:scheme="http" />-->
+                <data android:scheme="com.galp.adbmarkcloud.devop" />
+            </intent-filter>
+        </activity>
 
         <!-- add service-->
         <source-file src="src/android/ACPFirebaseMessagingService.java" target-dir="src/com/adobe/marketing/mobile/cordova" />
@@ -182,6 +176,7 @@
         <dependency id="cordova-plugin-add-swift-support@2.0.2"/>
 
         <config-file parent="/*" target="config.xml">
+            <preference name="deployment-target" value="13.0" />
             <preference name="SwiftVersion" value="5" />
         </config-file>
 

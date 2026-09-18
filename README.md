@@ -1,11 +1,5 @@
 # Adobe Experience Platform - Core plugin for Cordova apps
 
-> **OutSystems (MABS) build notes**
->
-> - This plugin bundle builds with **MABS 11 and above** (and MABS 9/10).
-> - It depends on **`cordova-plugin-firebase`** (the `cordova-plugin-firebase-only-analytics-notifications-OS` bundle) being present in the app: `ACPFirebaseMessagingService` extends `FirebasePluginMessageReceiver` from that plugin for Campaign push tracking (the base class self-registers in its constructor).
-> - Adobe AEP Android extensions are pinned to the latest **2.x** releases and the iOS pods to **`~> 4`** (AEPMobileServices `~> 3`, deprecated by Adobe). Android 3.x / iOS 5.x exist but are not adopted yet because MobileServices was never released for those majors.
-
 [![CI](https://github.com/adobe/cordova-acpcore/workflows/CI/badge.svg)](https://github.com/adobe/cordova-acpcore/actions)
 [![npm](https://img.shields.io/npm/v/@adobe/cordova-acpcore)](https://www.npmjs.com/package/@adobe/cordova-acpcore)
 [![GitHub](https://img.shields.io/github/license/adobe/cordova-acpcore)](https://github.com/adobe/cordova-acpcore/blob/master/LICENSE)

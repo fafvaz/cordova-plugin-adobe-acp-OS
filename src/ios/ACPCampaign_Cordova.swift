@@ -26,11 +26,7 @@ import UserNotifications
   func setPushIdentifier(command: CDVInvokedUrlCommand!) {
 
     let center: UNUserNotificationCenter! = UNUserNotificationCenter.current()
-    // NOTE: do NOT set center.delegate = self here. The Firebase plugin
-    // (AppDelegate+FirebasePlugin) installs itself as the UNUserNotificationCenter
-    // delegate to present foreground notifications and forward tap events to JS.
-    // This plugin's delegate implements no callback methods, so overriding it
-    // silently broke foreground notification handling.
+    center.delegate = self
 
     center.requestAuthorization(
       options: [.sound, .alert, .badge],
@@ -44,8 +40,15 @@ import UserNotifications
           DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  // in half a second...
             let _: String! = command.arguments[0] as? String
             let valueTypeId: String! = command.arguments[1] as? String
-
-            MobileCore.collectPii([self.typeId: valueTypeId!])
+            let data = command.arguments[2] as AnyObject
+              
+            if data is NSDictionary {
+                var convert = data as! [String: Any]
+                convert[self.typeId] = valueTypeId
+                MobileCore.collectPii(convert)
+            } else {
+               MobileCore.collectPii([self.typeId: valueTypeId!])
+            }
             UIApplication.shared.registerForRemoteNotifications()
           }
 

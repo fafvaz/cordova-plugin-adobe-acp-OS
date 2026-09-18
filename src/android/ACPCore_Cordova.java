@@ -3,7 +3,6 @@ Copyright 2020 Adobe. All rights reserved.
 This file is licensed to you under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License. You may obtain a copy
 of the License at http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software distributed under
 the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
 OF ANY KIND, either express or implied. See the License for the specific language
@@ -12,7 +11,13 @@ governing permissions and limitations under the License.
 
 package com.adobe.marketing.mobile.cordova;
 
+import static com.adobe.marketing.mobile.cordova.ACPFirebaseMessagingService.ACP_CORE_LAST_PUSH_KEY;
+import static com.adobe.marketing.mobile.cordova.ACPFirebaseMessagingService.ACP_CORE_LAST_PUSH_PREF_KEY;
+import static com.adobe.marketing.mobile.cordova.ACPFirebaseMessagingService.ACP_CORE_PUSH_TAG_LOG;
+
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -51,6 +56,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class ACPCore_Cordova extends CordovaPlugin {
@@ -69,19 +75,24 @@ public class ACPCore_Cordova extends CordovaPlugin {
     final static String METHOD_CORE_UPDATE_CONFIGURATION = "updateConfiguration";
     final static String METHOD_CORE_GET_APP_ID = "getAppId";
     final static String METHOD_CORE_OPEN_DEEPLINK = "openDeepLink";
+    final static String METHOD_CORE_SUBSCRIBER = "subscriber";
 
     final static String METHOD_CORE_PUSH_GET_STATUS = "getPushNotificationStatus";
     final static String METHOD_CORE_PUSH_REQUEST_PERMISSION = "requestPushNotificationPermission";
     final static int PERMISSION_REQUEST_CODE = 20230426;
-    
+
     private static final String PERMISSION_POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS";
 
     private String appId;
     private String initTime;
     private CallbackContext _tmpCallbackContext;
 
+    private CallbackContext subscriberContext;
+
+    private boolean wasHandled = false;
+
     public static ACPCore_Cordova intance;
-    
+
     // ===============================================================
     // all calls filter through this method
     // ===============================================================
@@ -139,11 +150,23 @@ public class ACPCore_Cordova extends CordovaPlugin {
         }  else if (METHOD_CORE_OPEN_DEEPLINK.equals(action)) {
             this.openScreenByDeepLink(args.getString(0));
             return true;
+        }  else if (METHOD_CORE_SUBSCRIBER.equals(action)) {
+            subscriberContext = callbackContext;
+
+            Log.d(ACP_CORE_PUSH_TAG_LOG, "before subs");
+            SharedPreferences pref = ACPCore_Cordova.intance.cordova.getContext()
+                    .getSharedPreferences(ACP_CORE_LAST_PUSH_PREF_KEY, Context.MODE_PRIVATE);
+            JSONObject prefJson = new JSONObject(pref.getString(ACP_CORE_LAST_PUSH_KEY, "{}"));
+            Log.d(ACP_CORE_PUSH_TAG_LOG, "before subs --> json " + prefJson);
+            this.subscribe(prefJson);
+            clearPushPreferences();
+            Log.d(ACP_CORE_PUSH_TAG_LOG, "after subs");
+            return true;
         }
-        
+
         return false;
     }
-    
+
     // ===============================================================
     // MobileCore Methods
     // ===============================================================
@@ -158,35 +181,35 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 callbackContext.success();
             } catch (Exception ex) {
                 final String errorMessage = String.format("Exception in call to dispatchEvent: %s",
-                ex.getLocalizedMessage());
+                        ex.getLocalizedMessage());
                 MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
                 callbackContext.error(errorMessage);
             }
         });
     }
-    
+
     private void dispatchEventWithResponseCallback(final JSONArray args, final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(() -> {
             try {
                 final HashMap<String, Object> eventMap = getObjectMapFromJSON(args.getJSONObject(0));
                 final Event event = getEventFromMap(eventMap);
-                
+
                 MobileCore.dispatchEventWithResponseCallback(event, event1 -> {
                     final HashMap<String, Object> eventMap1 = getMapFromEvent(event1);
                     final JSONObject eventJson = new JSONObject(eventMap1);
                     callbackContext.success(eventJson);
                 }, extensionError -> callbackContext.error(extensionError.getErrorName()));
-                
+
                 callbackContext.success();
             } catch (Exception ex) {
                 final String errorMessage = String.format(
-                "Exception in call to dispatchEventWithResponseCallback: %s", ex.getLocalizedMessage());
+                        "Exception in call to dispatchEventWithResponseCallback: %s", ex.getLocalizedMessage());
                 MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
                 callbackContext.error(errorMessage);
             }
         });
     }
-    
+
     private void dispatchResponseEvent(final JSONArray args, final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(() -> {
             try {
@@ -201,33 +224,33 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 callbackContext.success();
             } catch (Exception ex) {
                 final String errorMessage = String.format("Exception in call to dispatchResponseEvent: %s",
-                ex.getLocalizedMessage());
+                        ex.getLocalizedMessage());
                 MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
                 callbackContext.error(errorMessage);
             }
         });
     }
-    
+
     private void downloadRules(final CallbackContext callbackContext) {
         // TODO: this method is not implemented in Android
         cordova.getThreadPool().execute(callbackContext::success);
     }
-    
+
     private void extensionVersion(final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(() -> {
             final String version = initTime + ": " + MobileCore.extensionVersion();
             callbackContext.success(version);
         });
     }
-    
+
     private void getPrivacyStatus(final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(() -> MobileCore.getPrivacyStatus(mobilePrivacyStatus -> callbackContext.success(mobilePrivacyStatus.getValue())));
     }
-    
+
     private void getSdkIdentities(final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(() -> MobileCore.getSdkIdentities(callbackContext::success));
     }
-    
+
     private void setAdvertisingIdentifier(final JSONArray args, final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(() -> {
             try {
@@ -236,13 +259,13 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 callbackContext.success();
             } catch (final Exception ex) {
                 final String errorMessage = String.format("Exception in call to setAdvertisingIdentifier: %s",
-                ex.getLocalizedMessage());
+                        ex.getLocalizedMessage());
                 MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
                 callbackContext.error(errorMessage);
             }
         });
     }
-    
+
     private void setLogLevel(final JSONArray args, final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(() -> {
             try {
@@ -250,56 +273,56 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 switch (args.getInt(0)) {
                     case 0:
                     default:
-                    newLogLevel = LoggingMode.ERROR;
-                    break;
+                        newLogLevel = LoggingMode.ERROR;
+                        break;
                     case 1:
-                    newLogLevel = LoggingMode.WARNING;
-                    break;
+                        newLogLevel = LoggingMode.WARNING;
+                        break;
                     case 2:
-                    newLogLevel = LoggingMode.DEBUG;
-                    break;
+                        newLogLevel = LoggingMode.DEBUG;
+                        break;
                     case 3:
-                    newLogLevel = LoggingMode.VERBOSE;
-                    break;
+                        newLogLevel = LoggingMode.VERBOSE;
+                        break;
                 }
                 MobileCore.setLogLevel(newLogLevel);
                 callbackContext.success();
             } catch (final Exception ex) {
                 final String errorMessage = String.format("Exception in call to setLogLevel: %s",
-                ex.getLocalizedMessage());
+                        ex.getLocalizedMessage());
                 MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
                 callbackContext.error(errorMessage);
             }
         });
     }
-    
+
     private void setPrivacyStatus(final JSONArray args, final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(() -> {
             try {
                 MobilePrivacyStatus newPrivacyStatus;
                 switch (args.getInt(0)) {
                     case 0:
-                    newPrivacyStatus = MobilePrivacyStatus.OPT_IN;
-                    break;
+                        newPrivacyStatus = MobilePrivacyStatus.OPT_IN;
+                        break;
                     case 1:
-                    newPrivacyStatus = MobilePrivacyStatus.OPT_OUT;
-                    break;
+                        newPrivacyStatus = MobilePrivacyStatus.OPT_OUT;
+                        break;
                     case 2:
                     default:
-                    newPrivacyStatus = MobilePrivacyStatus.UNKNOWN;
-                    break;
+                        newPrivacyStatus = MobilePrivacyStatus.UNKNOWN;
+                        break;
                 }
                 MobileCore.setPrivacyStatus(newPrivacyStatus);
                 callbackContext.success();
             } catch (final Exception ex) {
                 final String errorMessage = String.format("Exception in call to setPrivacyStatus: %s",
-                ex.getLocalizedMessage());
+                        ex.getLocalizedMessage());
                 MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
                 callbackContext.error(errorMessage);
             }
         });
     }
-    
+
     private void trackAction(final JSONArray args, final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(() -> {
             try {
@@ -309,13 +332,13 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 callbackContext.success();
             } catch (final Exception ex) {
                 final String errorMessage = String.format("Exception in call to trackAction: %s",
-                ex.getLocalizedMessage());
+                        ex.getLocalizedMessage());
                 MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
                 callbackContext.error(errorMessage);
             }
         });
     }
-    
+
     private void trackState(final JSONArray args, final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(() -> {
             try {
@@ -327,13 +350,13 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 System.out.println("Passei no trackstate");
             } catch (final Exception ex) {
                 final String errorMessage = String.format("Exception in call to trackState: %s",
-                ex.getLocalizedMessage());
+                        ex.getLocalizedMessage());
                 MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
                 callbackContext.error(errorMessage);
             }
         });
     }
-    
+
     private void updateConfiguration(final JSONArray args, final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(() -> {
             try {
@@ -343,7 +366,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 callbackContext.success();
             } catch (final Exception ex) {
                 final String errorMessage = String.format("Exception in call to updateConfiguration: %s",
-                ex.getLocalizedMessage());
+                        ex.getLocalizedMessage());
                 MobileCore.log(LoggingMode.WARNING, "AEP SDK", errorMessage);
                 callbackContext.error(errorMessage);
             }
@@ -353,7 +376,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
     private void getAppId(final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(() -> callbackContext.success(appId));
     }
-    
+
     // ===============================================================
     // Helpers
     // ===============================================================
@@ -369,10 +392,10 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 e.printStackTrace();
             }
         }
-        
+
         return map;
     }
-    
+
     private HashMap<String, Object> getObjectMapFromJSON(JSONObject data) {
         HashMap<String, Object> map = new HashMap<>();
         @SuppressWarnings("rawtypes")
@@ -385,26 +408,26 @@ public class ACPCore_Cordova extends CordovaPlugin {
                 e.printStackTrace();
             }
         }
-        
+
         return map;
     }
-    
+
     private Event getEventFromMap(final HashMap<String, Object> event) throws Exception {
         return new Event.Builder(Objects.requireNonNull(event.get("name")).toString(), Objects.requireNonNull(event.get("type")).toString(),
-        Objects.requireNonNull(event.get("source")).toString())
-        .setEventData(getObjectMapFromJSON(new JSONObject(Objects.requireNonNull(event.get("data")).toString()))).build();
+                Objects.requireNonNull(event.get("source")).toString())
+                .setEventData(getObjectMapFromJSON(new JSONObject(Objects.requireNonNull(event.get("data")).toString()))).build();
     }
-    
+
     private HashMap<String, Object> getMapFromEvent(final Event event) {
         final HashMap<String, Object> eventMap = new HashMap<>();
         eventMap.put("name", event.getName());
         eventMap.put("type", event.getType());
         eventMap.put("source", event.getSource());
         eventMap.put("data", event.getEventData());
-        
+
         return eventMap;
     }
-    
+
     private void getPushNotificationStatus(final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(() -> {
             try {
@@ -415,7 +438,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
             }
         });
     }
-    
+
     private void requestPushNotificationPermission(final CallbackContext callbackContext) {
         if(Build.VERSION.SDK_INT >= 33){ // Android 13+
             _tmpCallbackContext = callbackContext;
@@ -428,7 +451,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
 
     @Override
     public void onRequestPermissionResult(int requestCode, String[] permissions,
-    int[] grantResults) {
+                                          int[] grantResults) {
         for(int r:grantResults)
         {
             if(r == PackageManager.PERMISSION_DENIED)
@@ -440,19 +463,23 @@ public class ACPCore_Cordova extends CordovaPlugin {
         if(requestCode == PERMISSION_REQUEST_CODE) {
             this._tmpCallbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, "GRANTED"));
         }
-        
+
     }
 
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         final Bundle data = intent.getExtras();
+        Log.d(ACP_CORE_PUSH_TAG_LOG, "public void onNewIntent(Intent intent)");
+        Log.d(ACP_CORE_PUSH_TAG_LOG, data != null ? data.toString() : "data empty");
 
-        if (data != null && data.containsKey("google.message_id")) {
-            ACPFirebaseMessagingService.handleMessage(data);
+        if (data != null) {
+            Log.d(ACP_CORE_PUSH_TAG_LOG, "newIntent before handleMessage");
+            ACPFirebaseMessagingService.handleMessage(data, true);
+            Log.d(ACP_CORE_PUSH_TAG_LOG, "newIntent after handleMessage");
         }
     }
- 
+
     // ===============================================================
     // Plugin lifecycle events
     // ===============================================================
@@ -461,16 +488,10 @@ public class ACPCore_Cordova extends CordovaPlugin {
         super.initialize(cordova, webView);
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
         MobileCore.setLogLevel(LoggingMode.VERBOSE);
-        // Instantiate the push tracking receiver. The FirebasePluginMessageReceiver
-        // base class (cordova-plugin-firebase) self-registers every instance in its
-        // constructor via FirebasePluginMessageReceiverManager.register(), so this
-        // is all that is needed to receive Campaign delivery events (action "7").
         new ACPFirebaseMessagingService();
         intance = this;
 
-        // Get AppId string resource - MUST exist, no fallback
-        appId = getStringResourceRequired(cordova.getActivity(), "AppId");
-        Log.d("ACP_CORE", "AppId loaded: " + appId);
+        appId = cordova.getActivity().getString(cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName()));
 
         try {
 
@@ -491,119 +512,15 @@ public class ACPCore_Cordova extends CordovaPlugin {
             });
 
             MobileServices.registerExtension();
-            
+
         } catch (Exception e) {
             Log.d("ACP_CORE", "Erro ao inicializar o SDK");
-            e.printStackTrace();
         }
-        
+
         initTime = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date());
     }
-    
-    /**
-     * Get string resource - REQUIRED. Throws exception if not found.
-     * Prevents crash from getString(0) but fails clearly if resource is missing.
-     * 
-     * Strategy:
-     * 1. First try to get APP_ID from plugin preferences (Cordova plugin variables)
-     * 2. If not available, search for string resource in both strings.xml and cdv_strings.xml
-     * 
-     * @param context Android context
-     * @param resourceName Name of the string resource (e.g., "AppId")
-     * @return The string value
-     * @throws IllegalStateException if resource is not found
-     */
-    private String getStringResourceRequired(android.content.Context context, String resourceName) {
-        if (context == null) {
-            throw new IllegalStateException("Context is null - cannot load string resource: " + resourceName);
-        }
-        
-        if (resourceName == null || resourceName.isEmpty()) {
-            throw new IllegalStateException("Resource name is null or empty - cannot load string resource");
-        }
-        
-        // Strategy 1: Try to get APP_ID directly from plugin preferences (Cordova plugin variables)
-        // This is the most reliable method as it doesn't depend on build system injection
-        if ("AppId".equals(resourceName)) {
-            try {
-                // Get the APP_ID from plugin preferences
-                String appIdFromPrefs = getAPP_IDFromPreferences();
-                if (appIdFromPrefs != null && !appIdFromPrefs.isEmpty()) {
-                    Log.d("ACP_CORE", "AppId loaded from plugin preferences: " + appIdFromPrefs);
-                    return appIdFromPrefs;
-                }
-            } catch (Exception e) {
-                Log.d("ACP_CORE", "Could not read APP_ID from preferences, trying string resources: " + e.getMessage());
-            }
-        }
-        
-        // Strategy 2: Search for string resource in resources (handles both strings.xml and cdv_strings.xml)
-        try {
-            // Get the resource ID - Android automatically searches across all resource files
-            int resourceId = context.getResources().getIdentifier(resourceName, "string", context.getPackageName());
-            
-            // Check if resource ID is valid (not 0)
-            if (resourceId == 0) {
-                throw new IllegalStateException(
-                    "String resource '" + resourceName + "' NOT FOUND in " + context.getPackageName() + 
-                    "/res/values/ (checked both strings.xml and cdv_strings.xml). " +
-                    "The plugin <config-file> may not have injected it properly, " +
-                    "or the OutSystems extensibility configuration is missing the APP_ID variable."
-                );
-            }
-            
-            // Get the string value
-            String value = context.getString(resourceId);
-            if (value == null || value.isEmpty()) {
-                throw new IllegalStateException(
-                    "String resource '" + resourceName + "' is empty in resources"
-                );
-            }
-            
-            Log.d("ACP_CORE", "AppId loaded from string resources: " + value);
-            return value;
-            
-        } catch (android.content.res.Resources.NotFoundException e) {
-            throw new IllegalStateException(
-                "String resource '" + resourceName + "' not found: " + e.getMessage(), e
-            );
-        }
-    }
-    
-    /**
-     * Try to get APP_ID from Cordova plugin preferences.
-     * This reads the variable value set in plugin.xml and passed via OutSystems configuration.
-     * 
-     * @return The APP_ID value from preferences, or null if not available
-     */
-    private String getAPP_IDFromPreferences() {
-        try {
-            // Try to get from SharedPreferences (works in most Cordova versions)
-            if (cordova != null && cordova.getActivity() != null) {
-                android.content.SharedPreferences prefs = cordova.getActivity()
-                    .getSharedPreferences("plugin_preferences", android.content.Context.MODE_PRIVATE);
-                String appId = prefs.getString("APP_ID", null);
-                if (appId != null && !appId.isEmpty() && !"INVALID".equals(appId)) {
-                    Log.d("ACP_CORE", "APP_ID read from SharedPreferences: " + appId);
-                    return appId;
-                } else if (appId != null) {
-                    Log.d("ACP_CORE", "APP_ID from SharedPreferences is empty or invalid: " + appId);
-                }
-            }
-            
-            // Note: Plugin variables from plugin.xml are typically accessible via
-            // the getVariable() method in CordovaPlugin, but this is protected.
-            // The SharedPreferences approach above should work for most cases.
-            // If APP_ID is not found, the string resource fallback will be used.
-            
-        } catch (Exception e) {
-            Log.d("ACP_CORE", "Error reading APP_ID from preferences: " + e.getMessage());
-        }
-        
-        return null;
-    }
-    
-    
+
+
     @Override
     public void onPause(boolean multitasking) {
         super.onPause(multitasking);
@@ -613,25 +530,82 @@ public class ACPCore_Cordova extends CordovaPlugin {
     @Override
     public void onResume(boolean multitasking) {
         super.onResume(multitasking);
+        final Bundle data = this.cordova.getActivity().getIntent().getExtras();
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
+
+        Log.d(ACP_CORE_PUSH_TAG_LOG, "public void onResume");
+        Log.d(ACP_CORE_PUSH_TAG_LOG, data != null ? data.toString() : "data empty");
+        Log.d(ACP_CORE_PUSH_TAG_LOG, "handled onResume " + wasHandled);
+
+        if(!wasHandled) {
+            ACPFirebaseMessagingService.handleMessage(data, true);
+            wasHandled = true;
+        }
+
         MobileCore.lifecycleStart(null);
     }
- 
+    
     @Override
     public void pluginInitialize() {
-        ACPFirebaseMessagingService.handleMessage(this.cordova.getActivity().getIntent().getExtras());
         super.pluginInitialize();
+        final Bundle data = this.cordova.getActivity().getIntent().getExtras();
+
+        Log.d(ACP_CORE_PUSH_TAG_LOG, "public void pluginInitialize()");
+        Log.d(ACP_CORE_PUSH_TAG_LOG, data != null ? data.toString() : "data empty");
+        if (data != null) {
+            ACPFirebaseMessagingService.handleMessage(data, true);
+        }
+
     }
 
     public void openScreenByDeepLink(String deepLink) {
 
         Log.d("DEEPLINK", "Abrindo o deeplink " + deepLink);
         if (deepLink != null) {
-           // Criar e iniciar a nova Intent
-           Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLink));
-           intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-           cordova.getActivity().startActivity(intent);
+            // Criar e iniciar a nova Intent
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLink));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            cordova.getActivity().startActivity(intent);
         }
+    }
+
+    public void subscribe(JSONObject result) {
+        Log.d(ACP_CORE_PUSH_TAG_LOG, "public void subscribe(JSONObject result)" );
+        Log.d(ACP_CORE_PUSH_TAG_LOG, result.toString());
+        if(this.subscriberContext != null) {
+            cordova.getThreadPool().execute(() -> {
+                try {
+                    Log.d(ACP_CORE_PUSH_TAG_LOG, "subscriberContext");
+                    PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, result);
+                    pluginResult.setKeepCallback(true);
+                    this.subscriberContext.sendPluginResult(pluginResult);
+                    Log.d(ACP_CORE_PUSH_TAG_LOG, "subscriberContext sent :::: " + pluginResult);
+                    clearPushPreferences();
+                } catch (Exception e) {
+                    this.subscriberContext.error(e.getMessage());
+                }
+            });
+        } else {
+            Log.d(ACP_CORE_PUSH_TAG_LOG, "subscriberContext null");
+        }
+    }
+
+    public static void clearPushPreferences() {
+        Log.d(ACP_CORE_PUSH_TAG_LOG, "clearPushPreferences");
+        SharedPreferences pref = ACPCore_Cordova.intance.cordova.getContext()
+                .getSharedPreferences(ACP_CORE_LAST_PUSH_PREF_KEY, Context.MODE_PRIVATE);
+        pref.edit().clear().apply();
+    }
+
+    public static void addPushToPreferences(Map<String, String> data) {
+        Log.d(ACP_CORE_PUSH_TAG_LOG, "begin addPushToPreferences");
+        SharedPreferences pref = ACPCore_Cordova.intance.cordova.getContext()
+                .getSharedPreferences(ACP_CORE_LAST_PUSH_PREF_KEY, Context.MODE_PRIVATE);
+        pref.edit().clear().apply();
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString(ACP_CORE_LAST_PUSH_KEY, new JSONObject(data).toString());
+        editor.apply();
+        Log.d(ACP_CORE_PUSH_TAG_LOG, "end addPushToPreferences");
     }
 
 }
