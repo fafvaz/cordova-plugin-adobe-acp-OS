@@ -491,11 +491,21 @@ public class ACPCore_Cordova extends CordovaPlugin {
         new ACPFirebaseMessagingService();
         intance = this;
 
-        appId = cordova.getActivity().getString(cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName()));
+        int appIdResId = cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName());
+        if (appIdResId != 0) {
+            appId = cordova.getActivity().getString(appIdResId);
+        } else {
+            Log.e(ACP_CORE_PUSH_TAG_LOG, "String resource 'AppId' not found in the APK. " +
+                    "Adobe AEP SDK will NOT be configured (app will continue to run). " +
+                    "Check that the APP_ID plugin variable is set in the Extensibility Configurations, and that this plugin version " +
+                    "injects the string into res/values/cdv_strings.xml (MABS 12 uses cordova-android 13, which renamed strings.xml to cdv_strings.xml).");
+        }
 
         try {
 
-            MobileCore.configureWithAppID(appId);
+            if (appId != null) {
+                MobileCore.configureWithAppID(appId);
+            }
             List<Class<? extends Extension>> extensions = new ArrayList<>();
             extensions.add(Campaign.EXTENSION);
             extensions.add(Places.EXTENSION);
