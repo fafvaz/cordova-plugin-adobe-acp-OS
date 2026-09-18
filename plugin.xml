@@ -182,7 +182,7 @@
         <dependency id="cordova-plugin-add-swift-support@2.0.2"/>
 
         <config-file parent="/*" target="config.xml">
-            <preference name="deployment-target" value="13.0" />
+            <preference name="deployment-target" value="15.0" />
             <preference name="SwiftVersion" value="5" />
         </config-file>
 
