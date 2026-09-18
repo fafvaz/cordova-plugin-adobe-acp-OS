@@ -4,6 +4,27 @@
 [![npm](https://img.shields.io/npm/v/@adobe/cordova-acpcore)](https://www.npmjs.com/package/@adobe/cordova-acpcore)
 [![GitHub](https://img.shields.io/github/license/adobe/cordova-acpcore)](https://github.com/adobe/cordova-acpcore/blob/master/LICENSE)
 
+## MABS 11 / MABS 12+ compatibility (OutSystems)
+
+This plugin is compatible with **both MABS 11 and MABS 12+**:
+
+- **MABS 12+** (cordova-android 13) renamed `res/values/strings.xml` to `res/values/cdv_strings.xml`, and MABS ignores plugin `config-file` injections targeting `res/values/*strings*.xml`. Because of this, the `AppId`/`TypeId` string resources are **not** available at runtime on MABS 12+. The native code therefore reads `APP_ID` / `TYPE_ID` from the **config.xml preferences** (Cordova persists the plugin variables into config.xml at install time), falling back to the string resources when they exist. Never rely on the string resources alone.
+- **MABS 11** (cordova-android 12): the `res/values/strings.xml` injection works as before, and the preference-based lookup returns the same values.
+
+Set the plugin variables in the OutSystems **Extensibility Configurations**:
+
+```json
+{
+  "plugin": {
+    "variables": {
+      "APP_ID": "<your Adobe AEP AppId>",
+      "TYPE_ID": "fiscalnumber"
+    }
+  }
+}
+```
+
+
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Usage](#usage)

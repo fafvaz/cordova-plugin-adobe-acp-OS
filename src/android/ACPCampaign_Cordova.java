@@ -72,7 +72,19 @@
      private void setPushIdentifier(final JSONArray args, final CallbackContext callbackContext) {
  
  
-         typeId = cordova.getActivity().getString(cordova.getActivity().getResources().getIdentifier("TypeId", "string", cordova.getActivity().getPackageName()));
+         // Read the Type Id from config.xml preferences (plugin variable TYPE_ID).
+        // MABS 12 (cordova-android 13) ignores plugin config-file injections targeting
+        // res/values/*strings*.xml, so the "TypeId" string resource may not exist.
+        typeId = webView.getConfig().getPreference("TYPE_ID", null);
+        if (typeId == null || typeId.isEmpty()) {
+            int typeIdResId = cordova.getActivity().getResources().getIdentifier("TypeId", "string", cordova.getActivity().getPackageName());
+            if (typeIdResId != 0) {
+                typeId = cordova.getActivity().getString(typeIdResId);
+            }
+        }
+        if (typeId == null || typeId.isEmpty()) {
+            Log.e("ACP_CORE", "Type Id not found: set the TYPE_ID plugin variable in the Extensibility Configurations.");
+        }
  
          cordova.getThreadPool().execute(() -> {
              if (args == null || args.length() != 3) {

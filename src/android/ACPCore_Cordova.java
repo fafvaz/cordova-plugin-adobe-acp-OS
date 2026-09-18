@@ -491,19 +491,27 @@ public class ACPCore_Cordova extends CordovaPlugin {
         new ACPFirebaseMessagingService();
         intance = this;
 
-        int appIdResId = cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName());
-        if (appIdResId != 0) {
-            appId = cordova.getActivity().getString(appIdResId);
-        } else {
-            Log.e(ACP_CORE_PUSH_TAG_LOG, "String resource 'AppId' not found in the APK. " +
-                    "Adobe AEP SDK will NOT be configured (app will continue to run). " +
-                    "Check that the APP_ID plugin variable is set in the Extensibility Configurations, and that this plugin version " +
-                    "injects the string into res/values/cdv_strings.xml (MABS 12 uses cordova-android 13, which renamed strings.xml to cdv_strings.xml).");
+        // Read the Adobe App Id from config.xml preferences (the APP_ID plugin variable
+        // is persisted into config.xml by Cordova at install time).
+        // MABS 12 uses cordova-android 13, which renamed strings.xml to cdv_strings.xml,
+        // and plugin config-file injections targeting res/values/*strings*.xml are
+        // resolved back to strings.xml and ignored — so we can no longer rely on the
+        // "AppId" string resource. It is kept only as a legacy fallback.
+        appId = webView.getConfig().getPreference("APP_ID", null);
+        if (appId == null || appId.isEmpty()) {
+            int appIdResId = cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName());
+            if (appIdResId != 0) {
+                appId = cordova.getActivity().getString(appIdResId);
+            }
+        }
+        if (appId == null || appId.isEmpty()) {
+            Log.e(ACP_CORE_PUSH_TAG_LOG, "Adobe App Id not found: set the APP_ID plugin variable " +
+                    "in the Extensibility Configurations. Adobe AEP SDK will NOT be configured.");
         }
 
         try {
 
-            if (appId != null) {
+            if (appId != null && !appId.isEmpty()) {
                 MobileCore.configureWithAppID(appId);
             }
             List<Class<? extends Extension>> extensions = new ArrayList<>();
