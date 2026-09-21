@@ -78,6 +78,12 @@
         // res/values/*strings*.xml, so the "TypeId" string resource may not exist.
         typeId = webView.getPreferences().getString("TYPE_ID", null);
         if (typeId == null || typeId.isEmpty()) {
+            // Plugin variables are persisted as <variable> elements in the packaged
+            // res/xml/config.xml; CordovaPreferences cannot see them, so parse them.
+            typeId = ACPCore_Cordova.readVariableFromPackagedConfig(
+                    cordova.getActivity().getApplicationContext(), "cordova-acp", "TYPE_ID");
+        }
+        if (typeId == null || typeId.isEmpty()) {
             int typeIdResId = cordova.getActivity().getResources().getIdentifier("TypeId", "string", cordova.getActivity().getPackageName());
             if (typeIdResId != 0) {
                 typeId = cordova.getActivity().getString(typeIdResId);

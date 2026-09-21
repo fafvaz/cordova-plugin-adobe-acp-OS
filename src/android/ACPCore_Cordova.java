@@ -51,6 +51,7 @@ import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -374,7 +375,93 @@ public class ACPCore_Cordova extends CordovaPlugin {
     }
 
     private void getAppId(final CallbackContext callbackContext) {
-        cordova.getThreadPool().execute(() -> callbackContext.success(appId));
+        cordova.getThreadPool().execute(() -> {
+            // Lazy retry: initialize() may have run before the value was available.
+            if (appId == null || appId.isEmpty()) {
+                appId = resolveAppId();
+                if (appId != null && !appId.isEmpty()) {
+                    // The SDK was not configured at startup; configure it now.
+                    try {
+                        MobileCore.configureWithAppID(appId);
+                    } catch (Exception e) {
+                        Log.d(ACP_CORE_PUSH_TAG_LOG, "Late configureWithAppID failed: " + e.getMessage());
+                    }
+                }
+            }
+            if (appId == null || appId.isEmpty()) {
+                callbackContext.error("APP_ID_NOT_CONFIGURED: no Adobe App Id found. Checked: " +
+                        "(1) <preference name=\"APP_ID\"> in config.xml, " +
+                        "(2) <variable name=\"APP_ID\"> of plugin 'cordova-acp' in the packaged res/xml/config.xml, " +
+                        "(3) legacy 'AppId' string resource (MABS 11 only). " +
+                        "Set the APP_ID plugin variable in the Extensibility Configurations; " +
+                        "the Adobe AEP SDK is currently NOT configured.");
+            } else {
+                callbackContext.success(appId);
+            }
+        });
+    }
+
+    /**
+     * Resolves the Adobe App Id from every source available at runtime.
+     * Returns null (never empty) when no value can be found.
+     */
+    private String resolveAppId() {
+        // 1. Real config.xml <preference> (readable by CordovaPreferences).
+        String value = webView.getPreferences().getString("APP_ID", null);
+
+        // 2. <variable name="APP_ID"> persisted by Cordova inside <plugin name="cordova-acp">
+        //    in the packaged res/xml/config.xml. CordovaPreferences ignores <variable>
+        //    elements, so parse them manually.
+        if (value == null || value.isEmpty()) {
+            value = readVariableFromPackagedConfig(cordova.getActivity().getApplicationContext(), "cordova-acp", "APP_ID");
+        }
+
+        // 3. Legacy "AppId" string resource (MABS 11 only; dropped on MABS 12+ because
+        //    config-file injections targeting res/values/*strings*.xml are ignored).
+        if (value == null || value.isEmpty()) {
+            int appIdResId = cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName());
+            if (appIdResId != 0) {
+                value = cordova.getActivity().getString(appIdResId);
+            }
+        }
+
+        return (value != null && !value.isEmpty()) ? value : null;
+    }
+
+    /**
+     * Parses the packaged res/xml/config.xml looking for <variable name="variableName"
+     * value="..."/> inside <plugin name="pluginName">. This is where Cordova persists
+     * plugin variables (from Extensibility Configurations), and the only runtime-safe
+     * place to read them, since cordova-android always copies config.xml into the APK.
+     */
+    public static String readVariableFromPackagedConfig(final Context context, String pluginName, String variableName) {
+        try {
+            int configResId = context.getResources().getIdentifier("config", "xml", context.getPackageName());
+            if (configResId == 0) {
+                Log.e(ACP_CORE_PUSH_TAG_LOG, "Packaged res/xml/config.xml not found.");
+                return null;
+            }
+            XmlPullParser xml = context.getResources().getXml(configResId);
+            boolean insideOurPlugin = false;
+            int eventType = xml.getEventType();
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                if (eventType == XmlPullParser.START_TAG) {
+                    final String name = xml.getName();
+                    if ("plugin".equals(name) && pluginName.equals(xml.getAttributeValue(null, "name"))) {
+                        insideOurPlugin = true;
+                    } else if (insideOurPlugin && "variable".equals(name)
+                            && variableName.equals(xml.getAttributeValue(null, "name"))) {
+                        return xml.getAttributeValue(null, "value");
+                    }
+                } else if (eventType == XmlPullParser.END_TAG && "plugin".equals(xml.getName())) {
+                    insideOurPlugin = false;
+                }
+                eventType = xml.next();
+            }
+        } catch (Exception e) {
+            Log.e(ACP_CORE_PUSH_TAG_LOG, "Error parsing packaged config.xml: " + e.getMessage());
+        }
+        return null;
     }
 
     // ===============================================================
@@ -491,19 +578,16 @@ public class ACPCore_Cordova extends CordovaPlugin {
         new ACPFirebaseMessagingService();
         intance = this;
 
-        // Read the Adobe App Id from config.xml preferences (the APP_ID plugin variable
-        // is persisted into config.xml by Cordova at install time).
-        // MABS 12 uses cordova-android 13, which renamed strings.xml to cdv_strings.xml,
-        // and plugin config-file injections targeting res/values/*strings*.xml are
-        // resolved back to strings.xml and ignored — so we can no longer rely on the
-        // "AppId" string resource. It is kept only as a legacy fallback.
-        appId = webView.getPreferences().getString("APP_ID", null);
-        if (appId == null || appId.isEmpty()) {
-            int appIdResId = cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName());
-            if (appIdResId != 0) {
-                appId = cordova.getActivity().getString(appIdResId);
-            }
-        }
+        // Resolve the Adobe App Id. Lookup order (most to least reliable):
+        //  1. A real <preference name="APP_ID"> in the app config.xml (injected by
+        //     plugin.xml; readable at runtime via CordovaPreferences).
+        //  2. The <variable name="APP_ID"> element of this plugin in the packaged
+        //     res/xml/config.xml — this is how Cordova persists plugin variables
+        //     (Extensibility Configurations), but CordovaPreferences CANNOT see them
+        //     because ConfigXmlParser only parses <preference> elements, so we parse
+        //     the packaged config.xml ourselves.
+        //  3. Legacy "AppId" string resource (works on MABS 11; dropped on MABS 12+).
+        appId = resolveAppId();
         if (appId == null || appId.isEmpty()) {
             Log.e(ACP_CORE_PUSH_TAG_LOG, "Adobe App Id not found: set the APP_ID plugin variable " +
                     "in the Extensibility Configurations. Adobe AEP SDK will NOT be configured.");

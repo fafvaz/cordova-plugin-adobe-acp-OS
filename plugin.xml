@@ -64,6 +64,14 @@
         <config-file target="res/values/strings.xml" parent="/*">
             <string name="TypeId">$TYPE_ID</string>
         </config-file>
+        <!-- Inject the plugin variables as REAL config.xml <preference> elements so they
+             are readable at runtime via CordovaPreferences (ConfigXmlParser parses
+             <preference> elements but IGNORES the <variable> elements that Cordova uses
+             to persist plugin variables inside <plugin> tags). -->
+        <config-file parent="/*" target="res/xml/config.xml">
+            <preference name="APP_ID" value="$APP_ID" />
+            <preference name="TYPE_ID" value="$TYPE_ID" />
+        </config-file>
         <config-file parent="/*" target="res/xml/config.xml">
             <feature name="ACPCore_Cordova">
                 <param name="android-package" value="com.adobe.marketing.mobile.cordova.ACPCore_Cordova" />
