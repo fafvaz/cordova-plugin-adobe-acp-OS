@@ -54,28 +54,34 @@ import UserNotifications
         }
 
         let deviceToken = (command.arguments[0] as? String) ?? ""
-        let valueTypeId = (command.arguments[1] as? String) ?? ""
-        MobileCore.setPushIdentifier(identifier: deviceToken)
-              
+
+        // Build contextData: start with any user-provided data from arguments[2]
         var contextData: [String: Any] = [:]
-        if command.arguments.count >= 3,
-           let data = command.arguments[2] as? [String: Any] {
-            contextData = data
+        if command.arguments.count >= 3 {
+            if let data = command.arguments[2] as? [String: Any] {
+                contextData = data
+            }
         }
 
-        if let typeId = self.typeId, !typeId.isEmpty {
-            contextData[typeId] = valueTypeId
+        // Read email from typeId parameter (arguments[1]) and add to contextData
+        // self.typeId is the key name (e.g. "emailAddress") from Info.plist
+        if let typeId = self.typeId, !typeId.isEmpty,
+           let emailValue = (command.arguments[1] as? String) {
+            contextData[typeId] = emailValue
         }
 
-        MobileCore.collectPii(contextData)
-        UIApplication.shared.registerForRemoteNotifications()
+        // Store contextData for later use by push notification handlers
+        // (same pattern as Android: contextData is sent when handling push, not at registration)
+        ACPCampaign_Cordova.sendPushTrackingContextData(contextData)
+
+        // Register the push identifier (device token)
+        MobileCore.setPushIdentifier(identifier: deviceToken)
 
         NSLog("Push registration success.")
 
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
         self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
       })
-
   }
 
   @objc(loadAdobe:)
@@ -106,27 +112,44 @@ import UserNotifications
             return
         }
 
-        self.typeId = Bundle.main.object(forInfoDictionaryKey: "TypeId") as? String
-
         let deviceToken = (command.arguments[0] as? String) ?? ""
-        let valueTypeId = (command.arguments[1] as? String) ?? ""
 
-        MobileCore.setPushIdentifier(identifier: deviceToken)
-
+        // Build contextData: start with any user-provided data from arguments[2]
         var contextData: [String: Any] = [:]
-        if let typeId = self.typeId, !typeId.isEmpty {
-            contextData[typeId] = valueTypeId
+        if command.arguments.count >= 3 {
+            if let data = command.arguments[2] as? [String: Any] {
+                contextData = data
+            }
         }
 
-        MobileCore.collectPii(contextData)
+        // Read email from typeId parameter (arguments[1]) and add to contextData
+        if let typeId = self.typeId, !typeId.isEmpty,
+           let emailValue = (command.arguments[1] as? String) {
+            contextData[typeId] = emailValue
+        }
 
-        UIApplication.shared.registerForRemoteNotifications()
+        // Store contextData for later use by push notification handlers
+        // (same pattern as Android: contextData is sent when handling push, not at registration)
+        ACPCampaign_Cordova.sendPushTrackingContextData(contextData)
+
+        // Register the push identifier (device token)
+        MobileCore.setPushIdentifier(identifier: deviceToken)
 
         NSLog("Push registration success.")
 
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
         self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
       })
+  }
+
+  static func sendPushTrackingContextData(_ contextData: [String: Any]) {
+    // Store contextData for later use by push notification handlers.
+    // This mirrors the Android pattern where contextData is sent when handling
+    // push notifications (via collectMessageInfo), not just at registration time.
+    //
+    // NOTE: In iOS, we also send contextData directly via collectMessageInfo here
+    // to mirror Android's behavior of sending contextData with push tracking.
+    MobileCore.collectPii(contextData)
   }
 
   func getTypeId(command: CDVInvokedUrlCommand!) {

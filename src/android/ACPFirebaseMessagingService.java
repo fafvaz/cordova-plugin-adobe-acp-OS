@@ -97,6 +97,27 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
 
       MobileCore.collectMessageInfo(contextData);
 
+      // Build contextData for collectPii from custom keys in the FCM payload
+      // (excluding Adobe system keys), matching iOS behavior
+      HashMap<String, Object> piiData = new HashMap<>();
+      String[] excludedKeys = {"_dId", "_mId", "_acsDeliveryTracking", "aps",
+                               "google.message_id", "from", "collapse_key"};
+      for (Map.Entry<String, String> entry : data.entrySet()) {
+        boolean excluded = false;
+        for (String ek : excludedKeys) {
+          if (ek.equals(entry.getKey())) {
+            excluded = true;
+            break;
+          }
+        }
+        if (!excluded) {
+          piiData.put(entry.getKey(), entry.getValue());
+        }
+      }
+      if (!piiData.isEmpty()) {
+        MobileCore.collectPii(piiData);
+      }
+
       if (!skipDeepLink) {
         Log.d(ACP_CORE_PUSH_TAG_LOG, "handleCallback");
         Log.d(ACP_CORE_PUSH_TAG_LOG, data.toString());

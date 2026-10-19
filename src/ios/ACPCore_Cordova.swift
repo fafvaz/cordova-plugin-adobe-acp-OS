@@ -6,6 +6,7 @@ import AEPPlaces
 import AEPServices
 import AEPTarget
 import AEPUserProfile
+import UserNotifications
 
 @objc(ACPCore_Cordova) class ACPCore_Cordova: CDVPlugin {
 
@@ -263,6 +264,31 @@ import AEPUserProfile
       self.subscribe(json)
       clearPushPreferences()
     }
+
+  @objc(getPushNotificationStatus:)
+  func getPushNotificationStatus(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      UNUserNotificationCenter.current().getNotificationSettings { settings in
+        let authorized = settings.authorizationStatus == .authorized
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: authorized)
+        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      }
+    })
+  }
+
+  @objc(requestPushNotificationPermission:)
+  func requestPushNotificationPermission(command: CDVInvokedUrlCommand!) {
+    self.commandDelegate.run(inBackground: {
+      UNUserNotificationCenter.current().requestAuthorization(
+        options: [.sound, .alert, .badge],
+        completionHandler: { granted, error in
+          let pluginResult = CDVPluginResult(
+            status: granted ? CDVCommandStatus_OK : CDVCommandStatus_ERROR,
+            messageAs: granted)
+          self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        })
+    })
+  }
     
     func subscribe(_ json:  [String : Any]) {
         if(self.subscriberContextCallbackId != nil) {

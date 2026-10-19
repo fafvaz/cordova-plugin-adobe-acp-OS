@@ -60,35 +60,49 @@ import FirebaseMessaging
 
     static func sendTracking(notification: NSNotification, action: String, skipDeepLink: String) {
 
+    print("sendTracking", notification.object as Any)
 
-    print("sendTracking", notification.object)
-    
-        if let userInfo = notification.object as? [String: Any] {
-            
-            
-            let deliveryId = userInfo["_dId"] as? String
-            let broadlogId = userInfo["_mId"] as? String
-            var acsDeliveryTracking = userInfo["_acsDeliveryTracking"] as? String
-            
-            if acsDeliveryTracking == nil {
-                acsDeliveryTracking = "on"
+    guard let userInfo = notification.object as? [String: Any] else {
+        print("sendTracking: no userInfo")
+        return
+    }
+
+    let deliveryId = userInfo["_dId"] as? String
+    let broadlogId = userInfo["_mId"] as? String
+    var acsDeliveryTracking = userInfo["_acsDeliveryTracking"] as? String
+
+    if acsDeliveryTracking == nil {
+        acsDeliveryTracking = "on"
+    }
+
+    if deliveryId != nil && broadlogId != nil
+        && acsDeliveryTracking?.caseInsensitiveCompare("on") == ComparisonResult.orderedSame
+    {
+        MobileCore.collectMessageInfo([
+            "deliveryId": deliveryId!,
+            "broadlogId": broadlogId!,
+            "action": action,
+        ])
+
+        // Build contextData from custom keys in the push payload (excluding Adobe system keys)
+        var contextData: [String: Any] = [:]
+        let excludedKeys: Set<String> = ["_dId", "_mId", "_acsDeliveryTracking", "aps",
+                                         "google.message_id", "from", "collapse_key"]
+        for (key, value) in userInfo {
+            if !excludedKeys.contains(key) {
+                contextData[key] = value
             }
-       
-            if deliveryId != nil && broadlogId != nil
-                && acsDeliveryTracking?.caseInsensitiveCompare("on") == ComparisonResult.orderedSame
-            {
-                MobileCore.collectMessageInfo([
-                    "deliveryId": deliveryId!, "broadlogId": broadlogId!, "action": action,
-                ])
-            } else {
-                print("Trackin not delivered")
-            }
-            
-            if(skipDeepLink == "false") {
-                handleCallback(userInfo)
-            }
-                
         }
+        if !contextData.isEmpty {
+            MobileCore.collectPii(contextData)
+        }
+    } else {
+        print("Tracking not delivered")
+    }
+
+    if skipDeepLink == "false" {
+        handleCallback(userInfo)
+    }
   }
     
     
@@ -114,3 +128,7 @@ import FirebaseMessaging
     
 
 }
+
+
+
+
