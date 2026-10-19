@@ -28,8 +28,8 @@ import UserNotifications
     guard command.arguments.count >= 2,
           let deviceToken = command.arguments[0] as? String,
           !deviceToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-          let emailAddress = command.arguments[1] as? String,
-          !emailAddress.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+          let emailaddress = command.arguments[1] as? String,
+          !emailaddress.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
         let pluginResult = CDVPluginResult(
             status: CDVCommandStatus_ERROR,
             messageAs: "setPushIdentifier requires a non-empty device token and email address")
@@ -37,7 +37,7 @@ import UserNotifications
         return
     }
 
-    collectPiiData(from: command, emailAddress: emailAddress)
+    collectPiiData(from: command, emailaddress: emailaddress)
 
     let center: UNUserNotificationCenter! = UNUserNotificationCenter.current()
     // NOTE: do NOT set center.delegate here - the Firebase plugin must remain the
@@ -50,11 +50,23 @@ import UserNotifications
       completionHandler: {
         granted, error in
 
-        self.typeId = (Bundle.main.object(forInfoDictionaryKey: "TypeId") as? String)
-            // Fallback to the TYPE_ID config.xml preference injected by plugin.xml,
-            // then the plugin default, for getTypeId callers.
-            ?? (self.commandDelegate.settings["TYPE_ID"] as? String)
-            ?? "fiscalnumber"
+        self.typeId = Bundle.main.object(forInfoDictionaryKey: "TypeId") as? String
+
+        // Build contextData: start with any user-provided data from arguments[2].
+        // Read email from arguments[1] under the typeId key name (e.g. "fiscalnumber").
+        // Guard the index: some callers only pass [deviceToken].
+        var contextData: [String: Any] = [:]
+        if command.arguments.count >= 3 {
+            if let data = command.arguments[2] as? [String: Any] {
+                contextData = data
+            }
+        }
+        if !self.typeId.isEmpty,
+           command.arguments.count >= 2,
+           let emailValue = (command.arguments[1] as? String) {
+            contextData[self.typeId] = emailValue
+        }
+        ACPCampaign_Cordova.sendPushTrackingContextData(contextData)
 
         guard error == nil && granted else {
             NSLog("Push registration FAILED: %@", error?.localizedDescription ?? "user denied")
@@ -87,8 +99,8 @@ import UserNotifications
     guard command.arguments.count >= 2,
           let deviceToken = command.arguments[0] as? String,
           !deviceToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-          let emailAddress = command.arguments[1] as? String,
-          !emailAddress.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+          let emailaddress = command.arguments[1] as? String,
+          !emailaddress.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
         let pluginResult = CDVPluginResult(
             status: CDVCommandStatus_ERROR,
             messageAs: "loadAdobe requires a non-empty device token and email address")
@@ -96,7 +108,7 @@ import UserNotifications
         return
     }
 
-    collectPiiData(from: command, emailAddress: emailAddress)
+    collectPiiData(from: command, emailaddress: emailaddress)
 
     let center: UNUserNotificationCenter! = UNUserNotificationCenter.current()
     // NOTE: do NOT set center.delegate here - see setPushIdentifier above.
@@ -106,9 +118,7 @@ import UserNotifications
       completionHandler: {
         granted, error in
 
-        self.typeId = (Bundle.main.object(forInfoDictionaryKey: "TypeId") as? String)
-            ?? (self.commandDelegate.settings["TYPE_ID"] as? String)
-            ?? "fiscalnumber"
+        self.typeId = Bundle.main.object(forInfoDictionaryKey: "TypeId") as? String
 
         guard error == nil && granted else {
             NSLog("Push registration FAILED: %@", error?.localizedDescription ?? "user denied")
@@ -135,12 +145,12 @@ import UserNotifications
       })
   }
 
-  private func collectPiiData(from command: CDVInvokedUrlCommand!, emailAddress: String) {
+  private func collectPiiData(from command: CDVInvokedUrlCommand!, emailaddress: String) {
     var contextData: [String: Any] = [:]
     if command.arguments.count >= 3, let data = command.arguments[2] as? [String: Any] {
       contextData = data
     }
-    contextData["emailaddress"] = emailAddress
+    contextData["emailaddress"] = emailaddress
     MobileCore.collectPii(contextData)
   }
 
