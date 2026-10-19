@@ -32,6 +32,8 @@ public class NotificationDismissedReceiver extends BroadcastReceiver {
 
             //We only send the click tracking since the user dismissed the notification
             if (deliveryId != null && messageId != null && acsDeliveryTracking.equals("on")) {
+                // collectMessageInfo takes Map<String, Object> (per AEPCore API reference),
+                // so this map stays Object-typed.
                 contextData.put("deliveryId", deliveryId);
                 contextData.put("broadlogId", messageId);
                 contextData.put("action", "2");
@@ -39,7 +41,8 @@ public class NotificationDismissedReceiver extends BroadcastReceiver {
 
                 // Collect the custom payload keys as PII, matching the receipt/tap
                 // paths and the iOS behavior (excludes Adobe system keys).
-                HashMap<String, Object> piiData = new HashMap<>();
+                // Must stay String-typed: MobileCore.collectPii takes Map<String, String>.
+                HashMap<String, String> piiData = new HashMap<>();
                 String[] excludedKeys = {"_dId", "_mId", "_acsDeliveryTracking", "aps",
                                          "google.message_id", "from", "collapse_key"};
                 for (String key : data.keySet()) {
