@@ -155,6 +155,16 @@
             <receiver android:name="com.adobe.marketing.mobile.MessageNotificationHandler" />
         </config-file>
 
+        <!-- Firebase Messaging service for FCM push delivery (Android 8+) -->
+        <config-file parent="/manifest/application" target="AndroidManifest.xml">
+            <service android:name="com.adobe.marketing.mobile.cordova.ACPFirebaseMessagingService"
+                     android:exported="false">
+                <intent-filter>
+                    <action android:name="com.google.firebase.MESSAGING_EVENT" />
+                </intent-filter>
+            </service>
+        </config-file>
+
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

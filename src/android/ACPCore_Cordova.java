@@ -15,6 +15,8 @@ import static com.adobe.marketing.mobile.cordova.ACPFirebaseMessagingService.ACP
 import static com.adobe.marketing.mobile.cordova.ACPFirebaseMessagingService.ACP_CORE_LAST_PUSH_PREF_KEY;
 import static com.adobe.marketing.mobile.cordova.ACPFirebaseMessagingService.ACP_CORE_PUSH_TAG_LOG;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -83,6 +85,10 @@ public class ACPCore_Cordova extends CordovaPlugin {
     final static int PERMISSION_REQUEST_CODE = 20230426;
 
     private static final String PERMISSION_POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS";
+
+    // Notification channel for Android 8+ (API 26+)
+    private static final String NOTIFICATION_CHANNEL_ID = "adobe_push_default";
+    private static final String NOTIFICATION_CHANNEL_NAME = "Adobe Push Notifications";
 
     private String appId;
     private String initTime;
@@ -650,6 +656,8 @@ public class ACPCore_Cordova extends CordovaPlugin {
     @Override
     public void pluginInitialize() {
         super.pluginInitialize();
+        createNotificationChannel();
+
         final Bundle data = this.cordova.getActivity().getIntent().getExtras();
 
         Log.d(ACP_CORE_PUSH_TAG_LOG, "public void pluginInitialize()");
@@ -658,6 +666,33 @@ public class ACPCore_Cordova extends CordovaPlugin {
             ACPFirebaseMessagingService.handleMessage(data, true);
         }
 
+    }
+
+    /**
+     * Creates the notification channel required on Android 8+ (API 26+).
+     * Without a channel, notifications are silently dropped on newer Android versions.
+     */
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                NotificationManager manager = (NotificationManager) cordova.getActivity()
+                        .getSystemService(Context.NOTIFICATION_SERVICE);
+                if (manager != null) {
+                    NotificationChannel channel = new NotificationChannel(
+                            NOTIFICATION_CHANNEL_ID,
+                            NOTIFICATION_CHANNEL_NAME,
+                            NotificationManager.IMPORTANCE_HIGH
+                    );
+                    channel.setDescription("Channel for Adobe Campaign push notifications");
+                    channel.enableLights(true);
+                    channel.enableVibration(true);
+                    manager.createNotificationChannel(channel);
+                    Log.d(ACP_CORE_PUSH_TAG_LOG, "Notification channel created: " + NOTIFICATION_CHANNEL_ID);
+                }
+            } catch (Exception e) {
+                Log.e(ACP_CORE_PUSH_TAG_LOG, "Failed to create notification channel: " + e.getMessage());
+            }
+        }
     }
 
     public void openScreenByDeepLink(String deepLink) {

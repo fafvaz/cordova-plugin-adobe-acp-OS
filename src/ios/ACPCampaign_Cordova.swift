@@ -25,6 +25,15 @@ import UserNotifications
   @objc(setPushIdentifier:)
   func setPushIdentifier(command: CDVInvokedUrlCommand!) {
 
+    // Guard: require at least deviceToken and fiscalNumber
+    guard command.arguments.count >= 2 else {
+        let pluginResult = CDVPluginResult(
+            status: CDVCommandStatus_ERROR,
+            messageAs: "setPushIdentifier requires at least deviceToken and fiscalNumber")
+        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        return
+    }
+
     let center: UNUserNotificationCenter! = UNUserNotificationCenter.current()
     center.delegate = self
 
@@ -35,34 +44,82 @@ import UserNotifications
 
         self.typeId = Bundle.main.object(forInfoDictionaryKey: "TypeId") as? String
 
-        if error == nil {
-
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  // in half a second...
-            let _: String! = command.arguments[0] as? String
-            let valueTypeId: String! = command.arguments[1] as? String
-            let data = command.arguments[2] as AnyObject
-              
-            if data is NSDictionary {
-                var convert = data as! [String: Any]
-                convert[self.typeId] = valueTypeId
-                MobileCore.collectPii(convert)
-            } else {
-               MobileCore.collectPii([self.typeId: valueTypeId!])
-            }
-            UIApplication.shared.registerForRemoteNotifications()
-          }
-
-          NSLog("Push registration success.")
-
-        } else {
-          NSLog("Push registration FAILED")
-          NSLog("ERROR: %@ " + (error?.localizedDescription ?? ""))
+        guard error == nil && granted else {
+            NSLog("Push registration FAILED: %@", error?.localizedDescription ?? "user denied")
+            return
         }
+
+        let deviceToken = (command.arguments[0] as? String) ?? ""
+        let valueTypeId = (command.arguments[1] as? String) ?? ""
+        MobileCore.setPushIdentifier(identifier: deviceToken)
+              
+        var contextData: [String: Any] = [:]
+        if command.arguments.count >= 3,
+           let data = command.arguments[2] as? [String: Any] {
+            contextData = data
+        }
+
+        if let typeId = self.typeId, !typeId.isEmpty {
+            contextData[typeId] = valueTypeId
+        }
+
+        MobileCore.collectPii(contextData)
+        UIApplication.shared.registerForRemoteNotifications()
+
+        NSLog("Push registration success.")
       })
 
-    MobileCore.setLogLevel(.debug)
-    let pluginResult: CDVPluginResult! = CDVPluginResult(status: CDVCommandStatus_OK)
-    self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+  }
+
+  @objc(loadAdobe:)
+  func loadAdobe(command: CDVInvokedUrlCommand!) {
+
+    guard command.arguments.count >= 2 else {
+        let pluginResult = CDVPluginResult(
+            status: CDVCommandStatus_ERROR,
+            messageAs: "loadAdobe requires deviceToken and fiscalNumber")
+        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        return
+    }
+
+    let center: UNUserNotificationCenter! = UNUserNotificationCenter.current()
+    center.delegate = self
+
+    center.requestAuthorization(
+      options: [.sound, .alert, .badge],
+      completionHandler: {
+        granted, error in
+
+        guard error == nil && granted else {
+            NSLog("Push registration FAILED: %@", error?.localizedDescription ?? "user denied")
+            let pluginResult = CDVPluginResult(
+                status: CDVCommandStatus_ERROR,
+                messageAs: "Push authorization not granted")
+            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+            return
+        }
+
+        self.typeId = Bundle.main.object(forInfoDictionaryKey: "TypeId") as? String
+
+        let deviceToken = (command.arguments[0] as? String) ?? ""
+        let valueTypeId = (command.arguments[1] as? String) ?? ""
+
+        MobileCore.setPushIdentifier(identifier: deviceToken)
+
+        var contextData: [String: Any] = [:]
+        if let typeId = self.typeId, !typeId.isEmpty {
+            contextData[typeId] = valueTypeId
+        }
+
+        MobileCore.collectPii(contextData)
+
+        UIApplication.shared.registerForRemoteNotifications()
+
+        NSLog("Push registration success.")
+
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
+        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+      })
   }
 
   func getTypeId(command: CDVInvokedUrlCommand!) {
