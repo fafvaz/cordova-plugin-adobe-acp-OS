@@ -46,6 +46,10 @@ import UserNotifications
 
         guard error == nil && granted else {
             NSLog("Push registration FAILED: %@", error?.localizedDescription ?? "user denied")
+            let pluginResult = CDVPluginResult(
+                status: CDVCommandStatus_ERROR,
+                messageAs: "Push authorization not granted")
+            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
             return
         }
 
@@ -67,6 +71,9 @@ import UserNotifications
         UIApplication.shared.registerForRemoteNotifications()
 
         NSLog("Push registration success.")
+
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
+        self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
       })
 
   }
