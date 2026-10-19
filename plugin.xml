@@ -145,7 +145,10 @@
         <!-- add receivers to AndroidManifest.xml -->
         <config-file parent="/manifest/application" target="AndroidManifest.xml">
             <receiver android:name="com.adobe.marketing.mobile.LocalNotificationHandler" />
-            <receiver android:name=".NotificationDismissedReceiver" />
+            <!-- Fully-qualified name required: the relative ".NotificationDismissedReceiver"
+                 form resolves against the APP package (e.g. com.galp.km.test), never matched
+                 the class package, and dismiss/click (action "2") tracking could not fire. -->
+            <receiver android:name="com.adobe.marketing.mobile.cordova.NotificationDismissedReceiver" />
             <receiver android:name="com.adobe.marketing.mobile.cordova.GeofenceBroadcastReceiver" />
             <activity android:name="com.adobe.marketing.mobile.FullscreenMessageActivity" />
             <activity android:name="com.adobe.marketing.mobile.MessageFullScreenActivity"

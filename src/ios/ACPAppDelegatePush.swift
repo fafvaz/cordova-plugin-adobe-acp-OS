@@ -10,6 +10,7 @@ import AEPSignal
 import AEPTarget
 import AEPUserProfile
 import FirebaseMessaging
+import UserNotifications
 
 @objc(ACPAppDelegatePush) class ACPAppDelegatePush: NSObject {
 
@@ -41,12 +42,33 @@ import FirebaseMessaging
         }
       })
 
+    // Register the notification category used for Adobe Campaign Standard dismiss
+    // tracking: .customDismissAction makes iOS deliver the dismiss response to
+    // UNUserNotificationCenterDelegate when the user clears the notification.
+    // The push payload must reference the same category (aps.category = "DEFAULT").
+    let pushTrackingCategory = UNNotificationCategory(
+      identifier: "DEFAULT",
+      actions: [],
+      intentIdentifiers: [],
+      options: .customDismissAction)
+    UNUserNotificationCenter.current().setNotificationCategories([pushTrackingCategory])
+
     NotificationCenter.default.addObserver(
       self, selector: #selector(handleNotificationDispatched(notification:)),
       name: NSNotification.Name("FirebaseRemoteNotificationReceivedDispatch"), object: nil)
     NotificationCenter.default.addObserver(
       self, selector: #selector(handleClickNotificationDispatched(notification:)),
       name: NSNotification.Name("FirebaseRemoteNotificationClickedDispatch"), object: nil)
+    // Dismiss (swipe-away): Push Click only (action "2") - never Push Open ("1")
+    NotificationCenter.default.addObserver(
+      self, selector: #selector(handleDismissDispatched(notification:)),
+      name: NSNotification.Name("FirebaseRemoteNotificationDismissedDispatch"), object: nil)
+  }
+
+  @objc static func handleDismissDispatched(notification: NSNotification) {
+    // User cleared the notification: Push Click tracking (action "2") only.
+    // skipDeepLink = "true": the app was not opened, so no payload forwarding here.
+    sendTracking(notification: notification, action: "2", skipDeepLink: "true")
   }
 
   @objc static func handleNotificationDispatched(notification: NSNotification) {

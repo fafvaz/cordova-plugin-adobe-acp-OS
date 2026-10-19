@@ -569,6 +569,9 @@ public class ACPCore_Cordova extends CordovaPlugin {
         if (data != null) {
             Log.d(ACP_CORE_PUSH_TAG_LOG, "newIntent before handleMessage");
             ACPFirebaseMessagingService.handleMessage(data, true);
+            // Mark handled so the subsequent onResume does not send the click/open
+            // tracking (actions "2"/"1") a second time for the same notification.
+            wasHandled = true;
             Log.d(ACP_CORE_PUSH_TAG_LOG, "newIntent after handleMessage");
         }
     }
@@ -664,6 +667,9 @@ public class ACPCore_Cordova extends CordovaPlugin {
         Log.d(ACP_CORE_PUSH_TAG_LOG, data != null ? data.toString() : "data empty");
         if (data != null) {
             ACPFirebaseMessagingService.handleMessage(data, true);
+            // Cold start from a notification tap: tracking (actions "2"/"1") was just
+            // sent - prevent onResume from sending it again for the same intent extras.
+            wasHandled = true;
         }
 
     }

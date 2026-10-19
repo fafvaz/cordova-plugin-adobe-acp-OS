@@ -2,7 +2,7 @@ import AEPCampaign
 import AEPCore
 import UserNotifications
 
-@objc(ACPCampaign_Cordova) class ACPCampaign_Cordova: CDVPlugin, UNUserNotificationCenterDelegate {
+@objc(ACPCampaign_Cordova) class ACPCampaign_Cordova: CDVPlugin {
 
   var typeId: String!
 
@@ -35,7 +35,10 @@ import UserNotifications
     }
 
     let center: UNUserNotificationCenter! = UNUserNotificationCenter.current()
-    center.delegate = self
+    // NOTE: do NOT set center.delegate here - the Firebase plugin must remain the
+    // UNUserNotificationCenter delegate; its handlers post the dispatch notifications
+    // that drive push tracking (impression/click/open) in ACPAppDelegatePush, and
+    // stealing the delegate would silently disable ALL push tracking.
 
     center.requestAuthorization(
       options: [.sound, .alert, .badge],
@@ -102,7 +105,7 @@ import UserNotifications
     }
 
     let center: UNUserNotificationCenter! = UNUserNotificationCenter.current()
-    center.delegate = self
+    // NOTE: do NOT set center.delegate here - see setPushIdentifier above.
 
     center.requestAuthorization(
       options: [.sound, .alert, .badge],
