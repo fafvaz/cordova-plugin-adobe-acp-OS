@@ -262,6 +262,19 @@ ACPIdentity.getExperienceCloudId(function(cloudId) {
 });
 ```
 
+### Campaign push registration
+
+On Android, when the Firebase plugin is installed, `ACPCampaign` automatically forwards the current FCM token and later token refreshes to Adobe. If another component manages FCM, forward its token explicitly:
+```js
+ACPCampaign.setPushIdentifier(token, null, {}, successCallback, errorCallback);
+```
+
+On iOS, provide the push token and email address explicitly:
+```js
+ACPCampaign.setPushIdentifier(deviceToken, emailAddress, {}, successCallback, errorCallback);
+```
+The email is collected by Adobe under the exact, case-sensitive `emailaddress` key on both platforms. Email collection does not depend on the user granting notification permission; push registration still reports a permission error when permission is denied.
+
 ### [Lifecycle](https://aep-sdks.gitbook.io/docs/using-mobile-extensions/mobile-core/lifecycle)
 > Note: We recommend implementing Lifecycle in native [Android and iOS code](https://aep-sdks.gitbook.io/docs/using-mobile-extensions/mobile-core/lifecycle).
 

@@ -47,7 +47,7 @@
              extensionVersion(callbackContext);
              return true;       
          }
-         else if ("setPushIdentifier".equals(action)){
+         else if ("setPushIdentifier".equals(action) || "loadAdobe".equals(action)){
              setPushIdentifier(args, callbackContext);
              return true;
          }
@@ -94,18 +94,29 @@
         }
  
          cordova.getThreadPool().execute(() -> {
-             if (args == null || args.length() != 3) {
-                 callbackContext.error("Invalid argument count, expected length 3.");
+             if (args == null || args.length() < 1 || args.length() > 3) {
+                 callbackContext.error("Invalid argument count, expected 1 to 3 arguments.");
                  return;
              }
              try {
  
                  String deviceToken = args.getString(0);
-                 String valueTypeId = args.getString(1);
-                 final HashMap<String, String> data = getStringMapFromJSON(args.getJSONObject(2));
-                 data.put(typeId, valueTypeId);
+                 if (deviceToken.trim().isEmpty()) {
+                     callbackContext.error("Device token must not be empty.");
+                     return;
+                 }
+
+                 // Automatic Firebase forwarding sends only the device token.
+                 final HashMap<String, String> data = args.length() == 3 && !args.isNull(2)
+                         ? getStringMapFromJSON(args.getJSONObject(2))
+                         : new HashMap<String, String>();
+                 if (args.length() >= 2 && !args.isNull(1)) {
+                     data.put("emailaddress", args.getString(1));
+                 }
                  MobileCore.setPushIdentifier(deviceToken);
-                 MobileCore.collectPii(data);
+                 if (!data.isEmpty()) {
+                     MobileCore.collectPii(data);
+                 }
                  callbackContext.success();
  
                  return;

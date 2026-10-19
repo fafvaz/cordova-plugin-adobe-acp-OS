@@ -34,8 +34,8 @@ var ACPCampaign = (function () {
     exec(success, error, PLUGIN_NAME, FUNCTION_NAME, []);
   };
  
-  //Call setPushIdentifer to send the push identifier that is received from the APNS or FCM to the Adobe Identity service
-  ACPCampaign.setPushIdentifier = function (DeviceToken, FiscalNumber, contextData, success, error) {
+  // Sends the push identifier and optional user data to Adobe.
+  ACPCampaign.setPushIdentifier = function (deviceToken, emailAddress, contextData, success, error) {
     var FUNCTION_NAME = 'setPushIdentifier';
     if (success && !isFunction(success)) {
       printNotAFunction('success', FUNCTION_NAME);
@@ -50,15 +50,44 @@ var ACPCampaign = (function () {
       contextData = {};
     }
 
-    exec(success, error, PLUGIN_NAME, FUNCTION_NAME, [DeviceToken, FiscalNumber, contextData]);
+    exec(success, error, PLUGIN_NAME, FUNCTION_NAME, [deviceToken, emailAddress, contextData]);
   
   };
 
-  ACPCampaign.loadAdobe = function (deviceToken, fiscalNumber, success, error) {
+  ACPCampaign.loadAdobe = function (deviceToken, emailAddress, success, error) {
 
     var FUNCTION_NAME = 'loadAdobe';
-    exec(success, error, PLUGIN_NAME, FUNCTION_NAME, [deviceToken, fiscalNumber]);
+    exec(success, error, PLUGIN_NAME, FUNCTION_NAME, [deviceToken, emailAddress]);
 };
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('deviceready', function () {
+      if (typeof cordova === 'undefined' || cordova.platformId !== 'android') {
+        return;
+      }
+
+      var firebasePlugin = window.FirebasePlugin;
+      if (!firebasePlugin || !isFunction(firebasePlugin.onTokenRefresh)) {
+        firebasePlugin = window.fp;
+      }
+      if (!firebasePlugin || !isFunction(firebasePlugin.onTokenRefresh)) {
+        console.warn('ACPCampaign: Android Firebase token forwarding is unavailable; install the Firebase plugin or call setPushIdentifier directly.');
+        return;
+      }
+
+      firebasePlugin.onTokenRefresh(function (token) {
+        if (!isString(token) || !token.trim()) {
+          console.error('ACPCampaign: Firebase returned an empty push token.');
+          return;
+        }
+        exec(null, function (error) {
+          console.error('ACPCampaign: failed to forward the Firebase token to Adobe.', error);
+        }, PLUGIN_NAME, 'setPushIdentifier', [token]);
+      }, function (error) {
+        console.error('ACPCampaign: failed to subscribe to Firebase token updates.', error);
+      });
+    }, false);
+  }
 
   return ACPCampaign;
 })();
