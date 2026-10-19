@@ -66,7 +66,6 @@ import UserNotifications
            let emailValue = (command.arguments[1] as? String) {
             contextData[self.typeId] = emailValue
         }
-        ACPCampaign_Cordova.sendPushTrackingContextData(contextData)
 
         guard error == nil && granted else {
             NSLog("Push registration FAILED: %@", error?.localizedDescription ?? "user denied")
