@@ -102,18 +102,10 @@
                  callbackContext.error("Invalid argument count, expected 1 to 3 arguments.");
                  return;
              }
-                 // An empty/missing token must NOT abort the call: the app may call
-                 // before Firebase has produced a token. Only the push registration
-                 // is skipped; the PII below is still delivered (regression fix: the
-                 // previous hard return on an empty token silently dropped the email.
-                 String deviceToken = args.isNull(0) ? null : args.optString(0, null);
-                 boolean tokenSent = false;
-                 if (deviceToken != null && !deviceToken.trim().isEmpty()) {
-                     MobileCore.setPushIdentifier(deviceToken.trim());
-                     tokenSent = true;
-                 } else {
-                     Log.w("ACP_CAMPAIGN", "setPushIdentifier: device token missing/empty - "
-                             + "skipping push registration, still collecting PII.");
+                 String deviceToken = args.getString(0);
+                 if (deviceToken.trim().isEmpty()) {
+                     callbackContext.error("Device token must not be empty.");
+                     return;
                  }
 
                  // optJSONObject: a null / non-object 3rd argument must not throw.
@@ -135,18 +127,13 @@
                          }
                      }
                  }
-                 boolean piiSent = !data.isEmpty();
-                 if (piiSent) {
+                 MobileCore.setPushIdentifier(deviceToken.trim());
+                 if (!data.isEmpty()) {
                      MobileCore.collectPii(data);
                  }
 
-                 if (tokenSent || piiSent) {
-                     Log.i("ACP_CAMPAIGN", "setPushIdentifier: sent token=" + tokenSent
-                             + ", pii keys=" + data.keySet());
-                     callbackContext.success();
-                 } else {
-                     callbackContext.error("Nothing to send: device token and PII are both empty.");
-                 }
+                 Log.i("ACP_CAMPAIGN", "setPushIdentifier: sent token=true, pii keys=" + data.keySet());
+                 callbackContext.success();
  
                  return;
  
