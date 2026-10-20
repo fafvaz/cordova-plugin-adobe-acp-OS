@@ -92,6 +92,11 @@
             Log.e("ACP_CORE", "Type Id not found: set the TYPE_ID plugin variable in the Extensibility Configurations.");
         }
  
+        // typeId must be effectively final for use inside the lambda below.
+        // Keeping it a local variable (not a member field) prevents races on
+        // rapid repeated setPushIdentifier calls — each call captures its own value.
+        final String typeIdFinal = typeId;
+
          cordova.getThreadPool().execute(() -> {
              if (args == null || args.length() < 1 || args.length() > 3) {
                  callbackContext.error("Invalid argument count, expected 1 to 3 arguments.");
@@ -127,8 +132,8 @@
                          // Also send under the configured TYPE_ID key (e.g.
                          // "fiscalnumber") so attributes populated before the
                          // key rename keep being refreshed.
-                         if (typeId != null && !typeId.isEmpty() && !"emailaddress".equals(typeId)) {
-                             data.put(typeId, email);
+                         if (typeIdFinal != null && !typeIdFinal.isEmpty() && !"emailaddress".equals(typeIdFinal)) {
+                             data.put(typeIdFinal, email);
                          }
                      }
                  }
@@ -146,10 +151,6 @@
                  }
  
                  return;
-             } catch (JSONException e) {
-                 callbackContext.error("Error while parsing argument, Error " + e.getLocalizedMessage());
-                 return;
-             }
  
          });
  
