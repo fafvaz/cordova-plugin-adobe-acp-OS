@@ -620,6 +620,18 @@ public class ACPCore_Cordova extends CordovaPlugin {
 
             MobileCore.registerExtensions(extensions, o -> {
                 Log.d("ACP_CORE", "AEP Mobile SDK is initialized");
+                // Mirror iOS (ACPAppDelegatePush.registerExtensions): the AEP SDK's
+                // default privacy status is UNKNOWN, and while the status is
+                // UNKNOWN/OPT_OUT the SDK HOLDS all network requests — including the
+                // push-identifier -> Experience Cloud ID sync (demdex) AND the Campaign
+                // push tracking GETs (/r/?id=broadlogId,deliveryId,action&mcId=...).
+                // Adobe then has no ECID <-> push-token mapping, so tracking hits cannot
+                // be matched to a delivery recipient (mcId mismatch) and the token
+                // appears to "never reach Adobe".
+                MobileCore.setPrivacyStatus(MobilePrivacyStatus.OPT_IN);
+                if (appId != null && !appId.isEmpty()) {
+                    MobileCore.configureWithAppID(appId);
+                }
             });
 
             MobileServices.registerExtension();
