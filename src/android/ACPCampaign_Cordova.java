@@ -102,8 +102,6 @@
                  callbackContext.error("Invalid argument count, expected 1 to 3 arguments.");
                  return;
              }
-             try {
- 
                  // An empty/missing token must NOT abort the call: the app may call
                  // before Firebase has produced a token. Only the push registration
                  // is skipped; the PII below is still delivered (regression fix: the
