@@ -14,6 +14,11 @@ import UserNotifications
 
 @objc(ACPAppDelegatePush) class ACPAppDelegatePush: NSObject {
 
+  /// Shared instance used as NotificationCenter observer target.
+  /// Using an NSObject instance (rather than the metatype `self` in a static context)
+  /// is required for NSNotificationCenter to invoke the selector via performSelector:.
+  static let shared = ACPAppDelegatePush()
+
   static func registerExtensions() {
 
     let appId = Bundle.main.object(forInfoDictionaryKey: "AppId") as! String
@@ -54,28 +59,28 @@ import UserNotifications
     UNUserNotificationCenter.current().setNotificationCategories([pushTrackingCategory])
 
     NotificationCenter.default.addObserver(
-      self, selector: #selector(handleNotificationDispatched(notification:)),
+      ACPAppDelegatePush.shared, selector: #selector(handleNotificationDispatched(notification:)),
       name: NSNotification.Name("FirebaseRemoteNotificationReceivedDispatch"), object: nil)
     NotificationCenter.default.addObserver(
-      self, selector: #selector(handleClickNotificationDispatched(notification:)),
+      ACPAppDelegatePush.shared, selector: #selector(handleClickNotificationDispatched(notification:)),
       name: NSNotification.Name("FirebaseRemoteNotificationClickedDispatch"), object: nil)
     // Dismiss (swipe-away): Push Click only (action "2") - never Push Open ("1")
     NotificationCenter.default.addObserver(
-      self, selector: #selector(handleDismissDispatched(notification:)),
+      ACPAppDelegatePush.shared, selector: #selector(handleDismissDispatched(notification:)),
       name: NSNotification.Name("FirebaseRemoteNotificationDismissedDispatch"), object: nil)
   }
 
-  @objc static func handleDismissDispatched(notification: NSNotification) {
+  @objc func handleDismissDispatched(notification: NSNotification) {
     // User cleared the notification: Push Click tracking (action "2") only.
     // skipDeepLink = "true": the app was not opened, so no payload forwarding here.
     sendTracking(notification: notification, action: "2", skipDeepLink: "true")
   }
 
-  @objc static func handleNotificationDispatched(notification: NSNotification) {
+  @objc func handleNotificationDispatched(notification: NSNotification) {
     sendTracking(notification: notification, action: "7", skipDeepLink: "false")
   }
 
-  @objc static func handleClickNotificationDispatched(notification: NSNotification) {
+  @objc func handleClickNotificationDispatched(notification: NSNotification) {
     sendTracking(notification: notification, action: "2", skipDeepLink: "true")
     sendTracking(notification: notification, action: "1", skipDeepLink: "false")
   }

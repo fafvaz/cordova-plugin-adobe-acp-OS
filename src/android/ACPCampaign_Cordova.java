@@ -38,7 +38,6 @@
   */
  public class ACPCampaign_Cordova extends CordovaPlugin {
  
-      private String typeId;
  
      @Override
      public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
@@ -76,7 +75,7 @@
          // Read the Type Id from config.xml preferences (plugin variable TYPE_ID).
         // MABS 12 (cordova-android 13) ignores plugin config-file injections targeting
         // res/values/*strings*.xml, so the "TypeId" string resource may not exist.
-        typeId = webView.getPreferences().getString("TYPE_ID", null);
+        String typeId = webView.getPreferences().getString("TYPE_ID", null);
         if (typeId == null || typeId.isEmpty()) {
             // Plugin variables are persisted as <variable> elements in the packaged
             // res/xml/config.xml; CordovaPreferences cannot see them, so parse them.

@@ -19,6 +19,10 @@
 
 - (void)application:(UIApplication *)application swizzledDidRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
     [AEPMobileCore setPushIdentifier:deviceToken];
+    // Forward to the original implementation so Firebase Messaging also receives
+    // the APNS token ([FIRMessaging messaging].APNSToken = deviceToken). Without
+    // this forward, Firebase never gets the token and push delivery breaks.
+    [self application:application swizzledDidRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
     NSLog(@"ACPCampaign_didRegisterForRemoteNotificationsWithDeviceToken");
 }
 
