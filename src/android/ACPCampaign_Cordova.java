@@ -107,11 +107,17 @@
                  return;
              }
                  try {
-                     String deviceToken = args.getString(0);
-                     if (deviceToken.trim().isEmpty()) {
-                         callbackContext.error("Device token must not be empty.");
-                         return;
-                     }
+                     // ==== token + email: restored to the flow of commit 80fd656 ====
+                     // (the version verified to deliver BOTH the push token and the email
+                     // to Adobe). 80fd656 read token = args[0], email = args[1],
+                     // contextData = args[2] and then ALWAYS called setPushIdentifier AND
+                     // collectPii. No early return may appear here: the later
+                     // "Device token must not be empty" guard aborted the whole call
+                     // before any SDK call, so an empty/missing token silently dropped
+                     // the email as well - nothing reached Adobe on either channel.
+                     // Tolerant reads (isNull/optString/optJSONObject) instead of
+                     // getString: a JSON null token/Email must not throw either.
+                     String deviceToken = args.isNull(0) ? null : args.optString(0, null);
 
                      // optJSONObject: a null / non-object 3rd argument must not throw.
                      final HashMap<String, String> data = new HashMap<String, String>();
@@ -125,23 +131,36 @@
                              // Canonical, case-sensitive key (matches iOS).
                              data.put("emailaddress", email);
                              // Also send under the configured TYPE_ID key (e.g.
-                             // "fiscalnumber") so attributes populated before the
-                             // key rename keep being refreshed.
+                             // "fiscalnumber") - this is the key the working commit
+                             // 80fd656 used (data.put(typeId, valueTypeId)), kept so
+                             // attributes populated before the key rename refresh.
                              if (typeIdFinal != null && !typeIdFinal.isEmpty() && !"emailaddress".equals(typeIdFinal)) {
                                  data.put(typeIdFinal, email);
                              }
                          }
                      }
-                     MobileCore.setPushIdentifier(deviceToken.trim());
+                     // Unconditional, exactly like 80fd656: these must never be skipped
+                     // because of argument validation. An empty token only skips the push
+                     // registration itself; the PII (email) is always delivered.
+                     boolean tokenSent = false;
+                     if (deviceToken != null && !deviceToken.trim().isEmpty()) {
+                         MobileCore.setPushIdentifier(deviceToken.trim());
+                         tokenSent = true;
+                     }
                      if (!data.isEmpty()) {
                          MobileCore.collectPii(data);
                      }
 
-                     Log.i("ACP_CAMPAIGN", "setPushIdentifier: sent token=true, pii keys=" + data.keySet());
+                     Log.i("ACP_CAMPAIGN", "setPushIdentifier: sent token=" + tokenSent
+                             + ", pii keys=" + data.keySet());
                      callbackContext.success();
 
                      return;
-                 } catch (JSONException e) {
+                 } catch (Exception e) {
+                     // catch (Exception): the tolerant reads above never throw JSONException,
+                     // so catching JSONException here would be a compile error ("exception
+                     // ... is never thrown in body of corresponding try statement") -
+                     // same fix as trackPush in ca9b5e6.
                      callbackContext.error("Error while parsing argument, Error " + e.getLocalizedMessage());
                      return;
                  }
