@@ -13,6 +13,7 @@ var ACPCampaign = (function () {
   var exec = require('cordova/exec');
   var ACPCampaign = (typeof exports !== 'undefined' && exports) || {};
   var PLUGIN_NAME = 'ACPCampaign_Cordova';
+  var TYPE_ID = 'fiscalnumber'; // Default TYPE_ID; can be overridden by app config
   // ===========================================================================
   // public APIs
   // ===========================================================================
@@ -80,9 +81,10 @@ var ACPCampaign = (function () {
           console.error('ACPCampaign: Firebase returned an empty push token.');
           return;
         }
+        // Trim the token and forward it with TYPE_ID and empty context data
         exec(null, function (error) {
           console.error('ACPCampaign: failed to forward the Firebase token to Adobe.', error);
-        }, PLUGIN_NAME, 'setPushIdentifier', [token.trim()]);
+        }, PLUGIN_NAME, 'setPushIdentifier', [token.trim(), TYPE_ID, '{}']);
       };
 
       // Forward the CURRENT token right away: onTokenRefresh only fires when the
