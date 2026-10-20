@@ -85,7 +85,7 @@ import UserNotifications
     sendTracking(notification: notification, action: "1", skipDeepLink: "false")
   }
 
-    static func sendTracking(notification: NSNotification, action: String, skipDeepLink: String) {
+  func sendTracking(notification: NSNotification, action: String, skipDeepLink: String) {
 
     print("sendTracking", notification.object as Any)
 
