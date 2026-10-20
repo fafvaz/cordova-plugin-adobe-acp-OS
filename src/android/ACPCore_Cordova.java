@@ -563,6 +563,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
         if (data != null) {
             Log.d(ACP_CORE_PUSH_TAG_LOG, "newIntent before handleMessage");
             ACPFirebaseMessagingService.handleMessage(data, true);
+            wasHandled = true;
             Log.d(ACP_CORE_PUSH_TAG_LOG, "newIntent after handleMessage");
         }
     }
@@ -656,6 +657,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
         Log.d(ACP_CORE_PUSH_TAG_LOG, data != null ? data.toString() : "data empty");
         if (data != null) {
             ACPFirebaseMessagingService.handleMessage(data, true);
+            wasHandled = true;
         }
 
     }

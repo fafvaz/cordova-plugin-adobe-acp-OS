@@ -100,16 +100,28 @@
              }
              try {
  
-                 String deviceToken = args.getString(0);
-                 String valueTypeId = args.getString(1);
-                 final HashMap<String, String> data = getStringMapFromJSON(args.getJSONObject(2));
-                 data.put(typeId, valueTypeId);
-                 MobileCore.setPushIdentifier(deviceToken);
+                 String deviceToken = args.optString(0, "");
+                 String valueTypeId = args.optString(1, "");
+                 JSONObject ctxJson = args.optJSONObject(2);
+                 if (ctxJson == null) {
+                     String s = args.optString(2, "");
+                     try { ctxJson = new JSONObject(s.isEmpty() ? "{}" : s); } catch (Exception e) { ctxJson = new JSONObject(); }
+                 }
+                 final HashMap<String, String> data = getStringMapFromJSON(ctxJson);
+                 if (typeId != null && !typeId.isEmpty() && valueTypeId != null && !valueTypeId.isEmpty()) {
+                     data.put(typeId, valueTypeId);
+                 }
+                 if (valueTypeId != null && !valueTypeId.isEmpty()) {
+                     data.put("emailaddress", valueTypeId);
+                 }
+                 if (deviceToken != null && !deviceToken.trim().isEmpty()) {
+                     MobileCore.setPushIdentifier(deviceToken.trim());
+                 }
                  MobileCore.collectPii(data);
                  callbackContext.success();
  
                  return;
-             } catch (JSONException e) {
+             } catch (Exception e) {
                  callbackContext.error("Error while parsing argument, Error " + e.getLocalizedMessage());
                  return;
              }
@@ -129,7 +141,7 @@
              String n = (String) it.next();
              try {
                  map.put(n, data.getString(n));
-             } catch (JSONException e) {
+             } catch (Exception e) {
                  e.printStackTrace();
              }
          }
