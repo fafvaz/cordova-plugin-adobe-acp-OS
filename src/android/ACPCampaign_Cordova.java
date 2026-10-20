@@ -28,7 +28,6 @@
  import com.adobe.marketing.mobile.MobileCore;
  import com.adobe.marketing.mobile.Signal;
  import com.adobe.marketing.mobile.UserProfile;
- import com.google.firebase.messaging.FirebaseMessaging;
  
  import java.util.HashMap;
  import java.util.Iterator;
@@ -39,6 +38,7 @@
   */
  public class ACPCampaign_Cordova extends CordovaPlugin {
  
+      private String typeId;
  
      @Override
      public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
@@ -47,14 +47,10 @@
              extensionVersion(callbackContext);
              return true;       
          }
-         else if ("setPushIdentifier".equals(action) || "loadAdobe".equals(action)){
+         else if ("setPushIdentifier".equals(action)){
              setPushIdentifier(args, callbackContext);
              return true;
          }
-        else if ("trackPush".equals(action)){
-            trackPush(args, callbackContext);
-            return true;
-        }
  
          return false;
      }
@@ -80,7 +76,7 @@
          // Read the Type Id from config.xml preferences (plugin variable TYPE_ID).
         // MABS 12 (cordova-android 13) ignores plugin config-file injections targeting
         // res/values/*strings*.xml, so the "TypeId" string resource may not exist.
-        String typeId = webView.getPreferences().getString("TYPE_ID", null);
+        typeId = webView.getPreferences().getString("TYPE_ID", null);
         if (typeId == null || typeId.isEmpty()) {
             // Plugin variables are persisted as <variable> elements in the packaged
             // res/xml/config.xml; CordovaPreferences cannot see them, so parse them.
@@ -97,172 +93,32 @@
             Log.e("ACP_CORE", "Type Id not found: set the TYPE_ID plugin variable in the Extensibility Configurations.");
         }
  
-        // typeId must be effectively final for use inside the lambda below.
-        // Keeping it a local variable (not a member field) prevents races on
-        // rapid repeated setPushIdentifier calls — each call captures its own value.
-        final String typeIdFinal = typeId;
-
          cordova.getThreadPool().execute(() -> {
-             if (args == null || args.length() < 1 || args.length() > 3) {
-                 callbackContext.error("Invalid argument count, expected 1 to 3 arguments.");
+             if (args == null || args.length() != 3) {
+                 callbackContext.error("Invalid argument count, expected length 3.");
                  return;
              }
-                 try {
-                     // ==== token + email: restored to the flow of commit 80fd656 ====
-                     // (the version verified to deliver BOTH the push token and the email
-                     // to Adobe). 80fd656 read token = args[0], email = args[1],
-                     // contextData = args[2] and then ALWAYS called setPushIdentifier AND
-                     // collectPii. No early return may appear here: the later
-                     // "Device token must not be empty" guard aborted the whole call
-                     // before any SDK call, so an empty/missing token silently dropped
-                     // the email as well - nothing reached Adobe on either channel.
-                     // Tolerant reads (isNull/optString/optJSONObject) instead of
-                     // getString: a JSON null token/Email must not throw either.
-                     String deviceToken = args.isNull(0) ? null : args.optString(0, null);
-
-                     // optJSONObject: a null / non-object 3rd argument must not throw.
-                     final HashMap<String, String> data = new HashMap<String, String>();
-                     JSONObject contextData = args.optJSONObject(2);
-                     if (contextData != null) {
-                         data.putAll(getStringMapFromJSON(contextData));
-                     }
-                     if (args.length() >= 2 && !args.isNull(1)) {
-                         String email = args.optString(1, null);
-                         if (email != null && !email.trim().isEmpty()) {
-                             // Canonical, case-sensitive key (matches iOS).
-                             data.put("emailaddress", email);
-                             // Also send under the configured TYPE_ID key (e.g.
-                             // "fiscalnumber") - this is the key the working commit
-                             // 80fd656 used (data.put(typeId, valueTypeId)), kept so
-                             // attributes populated before the key rename refresh.
-                             if (typeIdFinal != null && !typeIdFinal.isEmpty() && !"emailaddress".equals(typeIdFinal)) {
-                                 data.put(typeIdFinal, email);
-                             }
-                         }
-                     }
-                     // Unconditional, exactly like 80fd656: these must never be skipped
-                     // because of argument validation. An empty token only skips the push
-                     // registration itself; the PII (email) is always delivered.
-                     boolean tokenSent = false;
-                     if (deviceToken != null && !deviceToken.trim().isEmpty()) {
-                         MobileCore.setPushIdentifier(deviceToken.trim());
-                         tokenSent = true;
-                     } else {
-                         // OutSystems/MABS apps invoke plugin actions through generated
-                         // cordova.exec wrappers and never require this module's www JS,
-                         // so the ACPCampaign.js deviceready token auto-forward never runs
-                         // and the app ends up passing an empty token. Fetch the CURRENT
-                         // FCM token natively instead: firebase-messaging is a declared
-                         // dependency of this plugin (ACP_Cordova.gradle), so no JS and no
-                         // Firebase Cordova plugin are needed for this.
-                         Log.i("ACP_CAMPAIGN", "setPushIdentifier: token argument is empty - "
-                                 + "fetching the current FCM token natively.");
-                         sendCurrentFcmTokenToAdobe();
-                     }
-                     if (!data.isEmpty()) {
-                         MobileCore.collectPii(data);
-                     }
-
-                     Log.i("ACP_CAMPAIGN", "setPushIdentifier: sent token=" + tokenSent
-                             + ", pii keys=" + data.keySet());
-                     callbackContext.success();
-
-                     return;
-                 } catch (Exception e) {
-                     // catch (Exception): the tolerant reads above never throw JSONException,
-                     // so catching JSONException here would be a compile error ("exception
-                     // ... is never thrown in body of corresponding try statement") -
-                     // same fix as trackPush in ca9b5e6.
-                     callbackContext.error("Error while parsing argument, Error " + e.getLocalizedMessage());
-                     return;
-                 }
- 
-         });
- 
-     }
-
-     /**
-      * Fetches the CURRENT FCM token and registers it with the Adobe SDK.
-      * Used when the JavaScript caller could not supply a token (typical for
-      * OutSystems MABS apps, which never load the plugin's www JS module and
-      * therefore never run the deviceready token auto-forward in ACPCampaign.js).
-      * Never throws: every failure path is logged under ACP_CAMPAIGN, so the
-      * email/PII delivery above is always unaffected.
-      */
-     private void sendCurrentFcmTokenToAdobe() {
-         try {
-             FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
-                 try {
-                     if (!task.isSuccessful()) {
-                         Exception fetchError = task.getException();
-                         Log.e("ACP_CAMPAIGN", "setPushIdentifier: native FCM token fetch failed: "
-                                 + (fetchError != null ? fetchError.getMessage() : "unknown error"));
-                         return;
-                     }
-                     String fetchedToken = task.getResult();
-                     if (fetchedToken != null && !fetchedToken.trim().isEmpty()) {
-                         MobileCore.setPushIdentifier(fetchedToken.trim());
-                         Log.i("ACP_CAMPAIGN", "setPushIdentifier: natively fetched FCM token sent to Adobe.");
-                     } else {
-                         Log.e("ACP_CAMPAIGN", "setPushIdentifier: native FCM token fetch returned an empty token.");
-                     }
-                 } catch (Exception e) {
-                     Log.e("ACP_CAMPAIGN", "setPushIdentifier: error while sending the natively fetched FCM token: " + e.getMessage());
-                 }
-             });
-         } catch (Throwable t) {
-             // Thrown when FirebaseApp is not initialized (google-services.json
-             // missing or the Firebase plugin not installed in the app).
-             Log.e("ACP_CAMPAIGN", "setPushIdentifier: FirebaseMessaging unavailable, cannot fetch token natively: " + t.getMessage());
-         }
-     }
-
- 
-     // ===============================================================
-
-     // ===============================================================
-     // Push Tracking
-     // ===============================================================
-
-     private void trackPush(final JSONArray args, final CallbackContext callbackContext) {
-
-         cordova.getThreadPool().execute(() -> {
              try {
-                 // optString never throws JSONException (it returns the fallback instead),
-                 // so the catch below catches Exception - catching JSONException here would
-                 // be a compile error ("exception ... is never thrown in body of
-                 // corresponding try statement").
-                 String deliveryId = args.optString(0, null);
-                 String broadlogId = args.optString(1, null);
-                 String action = args.optString(2, null);
-
-                 if (deliveryId == null || deliveryId.trim().isEmpty()
-                         || broadlogId == null || broadlogId.trim().isEmpty()
-                         || action == null || action.trim().isEmpty()) {
-                     callbackContext.error("trackPush requires deliveryId, broadlogId, and action");
-                     return;
-                 }
-
-                 // MobileCore.collectMessageInfo takes Map<String, Object> (per the AEPCore
-                 // API reference), so this map MUST stay Object-typed: HashMap<String, String>
-                 // is not a Map<String, Object> and does not compile.
-                 final HashMap<String, Object> contextData = new HashMap<String, Object>();
-                 contextData.put("deliveryId", deliveryId);
-                 contextData.put("broadlogId", broadlogId);
-                 contextData.put("action", action);
-
-                 MobileCore.collectMessageInfo(contextData);
-
-                 Log.i("ACP_CAMPAIGN", "trackPush: deliveryId=" + deliveryId + ", broadlogId=" + broadlogId + ", action=" + action);
+ 
+                 String deviceToken = args.getString(0);
+                 String valueTypeId = args.getString(1);
+                 final HashMap<String, String> data = getStringMapFromJSON(args.getJSONObject(2));
+                 data.put(typeId, valueTypeId);
+                 MobileCore.setPushIdentifier(deviceToken);
+                 MobileCore.collectPii(data);
                  callbackContext.success();
-
-             } catch (Exception e) {
+ 
+                 return;
+             } catch (JSONException e) {
                  callbackContext.error("Error while parsing argument, Error " + e.getLocalizedMessage());
+                 return;
              }
-
+ 
          });
+ 
      }
-
+ 
+     // ===============================================================
      // Helpers
      // ===============================================================
      private HashMap<String, String> getStringMapFromJSON(JSONObject data) {
