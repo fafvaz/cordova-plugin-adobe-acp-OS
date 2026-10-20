@@ -50,6 +50,10 @@
              setPushIdentifier(args, callbackContext);
              return true;
          }
+        else if ("trackPush".equals(action)){
+            trackPush(args, callbackContext);
+            return true;
+        }
  
          return false;
      }
@@ -147,6 +151,41 @@
      }
  
      // ===============================================================
+
+     // ===============================================================
+     // Push Tracking
+     // ===============================================================
+
+     private void trackPush(final JSONArray args, final CallbackContext callbackContext) {
+
+         cordova.getThreadPool().execute(() -> {
+             try {
+                 String deliveryId = args.optString(0, null);
+                 String broadlogId = args.optString(1, null);
+                 String action = args.optString(2, null);
+
+                 if (deliveryId == null || broadlogId == null || action == null) {
+                     callbackContext.error("trackPush requires deliveryId, broadlogId, and action");
+                     return;
+                 }
+
+                 final HashMap<String, String> contextData = new HashMap<String, String>();
+                 contextData.put("deliveryId", deliveryId);
+                 contextData.put("broadlogId", broadlogId);
+                 contextData.put("action", action);
+
+                 MobileCore.collectMessageInfo(contextData);
+
+                 Log.i("ACP_CAMPAIGN", "trackPush: deliveryId=" + deliveryId + ", broadlogId=" + broadlogId + ", action=" + action);
+                 callbackContext.success();
+
+             } catch (JSONException e) {
+                 callbackContext.error("Error while parsing argument, Error " + e.getLocalizedMessage());
+             }
+
+         });
+     }
+
      // Helpers
      // ===============================================================
      private HashMap<String, String> getStringMapFromJSON(JSONObject data) {
