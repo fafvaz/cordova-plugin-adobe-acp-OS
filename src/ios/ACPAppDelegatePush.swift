@@ -133,7 +133,7 @@ import UserNotifications
   }
     
     
-    static func handleCallback(_ payload: [String: Any] ) {
+  func handleCallback(_ payload: [String: Any] ) {
         DispatchQueue.main.async{
             ACPCore_Cordova.instance.subscribe(payload)
         }
