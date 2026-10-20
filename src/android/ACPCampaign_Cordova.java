@@ -160,16 +160,25 @@
 
          cordova.getThreadPool().execute(() -> {
              try {
+                 // optString never throws JSONException (it returns the fallback instead),
+                 // so the catch below catches Exception - catching JSONException here would
+                 // be a compile error ("exception ... is never thrown in body of
+                 // corresponding try statement").
                  String deliveryId = args.optString(0, null);
                  String broadlogId = args.optString(1, null);
                  String action = args.optString(2, null);
 
-                 if (deliveryId == null || broadlogId == null || action == null) {
+                 if (deliveryId == null || deliveryId.trim().isEmpty()
+                         || broadlogId == null || broadlogId.trim().isEmpty()
+                         || action == null || action.trim().isEmpty()) {
                      callbackContext.error("trackPush requires deliveryId, broadlogId, and action");
                      return;
                  }
 
-                 final HashMap<String, String> contextData = new HashMap<String, String>();
+                 // MobileCore.collectMessageInfo takes Map<String, Object> (per the AEPCore
+                 // API reference), so this map MUST stay Object-typed: HashMap<String, String>
+                 // is not a Map<String, Object> and does not compile.
+                 final HashMap<String, Object> contextData = new HashMap<String, Object>();
                  contextData.put("deliveryId", deliveryId);
                  contextData.put("broadlogId", broadlogId);
                  contextData.put("action", action);
@@ -179,7 +188,7 @@
                  Log.i("ACP_CAMPAIGN", "trackPush: deliveryId=" + deliveryId + ", broadlogId=" + broadlogId + ", action=" + action);
                  callbackContext.success();
 
-             } catch (JSONException e) {
+             } catch (Exception e) {
                  callbackContext.error("Error while parsing argument, Error " + e.getLocalizedMessage());
              }
 
