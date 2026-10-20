@@ -28,6 +28,7 @@
  import com.adobe.marketing.mobile.MobileCore;
  import com.adobe.marketing.mobile.Signal;
  import com.adobe.marketing.mobile.UserProfile;
+ import com.google.firebase.messaging.FirebaseMessaging;
  
  import java.util.HashMap;
  import java.util.Iterator;
@@ -146,6 +147,17 @@
                      if (deviceToken != null && !deviceToken.trim().isEmpty()) {
                          MobileCore.setPushIdentifier(deviceToken.trim());
                          tokenSent = true;
+                     } else {
+                         // OutSystems/MABS apps invoke plugin actions through generated
+                         // cordova.exec wrappers and never require this module's www JS,
+                         // so the ACPCampaign.js deviceready token auto-forward never runs
+                         // and the app ends up passing an empty token. Fetch the CURRENT
+                         // FCM token natively instead: firebase-messaging is a declared
+                         // dependency of this plugin (ACP_Cordova.gradle), so no JS and no
+                         // Firebase Cordova plugin are needed for this.
+                         Log.i("ACP_CAMPAIGN", "setPushIdentifier: token argument is empty - "
+                                 + "fetching the current FCM token natively.");
+                         sendCurrentFcmTokenToAdobe();
                      }
                      if (!data.isEmpty()) {
                          MobileCore.collectPii(data);
@@ -168,6 +180,43 @@
          });
  
      }
+
+     /**
+      * Fetches the CURRENT FCM token and registers it with the Adobe SDK.
+      * Used when the JavaScript caller could not supply a token (typical for
+      * OutSystems MABS apps, which never load the plugin's www JS module and
+      * therefore never run the deviceready token auto-forward in ACPCampaign.js).
+      * Never throws: every failure path is logged under ACP_CAMPAIGN, so the
+      * email/PII delivery above is always unaffected.
+      */
+     private void sendCurrentFcmTokenToAdobe() {
+         try {
+             FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+                 try {
+                     if (!task.isSuccessful()) {
+                         Exception fetchError = task.getException();
+                         Log.e("ACP_CAMPAIGN", "setPushIdentifier: native FCM token fetch failed: "
+                                 + (fetchError != null ? fetchError.getMessage() : "unknown error"));
+                         return;
+                     }
+                     String fetchedToken = task.getResult();
+                     if (fetchedToken != null && !fetchedToken.trim().isEmpty()) {
+                         MobileCore.setPushIdentifier(fetchedToken.trim());
+                         Log.i("ACP_CAMPAIGN", "setPushIdentifier: natively fetched FCM token sent to Adobe.");
+                     } else {
+                         Log.e("ACP_CAMPAIGN", "setPushIdentifier: native FCM token fetch returned an empty token.");
+                     }
+                 } catch (Exception e) {
+                     Log.e("ACP_CAMPAIGN", "setPushIdentifier: error while sending the natively fetched FCM token: " + e.getMessage());
+                 }
+             });
+         } catch (Throwable t) {
+             // Thrown when FirebaseApp is not initialized (google-services.json
+             // missing or the Firebase plugin not installed in the app).
+             Log.e("ACP_CAMPAIGN", "setPushIdentifier: FirebaseMessaging unavailable, cannot fetch token natively: " + t.getMessage());
+         }
+     }
+
  
      // ===============================================================
 
