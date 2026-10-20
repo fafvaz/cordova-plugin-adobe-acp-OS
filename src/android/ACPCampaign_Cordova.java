@@ -102,40 +102,45 @@
                  callbackContext.error("Invalid argument count, expected 1 to 3 arguments.");
                  return;
              }
-                 String deviceToken = args.getString(0);
-                 if (deviceToken.trim().isEmpty()) {
-                     callbackContext.error("Device token must not be empty.");
-                     return;
-                 }
+                 try {
+                     String deviceToken = args.getString(0);
+                     if (deviceToken.trim().isEmpty()) {
+                         callbackContext.error("Device token must not be empty.");
+                         return;
+                     }
 
-                 // optJSONObject: a null / non-object 3rd argument must not throw.
-                 final HashMap<String, String> data = new HashMap<String, String>();
-                 JSONObject contextData = args.optJSONObject(2);
-                 if (contextData != null) {
-                     data.putAll(getStringMapFromJSON(contextData));
-                 }
-                 if (args.length() >= 2 && !args.isNull(1)) {
-                     String email = args.optString(1, null);
-                     if (email != null && !email.trim().isEmpty()) {
-                         // Canonical, case-sensitive key (matches iOS).
-                         data.put("emailaddress", email);
-                         // Also send under the configured TYPE_ID key (e.g.
-                         // "fiscalnumber") so attributes populated before the
-                         // key rename keep being refreshed.
-                         if (typeIdFinal != null && !typeIdFinal.isEmpty() && !"emailaddress".equals(typeIdFinal)) {
-                             data.put(typeIdFinal, email);
+                     // optJSONObject: a null / non-object 3rd argument must not throw.
+                     final HashMap<String, String> data = new HashMap<String, String>();
+                     JSONObject contextData = args.optJSONObject(2);
+                     if (contextData != null) {
+                         data.putAll(getStringMapFromJSON(contextData));
+                     }
+                     if (args.length() >= 2 && !args.isNull(1)) {
+                         String email = args.optString(1, null);
+                         if (email != null && !email.trim().isEmpty()) {
+                             // Canonical, case-sensitive key (matches iOS).
+                             data.put("emailaddress", email);
+                             // Also send under the configured TYPE_ID key (e.g.
+                             // "fiscalnumber") so attributes populated before the
+                             // key rename keep being refreshed.
+                             if (typeIdFinal != null && !typeIdFinal.isEmpty() && !"emailaddress".equals(typeIdFinal)) {
+                                 data.put(typeIdFinal, email);
+                             }
                          }
                      }
-                 }
-                 MobileCore.setPushIdentifier(deviceToken.trim());
-                 if (!data.isEmpty()) {
-                     MobileCore.collectPii(data);
-                 }
+                     MobileCore.setPushIdentifier(deviceToken.trim());
+                     if (!data.isEmpty()) {
+                         MobileCore.collectPii(data);
+                     }
 
-                 Log.i("ACP_CAMPAIGN", "setPushIdentifier: sent token=true, pii keys=" + data.keySet());
-                 callbackContext.success();
- 
-                 return;
+                     Log.i("ACP_CAMPAIGN", "setPushIdentifier: sent token=true, pii keys=" + data.keySet());
+                     callbackContext.success();
+
+                     return;
+                 } catch (JSONException e) {
+                     callbackContext.error("Error while parsing argument, Error " + e.getLocalizedMessage());
+                     return;
+                 }
  
          });
  
