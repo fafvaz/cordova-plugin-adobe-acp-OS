@@ -46,7 +46,7 @@ var ACPCampaign = (function () {
       return;
     }
 
-    if (contextData && !acpIsObject(contextData)) {
+    if (contextData && !isObject(contextData)) {
       contextData = {};
     }
 
@@ -67,25 +67,48 @@ var ACPCampaign = (function () {
       }
 
       var firebasePlugin = window.FirebasePlugin;
-      if (!firebasePlugin || !isFunction(firebasePlugin.onTokenRefresh)) {
+      if (!firebasePlugin || (!isFunction(firebasePlugin.getToken) && !isFunction(firebasePlugin.onTokenRefresh))) {
         firebasePlugin = window.fp;
       }
-      if (!firebasePlugin || !isFunction(firebasePlugin.onTokenRefresh)) {
+      if (!firebasePlugin || (!isFunction(firebasePlugin.getToken) && !isFunction(firebasePlugin.onTokenRefresh))) {
         console.warn('ACPCampaign: Android Firebase token forwarding is unavailable; install the Firebase plugin or call setPushIdentifier directly.');
         return;
       }
 
-      firebasePlugin.onTokenRefresh(function (token) {
+      var forwardToken = function (token) {
         if (!isString(token) || !token.trim()) {
           console.error('ACPCampaign: Firebase returned an empty push token.');
           return;
         }
         exec(null, function (error) {
           console.error('ACPCampaign: failed to forward the Firebase token to Adobe.', error);
-        }, PLUGIN_NAME, 'setPushIdentifier', [token]);
-      }, function (error) {
-        console.error('ACPCampaign: failed to subscribe to Firebase token updates.', error);
-      });
+        }, PLUGIN_NAME, 'setPushIdentifier', [token.trim()]);
+      };
+
+      // Forward the CURRENT token right away: onTokenRefresh only fires when the
+      // token changes, so subscribing alone never delivers an existing token.
+      if (isFunction(firebasePlugin.getToken)) {
+        try {
+          var tokenResult = firebasePlugin.getToken(forwardToken, function (error) {
+            console.warn('ACPCampaign: failed to fetch the Firebase token.', error);
+          });
+          // Some Firebase plugins expose getToken() as a Promise instead.
+          if (tokenResult && typeof tokenResult.then === 'function') {
+            tokenResult.then(forwardToken).catch(function (error) {
+              console.warn('ACPCampaign: failed to fetch the Firebase token.', error);
+            });
+          }
+        } catch (e) {
+          console.warn('ACPCampaign: getToken threw an error.', e);
+        }
+      }
+
+      // Also forward later token refreshes.
+      if (isFunction(firebasePlugin.onTokenRefresh)) {
+        firebasePlugin.onTokenRefresh(forwardToken, function (error) {
+          console.error('ACPCampaign: failed to subscribe to Firebase token updates.', error);
+        });
+      }
     }, false);
   }
 
@@ -99,6 +122,10 @@ var ACPCampaign = (function () {
 // ===========================================================================
 function isString(value) {
   return typeof value === 'string' || value instanceof String;
+}
+
+function isObject(value) {
+  return value && typeof value === 'object' && value.constructor === Object;
 }
 
 function printNotAString(paramName, functionName) {

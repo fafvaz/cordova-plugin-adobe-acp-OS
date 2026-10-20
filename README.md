@@ -273,7 +273,7 @@ On iOS, provide the push token and email address explicitly:
 ```js
 ACPCampaign.setPushIdentifier(deviceToken, emailAddress, {}, successCallback, errorCallback);
 ```
-The email is collected by Adobe under the exact, case-sensitive `emailaddress` key on both platforms. Email collection does not depend on the user granting notification permission; push registration still reports a permission error when permission is denied.
+The email is collected by Adobe under the exact, case-sensitive `emailaddress` key on both platforms. On Android the email is also mirrored under the configured `TYPE_ID` key for backwards compatibility. Email collection does not depend on the user granting notification permission — nor on the push token being available yet (an empty/missing token only skips the push registration); push registration still reports a permission error when permission is denied.
 
 ### [Lifecycle](https://aep-sdks.gitbook.io/docs/using-mobile-extensions/mobile-core/lifecycle)
 > Note: We recommend implementing Lifecycle in native [Android and iOS code](https://aep-sdks.gitbook.io/docs/using-mobile-extensions/mobile-core/lifecycle).

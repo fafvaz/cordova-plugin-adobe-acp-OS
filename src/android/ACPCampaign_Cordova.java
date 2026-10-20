@@ -100,24 +100,51 @@
              }
              try {
  
-                 String deviceToken = args.getString(0);
-                 if (deviceToken.trim().isEmpty()) {
-                     callbackContext.error("Device token must not be empty.");
-                     return;
+                 // An empty/missing token must NOT abort the call: the app may call
+                 // before Firebase has produced a token. Only the push registration
+                 // is skipped; the PII below is still delivered (regression fix: the
+                 // previous hard return on an empty token silently dropped the email.
+                 String deviceToken = args.isNull(0) ? null : args.optString(0, null);
+                 boolean tokenSent = false;
+                 if (deviceToken != null && !deviceToken.trim().isEmpty()) {
+                     MobileCore.setPushIdentifier(deviceToken.trim());
+                     tokenSent = true;
+                 } else {
+                     Log.w("ACP_CAMPAIGN", "setPushIdentifier: device token missing/empty - "
+                             + "skipping push registration, still collecting PII.");
                  }
 
-                 // Automatic Firebase forwarding sends only the device token.
-                 final HashMap<String, String> data = args.length() == 3 && !args.isNull(2)
-                         ? getStringMapFromJSON(args.getJSONObject(2))
-                         : new HashMap<String, String>();
-                 if (args.length() >= 2 && !args.isNull(1)) {
-                     data.put("emailaddress", args.getString(1));
+                 // optJSONObject: a null / non-object 3rd argument must not throw.
+                 final HashMap<String, String> data = new HashMap<String, String>();
+                 JSONObject contextData = args.optJSONObject(2);
+                 if (contextData != null) {
+                     data.putAll(getStringMapFromJSON(contextData));
                  }
-                 MobileCore.setPushIdentifier(deviceToken);
-                 if (!data.isEmpty()) {
+                 if (args.length() >= 2 && !args.isNull(1)) {
+                     String email = args.optString(1, null);
+                     if (email != null && !email.trim().isEmpty()) {
+                         // Canonical, case-sensitive key (matches iOS).
+                         data.put("emailaddress", email);
+                         // Also send under the configured TYPE_ID key (e.g.
+                         // "fiscalnumber") so attributes populated before the
+                         // key rename keep being refreshed.
+                         if (typeId != null && !typeId.isEmpty() && !"emailaddress".equals(typeId)) {
+                             data.put(typeId, email);
+                         }
+                     }
+                 }
+                 boolean piiSent = !data.isEmpty();
+                 if (piiSent) {
                      MobileCore.collectPii(data);
                  }
-                 callbackContext.success();
+
+                 if (tokenSent || piiSent) {
+                     Log.i("ACP_CAMPAIGN", "setPushIdentifier: sent token=" + tokenSent
+                             + ", pii keys=" + data.keySet());
+                     callbackContext.success();
+                 } else {
+                     callbackContext.error("Nothing to send: device token and PII are both empty.");
+                 }
  
                  return;
              } catch (JSONException e) {
