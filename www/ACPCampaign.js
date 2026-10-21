@@ -81,10 +81,11 @@ var ACPCampaign = (function () {
           console.error('ACPCampaign: Firebase returned an empty push token.');
           return;
         }
-        // Trim the token and forward it with TYPE_ID and empty context data
+        // Trim the token and forward it with TYPE_ID and empty context data for type,
+        // but pass undefined for email address so the native code doesn't hardcode fiscalnumber as email
         exec(null, function (error) {
           console.error('ACPCampaign: failed to forward the Firebase token to Adobe.', error);
-        }, PLUGIN_NAME, 'setPushIdentifier', [token.trim(), TYPE_ID, {}]);
+        }, PLUGIN_NAME, 'setPushIdentifier', [token.trim(), undefined, {}]);
       };
 
       // Forward the CURRENT token right away: onTokenRefresh only fires when the
@@ -130,9 +131,6 @@ function isObject(value) {
   return value && typeof value === 'object' && value.constructor === Object;
 }
 
-function printNotAString(paramName, functionName) {
-  console.log("Ignoring call to '" + functionName + "'. The '" + paramName + "' parameter is required to be a String.");
-}
 
 function isFunction(value) {
   return typeof value === 'function';
