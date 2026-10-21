@@ -41,7 +41,11 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
     // Verifica se a notificação push contém os dados necessários para o rastreamento
     if (deliveryId != null && messageId != null && acsDeliveryTracking.equals("on")) {
       handleTracking(data, "7", false);
-      return true;
+      // Return false so the Firebase plugin still displays the notification.
+      // Returning true here suppresses the Firebase plugin's notification handling,
+      // which means the push is never shown while the app process is alive
+      // (e.g. app in background) - it only shows when the process is dead.
+      return false;
     }
 
     Log.d(ACP_CORE_PUSH_TAG_LOG, "end onMessageReceived");
