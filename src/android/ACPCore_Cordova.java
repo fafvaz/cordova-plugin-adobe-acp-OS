@@ -655,6 +655,11 @@ public class ACPCore_Cordova extends CordovaPlugin {
 
         Log.d(ACP_CORE_PUSH_TAG_LOG, "public void pluginInitialize()");
         Log.d(ACP_CORE_PUSH_TAG_LOG, data != null ? data.toString() : "data empty");
+        
+        // Set privacy status to OPT_IN so the SDK doesn't hold network requests
+        // This mirrors iOS behavior where setPrivacyStatus(.optedIn) is called after registering extensions
+        MobileCore.setPrivacyStatus(MobilePrivacyStatus.OPT_IN);
+        
         if (data != null) {
             ACPFirebaseMessagingService.handleMessage(data, true);
             wasHandled = true;

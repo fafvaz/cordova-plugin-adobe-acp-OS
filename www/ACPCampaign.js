@@ -81,8 +81,8 @@ var ACPCampaign = (function () {
           console.error('ACPCampaign: Firebase returned an empty push token.');
           return;
         }
-        // Trim the token and forward it with TYPE_ID and empty context data for type,
-        // but pass undefined for email address so the native code doesn't hardcode fiscalnumber as email
+        // Trim the token and forward it with empty context data.
+// Passing undefined for email address so the native code doesn't hardcode fiscalnumber as email.
         exec(null, function (error) {
           console.error('ACPCampaign: failed to forward the Firebase token to Adobe.', error);
         }, PLUGIN_NAME, 'setPushIdentifier', [token.trim(), undefined, {}]);
