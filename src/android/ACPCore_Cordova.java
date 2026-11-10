@@ -434,8 +434,7 @@ public class ACPCore_Cordova extends CordovaPlugin {
             return null;
         }
 
-        Log.i(ACP_CORE_PUSH_TAG_LOG, "Adobe APP_ID resolved from " + source +
-                " (value omitted; length=" + value.length() + ").");
+        Log.i(ACP_CORE_PUSH_TAG_LOG, "Adobe APP_ID resolved from " + source + ": " + value);
         return value;
     }
 
