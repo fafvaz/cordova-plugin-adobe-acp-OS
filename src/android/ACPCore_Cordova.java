@@ -363,7 +363,6 @@ public class ACPCore_Cordova extends CordovaPlugin {
             try {
                 final HashMap<String, Object> newConfig = getObjectMapFromJSON(args.getJSONObject(0));
 
-                Log.i(ACP_CORE_PUSH_TAG_LOG, "Applying runtime configuration keys: " + newConfig.keySet());
                 MobileCore.updateConfiguration(newConfig);
                 callbackContext.success();
             } catch (final Exception ex) {
@@ -409,14 +408,11 @@ public class ACPCore_Cordova extends CordovaPlugin {
     private String resolveAppId() {
         // 1. Real config.xml <preference> (readable by CordovaPreferences).
         String value = webView.getPreferences().getString("APP_ID", null);
-        String source = "Cordova preference";
-
         // 2. <variable name="APP_ID"> persisted by Cordova inside <plugin name="cordova-acp">
         //    in the packaged res/xml/config.xml. CordovaPreferences ignores <variable>
         //    elements, so parse them manually.
         if (value == null || value.isEmpty()) {
             value = readVariableFromPackagedConfig(cordova.getActivity().getApplicationContext(), "cordova-acp", "APP_ID");
-            source = "packaged Cordova plugin variable";
         }
 
         // 3. Legacy "AppId" string resource (MABS 11 only; dropped on MABS 12+ because
@@ -425,17 +421,10 @@ public class ACPCore_Cordova extends CordovaPlugin {
             int appIdResId = cordova.getActivity().getResources().getIdentifier("AppId", "string", cordova.getActivity().getPackageName());
             if (appIdResId != 0) {
                 value = cordova.getActivity().getString(appIdResId);
-                source = "legacy AppId string resource";
             }
         }
 
-        if (value == null || value.isEmpty()) {
-            Log.e(ACP_CORE_PUSH_TAG_LOG, "Adobe APP_ID was not found in Cordova preferences, packaged plugin variables, or legacy resources.");
-            return null;
-        }
-
-        Log.i(ACP_CORE_PUSH_TAG_LOG, "Adobe APP_ID resolved from " + source + ": " + value);
-        return value;
+        return (value != null && !value.isEmpty()) ? value : null;
     }
 
     /**
@@ -584,8 +573,6 @@ public class ACPCore_Cordova extends CordovaPlugin {
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
-        Log.i(ACP_CORE_PUSH_TAG_LOG, "Initializing Adobe SDK for package " +
-                this.cordova.getActivity().getPackageName() + ".");
         MobileCore.setApplication(this.cordova.getActivity().getApplication());
         MobileCore.setLogLevel(LoggingMode.VERBOSE);
         new ACPFirebaseMessagingService();
@@ -601,15 +588,16 @@ public class ACPCore_Cordova extends CordovaPlugin {
         //     the packaged config.xml ourselves.
         //  3. Legacy "AppId" string resource (works on MABS 11; dropped on MABS 12+).
         appId = resolveAppId();
+        Log.i(ACP_CORE_PUSH_TAG_LOG, "Adobe APP_ID: " + appId);
+        if (appId == null || appId.isEmpty()) {
+            Log.e(ACP_CORE_PUSH_TAG_LOG, "Adobe App Id not found: set the APP_ID plugin variable " +
+                    "in the Extensibility Configurations. Adobe AEP SDK will NOT be configured.");
+        }
 
         try {
 
             if (appId != null && !appId.isEmpty()) {
-                Log.i(ACP_CORE_PUSH_TAG_LOG, "Calling MobileCore.configureWithAppID; APP_ID value is omitted from logs.");
                 MobileCore.configureWithAppID(appId);
-                Log.i(ACP_CORE_PUSH_TAG_LOG, "MobileCore.configureWithAppID returned.");
-            } else {
-                Log.e(ACP_CORE_PUSH_TAG_LOG, "Adobe AEP SDK is not configured because APP_ID is missing.");
             }
             List<Class<? extends Extension>> extensions = new ArrayList<>();
             extensions.add(Campaign.EXTENSION);
@@ -622,17 +610,14 @@ public class ACPCore_Cordova extends CordovaPlugin {
             extensions.add(Signal.EXTENSION);
             extensions.add(Assurance.EXTENSION);
 
-            Log.i(ACP_CORE_PUSH_TAG_LOG, "Registering " + extensions.size() + " Adobe extensions.");
             MobileCore.registerExtensions(extensions, o -> {
-                Log.i(ACP_CORE_PUSH_TAG_LOG, "Adobe extension registration callback completed.");
+                Log.d("ACP_CORE", "AEP Mobile SDK is initialized");
             });
 
-            Log.i(ACP_CORE_PUSH_TAG_LOG, "Registering Mobile Services extension.");
             MobileServices.registerExtension();
-            Log.i(ACP_CORE_PUSH_TAG_LOG, "Mobile Services extension registration returned.");
 
         } catch (Exception e) {
-            Log.e(ACP_CORE_PUSH_TAG_LOG, "Adobe SDK initialization or extension registration failed.", e);
+            Log.d("ACP_CORE", "Erro ao inicializar o SDK");
         }
 
         initTime = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date());
