@@ -16,9 +16,9 @@ public class NotificationDismissedReceiver extends BroadcastReceiver {
         Bundle data = intent.getExtras();
 
         if(data != null) {
-            String deliveryId = data.getString("_dId");
-            String messageId = data.getString("_mId");
-            String acsDeliveryTracking = data.getString("_acsDeliveryTracking");
+            String deliveryId = ACPFirebaseMessagingService.getStringValue(data, "_dId");
+            String messageId = ACPFirebaseMessagingService.getStringValue(data, "_mId");
+            String acsDeliveryTracking = ACPFirebaseMessagingService.getStringValue(data, "_acsDeliveryTracking");
 
             if( acsDeliveryTracking == null ) {
                 acsDeliveryTracking = "on";

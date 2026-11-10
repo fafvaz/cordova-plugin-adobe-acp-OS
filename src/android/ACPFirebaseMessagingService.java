@@ -61,7 +61,7 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
       Set<String> keys = bundle.keySet();
 
       for (String key : keys) {
-        data.put(key, bundle.getString(key, null));
+        data.put(key, getStringValue(bundle, key));
       }
 
       data.put("FromPushNotification", fromBackground ? "true" : "false");
@@ -78,6 +78,11 @@ public class ACPFirebaseMessagingService extends FirebasePluginMessageReceiver {
       Log.d(ACP_CORE_PUSH_TAG_LOG, "bundle null. nothing to do || background: " + fromBackground);
     }
     Log.d(ACP_CORE_PUSH_TAG_LOG, "end handleMessage || background: " + fromBackground);
+  }
+
+  static String getStringValue(Bundle bundle, String key) {
+    Object value = bundle.get(key);
+    return value instanceof String ? (String) value : null;
   }
 
   private static void handleTracking(Map<String, String> data, String action, boolean skipDeepLink) {
